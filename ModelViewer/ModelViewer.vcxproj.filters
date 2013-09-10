@@ -1,0 +1,328 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="GeneratedFiles\moc_GLWidget.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_mainwindow.cpp" />
+    <ClCompile Include="GeneratedFiles\qrc_modelViewerResources.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\Computation\GreenCoords.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\Computation\Segmentation.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Cage.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\DataStructures.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Deformer.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Geometry.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\grid3D.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\InteriorDistancesData.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Modelo.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Node.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Object.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\Scene.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\skeleton.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\DataStructures\SurfaceData.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\bar.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\DrawObject.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\GLWidget.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\moc_GLWidget.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\guicon.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\main.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\mainwindow.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\moc_mainwindow.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\manipulatedFrameSetConstraint.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\treeitem.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\treemodel.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\moc_treemodel.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\render\clipingPlaneRender.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\render\GeometryRender.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\render\gridRender.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\render\modeloRender.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\render\shadingNode.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\render\skeletonRender.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\utils\ioWeights.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\utils\util.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\utils\UtilQT.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\outliner.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\air\AirLib\gui\selectionManager.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GeneratedFiles\ui_mainwindow.h" />
+    <ClInclude Include="..\..\air\AirLib\Computation\BiharmonicDistances.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\Computation\GreenCoords.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\Computation\HarmonicCoords.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\Computation\MeanValueCoords.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\Computation\mvc_interiorDistances.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\Computation\Segmentation.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Cage.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\DataStructures.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\DefNode.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Deformer.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Geometry.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\grid3D.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\InteriorDistancesData.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Modelo.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Node.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Object.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\Scene.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\skeleton.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\DataStructures\SurfaceData.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\bar.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\DrawObject.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\guicon.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\manipulatedFrameSetConstraint.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\treeitem.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\render\clipingPlaneRender.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\render\GeometryRender.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\render\gridRender.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\render\modeloRender.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\render\ShadingNode.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\render\skeletonRender.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\utils\ioWeights.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\utils\util.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\utils\utilGL.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\utils\UtilQT.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\global.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\globalDefinitions.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\outliner.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\air\AirLib\gui\SelectionManager.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\air\AirLib\gui\modelViewerResources.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\air\AirLib\gui\GLWidget.h">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\air\AirLib\gui\mainwindow.h">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\air\AirLib\gui\mainwindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\air\AirLib\gui\treemodel.h">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\air\AirLib\gui\icons\moveIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\moveIcon_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\rotateIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\rotateIcon_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\selectionIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\selectionIcon_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\seleccion_obj_off.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\seleccion_obj_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\seleccion_subobj_off.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\seleccion_subobj_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\barra_color.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\folder-icon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\air\AirLib\gui\icons\select_icon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\air\AirLib\gui\ModelViewer.pro" />
+  </ItemGroup>
+</Project>
