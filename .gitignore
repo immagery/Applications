@@ -1,0 +1,8 @@
+ModelViewer/x64/
+ModelViewer/GeneratedFiles/
+ModelViewer/debug/
+ModelViewer/ModelViewer.exe
+ModelViewer/ModelViewer.sdf
+ModelViewer/ModelViewer.v11.suo
+ModelViewer/ModelViewer.vcxproj.user
+ModelViewer/lib_to_softimage.bat
