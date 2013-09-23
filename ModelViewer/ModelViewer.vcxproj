@@ -78,9 +78,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">release\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\ModelViewer\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\ModelViewer\$(Platform)\$(Configuration)</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\ModelViewer\$(Platform)\$(Configuration)</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\intermediateDir</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ModelViewer</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ModelViewer</TargetName>
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreImportLibrary>
@@ -98,11 +98,12 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(IncludePath);..\..\include\GL;..\..\include\QGLViewer;..\..\include;..\..\include\vcglib;r;..\..\include\unsupported;..\..\include\SuperLU_4.3;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include</IncludePath>
+    <IncludePath>..\..\include\GL;..\..\include\QGLViewer;..\..\include;..\..\include\vcglib;..\..\include\unsupported;..\..\include\SuperLU_4.3;..\..\adri;..\..\include;..\..\air\Airlib;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;$(IncludePath);</IncludePath>
     <LibraryPath>$(LibraryPath);..\..\lib</LibraryPath>
+    <ExecutablePath>C:\Users\chus\Documents\dev\lib\;$(VCInstallDir)bin\x86_amd64;$(VCInstallDir)bin;$(WindowsSDK_ExecutablePath_x86);$(VSInstallDir)Common7\Tools\bin;$(VSInstallDir)Common7\tools;$(VSInstallDir)Common7\ide;$(ProgramFiles)\HTML Help Workshop;$(MSBuildToolsPath32);$(FxCopDir);$(PATH);C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\bin</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(IncludePath);..\..\include\GL;..\..\include\QGLViewer;..\..\include;..\..\include\vcglib;r;..\..\include\unsupported;..\..\include\SuperLU_4.3;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include\QtCore;..\..\air\AirLib</IncludePath>
+    <IncludePath>..\..\include\GL;..\..\include\QGLViewer;..\..\include;..\..\include\vcglib;..\..\include\unsupported;..\..\include\SuperLU_4.3;..\..\adri;..\..\include;..\..\air\Airlib;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;$(IncludePath);</IncludePath>
     <LibraryPath>$(LibraryPath);..\..\lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -114,7 +115,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_XML_LIB;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;NDEBUG;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -147,14 +148,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;%(AdditionalIncludeDirectories);$(QT_DIR)\include</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm200 -w34100 -w34189 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>release\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_XML_LIB;UNICODE;UNICODE;WIN32;WIN32;WIN64;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;UNICODE;UNICODE;WIN32;WIN32;WIN64;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -164,14 +165,14 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;gdi32.lib;user32.lib;superLU_4.3.lib;QGLViewer2.lib;clapack_nowrap.lib;BLAS_nowrap.lib;libf2c.lib;$(QTDIR)\lib\Qt5OpenGL.lib;$(QTDIR)\lib\Qt5Widgets.lib;$(QTDIR)\lib\Qt5Xml.lib;$(QTDIR)\lib\Qt5Gui.lib;$(QTDIR)\lib\Qt5Core.lib;$(QTDIR)\lib\qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\DATA\phd_dev\Air\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmain.lib;QGLViewer2.lib;BLAS_nowrap.lib;clapack_nowrap.lib;libf2c.lib;superLU_4.3.lib;Qt5OpenGL.lib;Qt5Widgets.lib;Qt5Core.lib;Qt5Gui.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;..\..\lib%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type=%27win32%27 name=%27Microsoft.Windows.Common-Controls%27 version=%276.0.0.0%27 publicKeyToken=%276595b64144ccf1df%27 language=%27*%27 processorArchitecture=%27*%27"  /SUBSYSTEM:WINDOWS %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreImportLibrary>true</IgnoreImportLibrary>
       <LinkIncremental>false</LinkIncremental>
-      <OutputFile>$(OutDir)\ModelViewer.exe</OutputFile>
+      <OutputFile>./ModelViewer.exe</OutputFile>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
       <SubSystem>Windows</SubSystem>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -199,7 +200,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_XML_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_GUI_LIB;QT_CORE_LIB;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -231,7 +232,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.\..\include\vcglib;.\..\include;.\..\Testers\Cages;.\..\AirLib;.\..\Airlib\render;.\..\Airlib\Computation;.\..\Airlib\DataStructures;.\..\Airlib\utils;.\..\Airlib\ui;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore;.\debug;.;.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012;C:\DATA\phd_dev\Air\include\SuperLU_4.3;C:\DATA\phd_dev\Air\include\unsupported;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;.\GeneratedFiles;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\GeneratedFiles;%(AdditionalIncludeDirectories);$(QT_DIR)\include</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm200 -w34100 -w34189 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>debug\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -239,7 +240,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WINDOWS;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_XML_LIB;UNICODE;UNICODE;WIN32;WIN32;WIN64;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;UNICODE;UNICODE;WIN32;WIN32;WIN64;QT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -249,8 +250,8 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmaind.lib;QGLViewerd2.lib;BLASd_nowrap.lib;clapackd_nowrap.lib;libf2cd.lib;superLU_4.3d.lib;$(QTDIR)\lib\Qt5OpenGLd.lib;$(QTDIR)\lib\Qt5Widgetsd.lib;$(QTDIR)\lib\Qt5Xmld.lib;$(QTDIR)\lib\Qt5Guid.lib;$(QTDIR)\lib\Qt5Cored.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(QTDIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmaind.lib;QGLViewerd2.lib;BLASd_nowrap.lib;clapackd_nowrap.lib;libf2cd.lib;superLU_4.3d.lib;Qt5OpenGLd.lib;Qt5Widgetsd.lib;Qt5Cored.lib;Qt5Guid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(QTDIR)\lib;..\..\lib%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type=%27win32%27 name=%27Microsoft.Windows.Common-Controls%27 version=%276.0.0.0%27 publicKeyToken=%276595b64144ccf1df%27 language=%27*%27 processorArchitecture=%27*%27"  /SUBSYSTEM:WINDOWS %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -271,79 +272,78 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp" />
-    <ClCompile Include="..\..\air\AirLib\Computation\GreenCoords.cpp" />
-    <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
-    <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
-    <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
-    <ClCompile Include="..\..\air\AirLib\Computation\Segmentation.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Cage.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\DataStructures.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Deformer.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Geometry.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\grid3D.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\InteriorDistancesData.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Modelo.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Node.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Object.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\Scene.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\skeleton.cpp" />
-    <ClCompile Include="..\..\air\AirLib\DataStructures\SurfaceData.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\bar.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\DrawObject.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\GLWidget.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\guicon.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\main.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\mainwindow.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\manipulatedFrameSetConstraint.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\outliner.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\selectionManager.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\treeitem.cpp" />
-    <ClCompile Include="..\..\air\AirLib\gui\treemodel.cpp" />
-    <ClCompile Include="..\..\air\AirLib\render\clipingPlaneRender.cpp" />
-    <ClCompile Include="..\..\air\AirLib\render\GeometryRender.cpp" />
-    <ClCompile Include="..\..\air\AirLib\render\gridRender.cpp" />
-    <ClCompile Include="..\..\air\AirLib\render\modeloRender.cpp" />
-    <ClCompile Include="..\..\air\AirLib\render\shadingNode.cpp" />
-    <ClCompile Include="..\..\air\AirLib\render\skeletonRender.cpp" />
-    <ClCompile Include="..\..\air\AirLib\utils\ioWeights.cpp" />
-    <ClCompile Include="..\..\air\AirLib\utils\util.cpp" />
-    <ClCompile Include="..\..\air\AirLib\utils\UtilQT.cpp" />
-    <ClCompile Include="GeneratedFiles\moc_GLWidget.cpp" />
-    <ClCompile Include="GeneratedFiles\moc_mainwindow.cpp" />
-    <ClCompile Include="GeneratedFiles\moc_treemodel.cpp" />
-    <ClCompile Include="GeneratedFiles\qrc_modelViewerResources.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </PrecompiledHeader>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="..\..\air\AirLib\gui\modelViewerResources.qrc">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(FullPath);..\..\air\AirLib\gui\icons\moveIcon.png;..\..\air\AirLib\gui\icons\moveIcon_on.png;..\..\air\AirLib\gui\icons\rotateIcon.png;..\..\air\AirLib\gui\icons\rotateIcon_on.png;..\..\air\AirLib\gui\icons\selectionIcon.png;..\..\air\AirLib\gui\icons\selectionIcon_on.png;..\..\air\AirLib\gui\icons\seleccion_obj_off.png;..\..\air\AirLib\gui\icons\seleccion_obj_on.png;..\..\air\AirLib\gui\icons\seleccion_subobj_off.png;..\..\air\AirLib\gui\icons\seleccion_subobj_on.png;..\..\air\AirLib\gui\icons\barra_color.jpg;..\..\air\AirLib\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Rcc%27ing %(Identity)...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath);..\..\air\AirLib\gui\icons\moveIcon.png;..\..\air\AirLib\gui\icons\moveIcon_on.png;..\..\air\AirLib\gui\icons\rotateIcon.png;..\..\air\AirLib\gui\icons\rotateIcon_on.png;..\..\air\AirLib\gui\icons\selectionIcon.png;..\..\air\AirLib\gui\icons\selectionIcon_on.png;..\..\air\AirLib\gui\icons\seleccion_obj_off.png;..\..\air\AirLib\gui\icons\seleccion_obj_on.png;..\..\air\AirLib\gui\icons\seleccion_subobj_off.png;..\..\air\AirLib\gui\icons\seleccion_subobj_on.png;..\..\air\AirLib\gui\icons\barra_color.jpg;..\..\air\AirLib\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Rcc%27ing %(Identity)...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(FullPath);..\..\air\AirLib\gui\icons\moveIcon.png;..\..\air\AirLib\gui\icons\moveIcon_on.png;..\..\air\AirLib\gui\icons\rotateIcon.png;..\..\air\AirLib\gui\icons\rotateIcon_on.png;..\..\air\AirLib\gui\icons\selectionIcon.png;..\..\air\AirLib\gui\icons\selectionIcon_on.png;..\..\air\AirLib\gui\icons\seleccion_obj_off.png;..\..\air\AirLib\gui\icons\seleccion_obj_on.png;..\..\air\AirLib\gui\icons\seleccion_subobj_off.png;..\..\air\AirLib\gui\icons\seleccion_subobj_on.png;..\..\air\AirLib\gui\icons\barra_color.jpg;..\..\air\AirLib\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Rcc%27ing %(Identity)...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath);..\..\air\AirLib\gui\icons\moveIcon.png;..\..\air\AirLib\gui\icons\moveIcon_on.png;..\..\air\AirLib\gui\icons\rotateIcon.png;..\..\air\AirLib\gui\icons\rotateIcon_on.png;..\..\air\AirLib\gui\icons\selectionIcon.png;..\..\air\AirLib\gui\icons\selectionIcon_on.png;..\..\air\AirLib\gui\icons\seleccion_obj_off.png;..\..\air\AirLib\gui\icons\seleccion_obj_on.png;..\..\air\AirLib\gui\icons\seleccion_subobj_off.png;..\..\air\AirLib\gui\icons\seleccion_subobj_on.png;..\..\air\AirLib\gui\icons\barra_color.jpg;..\..\air\AirLib\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Rcc%27ing %(Identity)...</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
+    <Image Include="..\..\adri\gui\icons\barra_color.jpg">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\folder-icon.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\moveIcon.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\moveIcon_on.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\rotateIcon.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\rotateIcon_on.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\seleccion_obj_off.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\seleccion_obj_on.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\seleccion_subobj_off.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\seleccion_subobj_on.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\selectionIcon.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\..\adri\gui\icons\selectionIcon_on.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Image>
     <Image Include="..\..\air\AirLib\gui\icons\barra_color.jpg">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -424,101 +424,173 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\adri\DataStructures\Cage.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Deformer.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Geometry.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\grid3D.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\InteriorDistancesData.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Modelo.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Node.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Object.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Scene.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\skeleton.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\SurfaceData.cpp" />
+    <ClCompile Include="..\..\adri\gui\AdriViewer.cpp" />
+    <ClCompile Include="..\..\adri\gui\bar.cpp" />
+    <ClCompile Include="..\..\adri\gui\DrawObject.cpp" />
+    <ClCompile Include="..\..\adri\gui\GLWidget.cpp" />
+    <ClCompile Include="..\..\adri\gui\guicon.cpp" />
+    <ClCompile Include="..\..\adri\gui\main.cpp" />
+    <ClCompile Include="..\..\adri\gui\mainwindow.cpp" />
+    <ClCompile Include="..\..\adri\gui\manipulatedFrameSetConstraint.cpp" />
+    <ClCompile Include="..\..\adri\gui\outliner.cpp" />
+    <ClCompile Include="..\..\adri\gui\selectionManager.cpp" />
+    <ClCompile Include="..\..\adri\gui\treeitem.cpp" />
+    <ClCompile Include="..\..\adri\gui\treemodel.cpp" />
+    <ClCompile Include="..\..\adri\render\clipingPlaneRender.cpp" />
+    <ClCompile Include="..\..\adri\render\GeometryRender.cpp" />
+    <ClCompile Include="..\..\adri\render\gridRender.cpp" />
+    <ClCompile Include="..\..\adri\render\modeloRender.cpp" />
+    <ClCompile Include="..\..\adri\render\shadingNode.cpp" />
+    <ClCompile Include="..\..\adri\render\skeletonRender.cpp" />
+    <ClCompile Include="..\..\adri\utils\ioWeights.cpp" />
+    <ClCompile Include="..\..\adri\utils\util.cpp" />
+    <ClCompile Include="..\..\adri\utils\UtilQT.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\GreenCoords.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\Segmentation.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_AdriViewer.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_GLWidget.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_mainwindow.cpp" />
+    <ClCompile Include="GeneratedFiles\moc_treemodel.cpp" />
+    <ClCompile Include="GeneratedFiles\qrc_modelViewerResources.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\adri\DataStructures\Cage.h" />
+    <ClInclude Include="..\..\adri\DataStructures\DefNode.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Deformer.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Geometry.h" />
+    <ClInclude Include="..\..\adri\DataStructures\grid3D.h" />
+    <ClInclude Include="..\..\adri\DataStructures\InteriorDistancesData.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Modelo.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Node.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Object.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Scene.h" />
+    <ClInclude Include="..\..\adri\DataStructures\skeleton.h" />
+    <ClInclude Include="..\..\adri\DataStructures\SurfaceData.h" />
+    <ClInclude Include="..\..\adri\global.h" />
+    <ClInclude Include="..\..\adri\globalDefinitions.h" />
+    <CustomBuild Include="..\..\adri\gui\AdriViewer.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing AdriViewer.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing AdriViewer.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing AdriViewer.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing AdriViewer.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
+    </CustomBuild>
+    <ClInclude Include="..\..\adri\gui\bar.h" />
+    <ClInclude Include="..\..\adri\gui\DrawObject.h" />
+    <ClInclude Include="..\..\adri\gui\guicon.h" />
+    <ClInclude Include="..\..\adri\gui\manipulatedFrameSetConstraint.h" />
+    <ClInclude Include="..\..\adri\gui\outliner.h" />
+    <ClInclude Include="..\..\adri\gui\SelectionManager.h" />
+    <ClInclude Include="..\..\adri\gui\treeitem.h" />
+    <ClInclude Include="..\..\adri\render\clipingPlaneRender.h" />
+    <ClInclude Include="..\..\adri\render\GeometryRender.h" />
+    <ClInclude Include="..\..\adri\render\gridRender.h" />
+    <ClInclude Include="..\..\adri\render\modeloRender.h" />
+    <ClInclude Include="..\..\adri\render\shadingNode.h" />
+    <ClInclude Include="..\..\adri\render\skeletonRender.h" />
+    <ClInclude Include="..\..\adri\utils\ioWeights.h" />
+    <ClInclude Include="..\..\adri\utils\util.h" />
+    <ClInclude Include="..\..\adri\utils\utilGL.h" />
+    <ClInclude Include="..\..\adri\utils\UtilQT.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\BiharmonicDistances.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\GreenCoords.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\HarmonicCoords.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\MeanValueCoords.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\mvc_interiorDistances.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\Segmentation.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Cage.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\DataStructures.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\DefNode.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Deformer.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Geometry.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\grid3D.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\InteriorDistancesData.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Modelo.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Node.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Object.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\Scene.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\skeleton.h" />
-    <ClInclude Include="..\..\air\AirLib\DataStructures\SurfaceData.h" />
-    <ClInclude Include="..\..\air\AirLib\global.h" />
-    <ClInclude Include="..\..\air\AirLib\globalDefinitions.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\bar.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\DrawObject.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\guicon.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\manipulatedFrameSetConstraint.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\outliner.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\SelectionManager.h" />
-    <ClInclude Include="..\..\air\AirLib\gui\treeitem.h" />
-    <ClInclude Include="..\..\air\AirLib\render\clipingPlaneRender.h" />
-    <ClInclude Include="..\..\air\AirLib\render\GeometryRender.h" />
-    <ClInclude Include="..\..\air\AirLib\render\gridRender.h" />
-    <ClInclude Include="..\..\air\AirLib\render\modeloRender.h" />
-    <ClInclude Include="..\..\air\AirLib\render\ShadingNode.h" />
-    <ClInclude Include="..\..\air\AirLib\render\skeletonRender.h" />
-    <ClInclude Include="..\..\air\AirLib\utils\ioWeights.h" />
-    <ClInclude Include="..\..\air\AirLib\utils\util.h" />
-    <ClInclude Include="..\..\air\AirLib\utils\utilGL.h" />
-    <ClInclude Include="..\..\air\AirLib\utils\UtilQT.h" />
-    <CustomBuild Include="..\..\air\AirLib\gui\treemodel.h">
+    <CustomBuild Include="..\..\adri\gui\treemodel.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL  "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-IC:\DATA\phd_dev\Air\include\SuperLU_4.3" "-IC:\DATA\phd_dev\Air\include\unsupported" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL  "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
     </CustomBuild>
-    <CustomBuild Include="..\..\air\AirLib\gui\mainwindow.h">
+    <ClInclude Include="GeneratedFiles\ui_mainwindow.h" />
+    <CustomBuild Include="..\..\adri\gui\mainwindow.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL  "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-IC:\DATA\phd_dev\Air\include\SuperLU_4.3" "-IC:\DATA\phd_dev\Air\include\unsupported" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL  "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
     </CustomBuild>
-    <CustomBuild Include="..\..\air\AirLib\gui\GLWidget.h">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+    <CustomBuild Include="..\..\adri\gui\GLWidget.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-IC:\DATA\phd_dev\Air\include\SuperLU_4.3" "-IC:\DATA\phd_dev\Air\include\unsupported" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_XML_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-I.\GeneratedFiles"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-I.\GeneratedFiles" "-I$(INHERIT)\." "-I$(QT_DIR)\include"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\air\AirLib\gui\mainwindow.ui">
+    <CustomBuild Include="..\..\adri\gui\mainwindow.ui">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\uic.exe;%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Uic%27ing %(Identity)...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\ui_%(Filename).h;%(Outputs)</Outputs>
@@ -538,7 +610,25 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\air\AirLib\gui\ModelViewer.pro" />
+    <None Include="..\..\adri\gui\ModelViewer.pro" />
+    <CustomBuild Include="..\..\adri\gui\modelViewerResources.qrc">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(FullPath);..\..\adri\gui\icons\moveIcon.png;..\..\adri\gui\icons\moveIcon_on.png;..\..\adri\gui\icons\rotateIcon.png;..\..\adri\gui\icons\rotateIcon_on.png;..\..\adri\gui\icons\selectionIcon.png;..\..\adri\gui\icons\selectionIcon_on.png;..\..\adri\gui\icons\seleccion_obj_off.png;..\..\adri\gui\icons\seleccion_obj_on.png;..\..\adri\gui\icons\seleccion_subobj_off.png;..\..\adri\gui\icons\seleccion_subobj_on.png;..\..\adri\gui\icons\barra_color.jpg;..\..\adri\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Rcc%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FullPath);..\..\adri\gui\icons\moveIcon.png;..\..\adri\gui\icons\moveIcon_on.png;..\..\adri\gui\icons\rotateIcon.png;..\..\adri\gui\icons\rotateIcon_on.png;..\..\adri\gui\icons\selectionIcon.png;..\..\adri\gui\icons\selectionIcon_on.png;..\..\adri\gui\icons\seleccion_obj_off.png;..\..\adri\gui\icons\seleccion_obj_on.png;..\..\adri\gui\icons\seleccion_subobj_off.png;..\..\adri\gui\icons\seleccion_subobj_on.png;..\..\adri\gui\icons\barra_color.jpg;..\..\adri\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Rcc%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(FullPath);..\..\adri\gui\icons\moveIcon.png;..\..\adri\gui\icons\moveIcon_on.png;..\..\adri\gui\icons\rotateIcon.png;..\..\adri\gui\icons\rotateIcon_on.png;..\..\adri\gui\icons\selectionIcon.png;..\..\adri\gui\icons\selectionIcon_on.png;..\..\adri\gui\icons\seleccion_obj_off.png;..\..\adri\gui\icons\seleccion_obj_on.png;..\..\adri\gui\icons\seleccion_subobj_off.png;..\..\adri\gui\icons\seleccion_subobj_on.png;..\..\adri\gui\icons\barra_color.jpg;..\..\adri\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Rcc%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FullPath);..\..\adri\gui\icons\moveIcon.png;..\..\adri\gui\icons\moveIcon_on.png;..\..\adri\gui\icons\rotateIcon.png;..\..\adri\gui\icons\rotateIcon_on.png;..\..\adri\gui\icons\selectionIcon.png;..\..\adri\gui\icons\selectionIcon_on.png;..\..\adri\gui\icons\seleccion_obj_off.png;..\..\adri\gui\icons\seleccion_obj_on.png;..\..\adri\gui\icons\seleccion_subobj_off.png;..\..\adri\gui\icons\seleccion_subobj_on.png;..\..\adri\gui\icons\barra_color.jpg;..\..\adri\gui\icons\folder-icon.png;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Rcc%27ing %(Identity)...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
