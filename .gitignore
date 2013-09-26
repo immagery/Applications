@@ -6,3 +6,6 @@ ModelViewer/ModelViewer.sdf
 ModelViewer/ModelViewer.v11.suo
 ModelViewer/ModelViewer.vcxproj.user
 ModelViewer/lib_to_softimage.bat
+ModelViewer/intermediateDir/
+ModelViewer/ModelViewer.opensdf
+ModelViewer/ModelViewer.vcxproj.filters
