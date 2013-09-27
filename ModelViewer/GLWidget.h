@@ -100,6 +100,8 @@ public slots:
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);
 
+	void saveBinding(binding* bd, string fileName);
+
 };
 
 #endif // GLWIDGET_H

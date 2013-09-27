@@ -220,6 +220,22 @@ void GLWidget::paintModelWithData() {
                 }
                 else if(escena->iVisMode == VIS_CONFIDENCE_LEVEL)
                 {
+					value = 0.0;
+
+                    int searchedindex = -1;
+                    for(unsigned int ce = 0; ce < pd.influences.size(); ce++)
+                    {
+                        if(pd.influences[ce].label == escena->desiredVertex)
+                        {
+                            searchedindex = ce;
+                            break;
+                        }
+                        //sum += pd.influences[ce].weightvalue;
+                    }
+                    if(searchedindex >= 0)
+						value = pd.secondInfluences[searchedindex];
+
+					/*
                     value = 0.0;
                     if(count == escena->desiredVertex)
                     {
@@ -236,6 +252,7 @@ void GLWidget::paintModelWithData() {
                             }
                         }
                     }
+					*/
                 }
                 else if(escena->iVisMode == VIS_ISODISTANCES)
                 {
@@ -584,6 +601,41 @@ void GLWidget::doTests(string fileName, string name, string path) {
             outFile.close();
 }
 
+void GLWidget::saveBinding(binding* bd, string fileName)
+{
+	std::printf("Guardando\n"); std::fflush(0);
+	std::printf("\n%s\n",fileName.c_str());
+	FILE* fout = fopen(fileName.c_str(), "w");
+
+	for(int pt = 0; pt< bd->pointData.size(); pt++)
+	{
+		fprintf(fout, "%d", pt);
+
+		for(int infl = 0; infl< bd->pointData[pt].influences.size(); infl++)
+		{
+			int idInfl = bd->pointData[pt].influences[infl].label;
+			float inflValue = bd->pointData[pt].influences[infl].weightValue;
+			string inflName = "";
+
+			joint* jt;
+			for(int skt = 0; skt< bd->bindedSkeletons.size(); skt++)
+			{
+				jt = bd->bindedSkeletons[skt]->jointRef[idInfl];
+				if(jt) break;
+			}
+
+			if(jt)
+				inflName = jt->sName;
+
+			fprintf(fout, " %s %f", inflName, inflValue);
+		}
+
+		fprintf(fout, "\n"); fflush(fout);
+	}
+
+	fclose(fout);
+}
+
 void GLWidget::computeProcess() {
     printf("Voxelization de modelos:\n");
     if(escena->models.size() <= 0) return;
@@ -669,6 +721,8 @@ void GLWidget::computeProcess() {
 
         printf("Computing skinning:\n");
         fflush(0);
+
+		saveBinding( m->bindings[0], m->sPath+"/binding_export.txt");
     }
 
     paintModelWithData();
