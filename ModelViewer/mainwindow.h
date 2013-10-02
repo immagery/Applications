@@ -59,6 +59,8 @@ public slots:
     void updateSmoothSlidervalue(int);
 	void changeSmoothingPasses(int);
 
+	void changeAuxValueInt(int value);
+
     void changeExpansionSlider();
 	void changeInteriorPointPosition();
 	void updateClipingPlaneColor();

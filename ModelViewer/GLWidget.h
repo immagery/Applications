@@ -34,6 +34,8 @@ public:
 	GLWidget(QWidget * parent = 0, const QGLWidget * shareWidget = 0, Qt::WindowFlags flags = 0);
 
     gridRenderer* currentProcessGrid;
+	
+	int valueAux;
 
     // CAGES
     bool processGreenCoordinates();
@@ -99,8 +101,6 @@ public slots:
     void UpdateVertexSource(int id);
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);
-
-	void saveBinding(binding* bd, string fileName);
 
 };
 

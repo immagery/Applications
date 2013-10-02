@@ -71,8 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->voxelization_btn, SIGNAL(released()), ui->glCustomWidget, SLOT(computeProcess()));
 
-	connect(ui->nextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(nextProcessStep()));
-	connect(ui->allNextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(allNextProcessSteps()));
+	//connect(ui->nextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(nextProcessStep()));
+	//connect(ui->allNextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(allNextProcessSteps()));
 
     connect(ui->prop_function_updt, SIGNAL(released()), ui->glCustomWidget, SLOT(PropFunctionConf()));
 
@@ -110,6 +110,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->smoothPropagationSlider, SIGNAL(valueChanged(int)), this, SLOT(updateSmoothSlidervalue(int)));
 
 	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeSmoothingPasses(int)));
+
+	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
 
     connect(ui->glCustomWidget, SIGNAL(jointDataShow(float, int)), this , SLOT(jointDataUpdate(float,int)));
 
@@ -220,6 +222,12 @@ void MainWindow::changeSmoothingPasses(int)
 {
     float valueAux = ui->smoothingPasses->value();
     ui->glCustomWidget->changeSmoothingPasses(valueAux);
+}
+
+void MainWindow::changeAuxValueInt(int value)
+{
+    ui->glCustomWidget->valueAux = value;
+	ui->glCustomWidget->paintModelWithData();
 }
 
 void MainWindow::updateThresholdSlidervalue(int value)

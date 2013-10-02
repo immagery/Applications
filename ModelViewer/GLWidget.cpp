@@ -34,6 +34,8 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
     stillCageAbled = false;
     stillCageSelected = -1;
 
+	valueAux = 0;
+
 }
 
 void GLWidget::paintModelWithData() {
@@ -138,6 +140,7 @@ void GLWidget::paintModelWithData() {
 
             if(escena->iVisMode == VIS_ERROR)
             {
+				/*
                 completedistances.resize(m->vn());
                 double prevalue2 = 0;
                 for(int currentbinding = 0; currentbinding < m->bindings.size(); currentbinding++)
@@ -156,6 +159,7 @@ void GLWidget::paintModelWithData() {
                     int ivertexbind = m->modelVertexDataPoint[i];
                     completedistances[i] = -BiharmonicDistanceP2P_sorted(weights, weightssort, ivertexbind , m->bindings[ibind], 1.0, prevalue2, -10);
                 }
+				*/
             }
         }
 
@@ -233,7 +237,19 @@ void GLWidget::paintModelWithData() {
                         //sum += pd.influences[ce].weightvalue;
                     }
                     if(searchedindex >= 0)
-						value = pd.secondInfluences[searchedindex];
+					{
+						if(pd.secondInfluences[searchedindex].size()> 0)
+						{
+							if(valueAux < pd.secondInfluences[searchedindex].size())
+								value = pd.secondInfluences[searchedindex][valueAux];
+							else
+								value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1];
+						}
+						else
+						{
+							value = 1.0;
+						}
+					}
 
 					/*
                     value = 0.0;
@@ -278,12 +294,39 @@ void GLWidget::paintModelWithData() {
                 }
                 else if(escena->iVisMode == VIS_ERROR)
                 {
-                    int modelvert = m->bindings[currentbinding]->pointData[count].node->id;
+					value = 0.0;
+
+                    int searchedindex = -1;
+                    for(unsigned int ce = 0; ce < pd.influences.size(); ce++)
+                    {
+                        if(pd.influences[ce].label == escena->desiredVertex)
+                        {
+                            searchedindex = ce;
+                            break;
+                        }
+                        //sum += pd.influences[ce].weightvalue;
+                    }
+                    if(searchedindex >= 0)
+					{
+						if(pd.secondInfluences[searchedindex].size()> 0)
+						{
+							if(valueAux < pd.secondInfluences[searchedindex].size())
+								value = pd.secondInfluences[searchedindex][valueAux]*pd.influences[searchedindex].weightValue;
+							else
+								value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1]*pd.influences[searchedindex].weightValue;
+						}
+						else
+						{
+							value = 1.0*pd.influences[searchedindex].weightValue;
+						}
+					}
+                    /*int modelvert = m->bindings[currentbinding]->pointData[count].node->id;
 
                     if(completedistances[modelvert] > 0)
                         value = pointdistances[modelvert] - completedistances[modelvert];
 
                     maxError = max((double)maxError, (double)value);
+					*/
 
                 }
                 else if(escena->iVisMode == VIS_WEIGHT_INFLUENCE)
@@ -601,44 +644,11 @@ void GLWidget::doTests(string fileName, string name, string path) {
             outFile.close();
 }
 
-void GLWidget::saveBinding(binding* bd, string fileName)
-{
-	std::printf("Guardando\n"); std::fflush(0);
-	std::printf("\n%s\n",fileName.c_str());
-	FILE* fout = fopen(fileName.c_str(), "w");
-
-	for(int pt = 0; pt< bd->pointData.size(); pt++)
-	{
-		fprintf(fout, "%d", pt);
-
-		for(int infl = 0; infl< bd->pointData[pt].influences.size(); infl++)
-		{
-			int idInfl = bd->pointData[pt].influences[infl].label;
-			float inflValue = bd->pointData[pt].influences[infl].weightValue;
-			string inflName = "";
-
-			joint* jt;
-			for(int skt = 0; skt< bd->bindedSkeletons.size(); skt++)
-			{
-				jt = bd->bindedSkeletons[skt]->jointRef[idInfl];
-				if(jt) break;
-			}
-
-			if(jt)
-				inflName = jt->sName;
-
-			fprintf(fout, " %s %f", inflName, inflValue);
-		}
-
-		fprintf(fout, "\n"); fflush(fout);
-	}
-
-	fclose(fout);
-}
-
 void GLWidget::computeProcess() {
     printf("Voxelization de modelos:\n");
     if(escena->models.size() <= 0) return;
+
+	float subditionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
     for(unsigned int i = 0; i< escena->models.size(); i++)
     {
@@ -702,7 +712,7 @@ void GLWidget::computeProcess() {
         for(int i = 0; i< escena->skeletons.size(); i++)
         {
             float minValue = GetMinSegmentLenght(getMinSkeletonSize((skeleton*)escena->skeletons[i]),0);
-            ((skeleton*)escena->skeletons[i])->minSegmentLength = minValue;
+            ((skeleton*)escena->skeletons[i])->minSegmentLength = subditionRatio * minValue;
 
             for(int bind = 0; bind< m->bindings.size(); bind++)
                 m->bindings[bind]->bindedSkeletons.push_back((skeleton*)escena->skeletons[i]);
@@ -710,7 +720,7 @@ void GLWidget::computeProcess() {
 
         for(int i = 0; i< m->bindings.size(); i++)
         {
-            m->bindings[i]->weightsCutThreshold = escena->weightsThreshold;
+            m->bindings[i]->weightsCutThreshold = 1;//escena->weightsThreshold;
         }
 
         printf("Computing skinning:\n");
