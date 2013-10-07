@@ -10,6 +10,10 @@
 
 #include <QtCore/QTextStream>
 
+#include <tetgen/tetgen.h>
+
+#include <render/graphRender.h>
+
 #define ratioExpansion_DEF 0.7
 
 
@@ -644,7 +648,239 @@ void GLWidget::doTests(string fileName, string name, string path) {
             outFile.close();
 }
 
+void GLWidget::BuildTetrahedralization()
+{
+	
+	tetgenio in, out;
+	tetgenio::facet *f;
+	tetgenio::polygon *p;
+	int i;
+
+	
+	// All indices start from 1.
+	in.firstnumber = 1;
+
+	in.numberofpoints = 8;
+	in.pointlist = new REAL[in.numberofpoints * 3];
+	in.pointlist[0]  = 0;  // node 1.
+	in.pointlist[1]  = 0;
+	in.pointlist[2]  = 0;
+	in.pointlist[3]  = 2;  // node 2.
+	in.pointlist[4]  = 0;
+	in.pointlist[5]  = 0;
+	in.pointlist[6]  = 2;  // node 3.
+	in.pointlist[7]  = 2;
+	in.pointlist[8]  = 0;
+	in.pointlist[9]  = 0;  // node 4.
+	in.pointlist[10] = 2;
+	in.pointlist[11] = 0;
+	// Set node 5, 6, 7, 8.
+	for (i = 4; i < 8; i++) {
+		in.pointlist[i * 3]     = in.pointlist[(i - 4) * 3];
+		in.pointlist[i * 3 + 1] = in.pointlist[(i - 4) * 3 + 1];
+		in.pointlist[i * 3 + 2] = 12;
+	}
+
+	in.numberoffacets = 6;
+	in.facetlist = new tetgenio::facet[in.numberoffacets];
+	in.facetmarkerlist = new int[in.numberoffacets];
+
+	// Facet 1. The leftmost facet.
+	f = &in.facetlist[0];
+	f->numberofpolygons = 1;
+	f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+	f->numberofholes = 0;
+	f->holelist = NULL;
+	p = &f->polygonlist[0];
+	p->numberofvertices = 4;
+	p->vertexlist = new int[p->numberofvertices];
+	p->vertexlist[0] = 1;
+	p->vertexlist[1] = 2;
+	p->vertexlist[2] = 3;
+	p->vertexlist[3] = 4;
+  
+	// Facet 2. The rightmost facet.
+	f = &in.facetlist[1];
+	f->numberofpolygons = 1;
+	f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+	f->numberofholes = 0;
+	f->holelist = NULL;
+	p = &f->polygonlist[0];
+	p->numberofvertices = 4;
+	p->vertexlist = new int[p->numberofvertices];
+	p->vertexlist[0] = 5;
+	p->vertexlist[1] = 6;
+	p->vertexlist[2] = 7;
+	p->vertexlist[3] = 8;
+
+	// Facet 3. The bottom facet.
+	f = &in.facetlist[2];
+	f->numberofpolygons = 1;
+	f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+	f->numberofholes = 0;
+	f->holelist = NULL;
+	p = &f->polygonlist[0];
+	p->numberofvertices = 4;
+	p->vertexlist = new int[p->numberofvertices];
+	p->vertexlist[0] = 1;
+	p->vertexlist[1] = 5;
+	p->vertexlist[2] = 6;
+	p->vertexlist[3] = 2;
+
+	// Facet 4. The back facet.
+	f = &in.facetlist[3];
+	f->numberofpolygons = 1;
+	f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+	f->numberofholes = 0;
+	f->holelist = NULL;
+	p = &f->polygonlist[0];
+	p->numberofvertices = 4;
+	p->vertexlist = new int[p->numberofvertices];
+	p->vertexlist[0] = 2;
+	p->vertexlist[1] = 6;
+	p->vertexlist[2] = 7;
+	p->vertexlist[3] = 3;
+
+	// Facet 5. The top facet.
+	f = &in.facetlist[4];
+	f->numberofpolygons = 1;
+	f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+	f->numberofholes = 0;
+	f->holelist = NULL;
+	p = &f->polygonlist[0];
+	p->numberofvertices = 4;
+	p->vertexlist = new int[p->numberofvertices];
+	p->vertexlist[0] = 3;
+	p->vertexlist[1] = 7;
+	p->vertexlist[2] = 8;
+	p->vertexlist[3] = 4;
+
+	// Facet 6. The front facet.
+	f = &in.facetlist[5];
+	f->numberofpolygons = 1;
+	f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+	f->numberofholes = 0;
+	f->holelist = NULL;
+	p = &f->polygonlist[0];
+	p->numberofvertices = 4;
+	p->vertexlist = new int[p->numberofvertices];
+	p->vertexlist[0] = 4;
+	p->vertexlist[1] = 8;
+	p->vertexlist[2] = 5;
+	p->vertexlist[3] = 1;
+
+	// Set 'in.facetmarkerlist'
+	in.facetmarkerlist[0] = -1;
+	in.facetmarkerlist[1] = -2;
+	in.facetmarkerlist[2] = 0;
+	in.facetmarkerlist[3] = 0;
+	in.facetmarkerlist[4] = 0;
+	in.facetmarkerlist[5] = 0;
+	
+
+	// Output the PLC to files 'barin.node' and 'barin.poly'.
+	in.save_nodes("barin");
+	in.save_poly("barin");
+
+	// Tetrahedralize the PLC. Switches are chosen to read a PLC (p),
+	//   do quality mesh generation (q) with a specified quality bound
+	//   (1.414), and apply a maximum volume constraint (a0.1).
+
+	tetrahedralize("pq1.414a0.1", &in, &out);
+
+	
+
+	escena->models.push_back((object*)new Modelo(escena->getNewId()));
+	Modelo* m = ((Modelo*)escena->models.back());
+
+	delete m->shading;
+	m->shading = new GraphRender(m);
+
+	ReBuildScene();
+
+	m->nodes.resize(8);
+	for(int points = 0; points< 8; points++)
+	{
+		m->nodes[points] = new GraphNode(points);
+		m->nodes[points]->position = Point3d( in.pointlist[points*3],in.pointlist[points*3+1],in.pointlist[points*3+2]);
+	}
+
+	m->nodes[0]->connections.push_back(m->nodes[1]);
+	m->nodes[1]->connections.push_back(m->nodes[2]);
+	m->nodes[2]->connections.push_back(m->nodes[3]);
+	m->nodes[3]->connections.push_back(m->nodes[0]);
+
+	m->nodes[1]->connections.push_back(m->nodes[0]);
+	m->nodes[2]->connections.push_back(m->nodes[1]);
+	m->nodes[3]->connections.push_back(m->nodes[2]);
+	m->nodes[0]->connections.push_back(m->nodes[3]);
+
+	//p->vertexlist[0] = 1;
+	//p->vertexlist[1] = 2;
+	//p->vertexlist[2] = 3;
+	//p->vertexlist[3] = 4;
+
+	m->nodes[4]->connections.push_back(m->nodes[5]);
+	m->nodes[5]->connections.push_back(m->nodes[6]);
+	m->nodes[6]->connections.push_back(m->nodes[7]);
+	m->nodes[7]->connections.push_back(m->nodes[4]);
+
+	m->nodes[5]->connections.push_back(m->nodes[4]);
+	m->nodes[6]->connections.push_back(m->nodes[5]);
+	m->nodes[7]->connections.push_back(m->nodes[6]);
+	m->nodes[4]->connections.push_back(m->nodes[7]);
+
+	//p->vertexlist[0] = 5;
+	//p->vertexlist[1] = 6;
+	//p->vertexlist[2] = 7;
+	//p->vertexlist[3] = 8;
+	
+	m->nodes[0]->connections.push_back(m->nodes[4]);
+	m->nodes[1]->connections.push_back(m->nodes[5]);
+	m->nodes[2]->connections.push_back(m->nodes[6]);
+	m->nodes[3]->connections.push_back(m->nodes[7]);
+
+	m->nodes[4]->connections.push_back(m->nodes[0]);
+	m->nodes[5]->connections.push_back(m->nodes[1]);
+	m->nodes[6]->connections.push_back(m->nodes[2]);
+	m->nodes[7]->connections.push_back(m->nodes[3]);
+
+	/*p->vertexlist[0] = 1;
+	p->vertexlist[1] = 5;
+	p->vertexlist[2] = 6;
+	p->vertexlist[3] = 2;
+	
+	p->vertexlist[0] = 2;
+	p->vertexlist[1] = 6;
+	p->vertexlist[2] = 7;
+	p->vertexlist[3] = 3;
+	
+	p->vertexlist[0] = 3;
+	p->vertexlist[1] = 7;
+	p->vertexlist[2] = 8;
+	p->vertexlist[3] = 4;
+	
+	p->vertexlist[0] = 4;
+	p->vertexlist[1] = 8;
+	p->vertexlist[2] = 5;
+	p->vertexlist[3] = 1;*/
+
+	/*for(int faces = 0; faces< 6; faces++)
+	{
+		m->nodes[points] = new GraphNode(points);
+		m->nodes[points]->position = Point3d( in.pointlist[points*3],in.pointlist[points*3+1],in.pointlist[points*3+2]);
+	}*/
+
+	emit updateSceneView();
+}
+
 void GLWidget::computeProcess() {
+
+	//// Pruebas de tetrahedralizacion
+	//printf("Tengo comentada la parte de procesado para ver la tetrahedralizacion.\n");
+	//BuildTetrahedralization();
+	//return;
+
     printf("Voxelization de modelos:\n");
     if(escena->models.size() <= 0) return;
 
@@ -1709,46 +1945,7 @@ void GLWidget::showHCoordinatesSlot()
 }
 
 // TOFIX
-void GLWidget::ChangeStillCage(int id)
-{
-    //stillCageSelected = parent->ui->cagesComboBox->itemData(id).toInt();
-}
-
-void GLWidget::loadSelectableVertex(Cage* cage /* MyMesh& cage*/)
-{
-    // TODO
-    /*
-    MyMesh::VertexIterator vi;
-    for(vi = cage.vert.begin(); vi!=cage.vert.end(); ++vi )
-    {
-        DrawObject* o = new DrawObject();
-        o->frame.setPosition(Vec(vi->P()[0], vi->P()[1], vi->P()[2])); // Posicion
-        o->id = vi->IMark(); // id
-        objects_.append(o);
-    }
-    */
-}
-
-/*
- void AdriViewer::loadSelectVertexCombo(MyMesh& cage)
- {
-     QString vertName("Vertice %1");
-     parent->ui->selectElementComboLabel->setText("Vertices de la caja");
-
-     MyMesh::VertexIterator vi;
-     int idx = 0;
-     for(vi = cage.vert.begin(); vi!=cage.vert.end(); ++vi )
-         parent->ui->selectElementCombo->addItem(vertName.arg(idx), QVariant(idx++));
-
-     connect(parent->ui->selectElementCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeVertexSelection(int)));
- }
-
- void AdriViewer::changeVertexSelection(int id)
- {
-     influenceDrawingIdx = parent->ui->selectElementCombo->itemData(id).toInt();
-     updateGL();
- }
- */
+ 
 
 
 float GLWidget::calculateDistancesForISOLines(grid3d* grid, vector<double>&  embeddedPoint)
@@ -1928,6 +2125,7 @@ void GLWidget::updateGridVisualization()
 void GLWidget::changeVisualizationMode(int mode)
 {
     escena->iVisMode = mode;
+
     // TOFIX
     paintModelWithData();
 

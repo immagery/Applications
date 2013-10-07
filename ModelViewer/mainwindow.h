@@ -1,6 +1,43 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <gui/adrimainwindow.h>
+#include "GLWidget.h"
+
+class GLWidget;
+
+class MainWindow : public AdriMainWindow
+{
+    Q_OBJECT
+
+public:
+    MainWindow(QWidget *parent = 0);
+    ~MainWindow();
+
+	void changeSmoothSlider();
+	void changeSmoothingPasses(int);
+	void changeAuxValueInt(int value);
+	void updateThresholdSlidervalue(int value);
+	void enableThreshold(bool toogle);
+
+	virtual void keyPressEvent(QKeyEvent* event);
+
+	virtual void UpdateScene();
+
+	void updateClipingPlaneData();
+	void updateClipingPlaneColor();
+	void updateModelColors();
+
+	void toogleToShowSegmentation(bool toogle);
+
+	void changeExpansionSlider();
+
+	void enableAdaptativeThreshold(bool toogle);
+
+	GLWidget* widget;
+};
+
+/*
 #include <QtWidgets/QMainWindow>
 #include <QtCore/QModelIndex>
 
@@ -83,5 +120,7 @@ public:
 
     toolmode toolSelected;
 };
+
+*/
 
 #endif // MAINWINDOW_H

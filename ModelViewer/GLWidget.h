@@ -52,7 +52,6 @@ public:
     float calculateDistancesForISOLines(grid3d* grid, vector<double>&  embeddedPoint);
     void paintGrid(gridRenderer* grRend);
     void updateGridVisualization();
-    void changeVisualizationMode(int);
 
     void cleanWeights(gridRenderer* grRend);
     void changeSmoothPropagationDistanceRatio(float smoothRatioValue);
@@ -83,6 +82,8 @@ public:
 	void paintPlaneWithData(bool compute = false);
 	void paintModelWithData();
 
+	virtual void changeVisualizationMode(int);
+
 
 protected:
     virtual void postSelection(const QPoint& point);
@@ -94,8 +95,9 @@ public slots:
     void ChangeSliceXY(int slice);
 
 	//Metodos especificos
-    void doTests(string fileName, string name, string path);
+    virtual void doTests(string fileName, string name, string path);
     void computeProcess();
+	void BuildTetrahedralization();
     void VoxelizeModel(Modelo *m, bool onlyBorders = true);
     void exportWeightsToMaya();
     void UpdateVertexSource(int id);

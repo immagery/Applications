@@ -30,7 +30,7 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <widget class="GLWidget" name="glCustomWidget" native="true">
+          <widget class="AdriViewer" name="glCustomWidget" native="true">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
@@ -1940,9 +1940,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>GLWidget</class>
+   <class>AdriViewer</class>
    <extends>QWidget</extends>
-   <header>GLWidget.h</header>
+   <header>gui/AdriViewer.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
