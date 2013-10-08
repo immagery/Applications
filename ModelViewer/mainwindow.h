@@ -12,7 +12,7 @@ class MainWindow : public AdriMainWindow
 
 public:
     MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    ~MainWindow ();
 
 	void changeSmoothSlider();
 	void changeSmoothingPasses(int);
@@ -35,6 +35,9 @@ public:
 	void enableAdaptativeThreshold(bool toogle);
 
 	GLWidget* widget;
+
+	public slots:
+	 void Compute();
 };
 
 /*

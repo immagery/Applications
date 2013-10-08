@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
     connect(ui->SliceSelectorXY, SIGNAL(valueChanged(int)), ui->glCustomWidget, SLOT(ChangeSliceXY(int)));
     connect(ui->SliceSelectorXZ, SIGNAL(valueChanged(int)), ui->glCustomWidget, SLOT(ChangeSliceXZ(int)));
 
-    connect(ui->voxelization_btn, SIGNAL(released()), ui->glCustomWidget, SLOT(computeProcess()));
+	connect(ui->voxelization_btn, SIGNAL(released()), this, SLOT(Compute()));
 
 	//connect(ui->nextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(nextProcessStep()));
 	//connect(ui->allNextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(allNextProcessSteps()));
@@ -77,6 +77,11 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	
 	connect(ui->positionPlaneSlider, SIGNAL(sliderMoved(int)), this, SLOT(changeSelPointForPlane(int)));
 
+}
+
+void MainWindow::Compute()
+{
+	widget->computeProcess();
 }
 
 MainWindow::~MainWindow()

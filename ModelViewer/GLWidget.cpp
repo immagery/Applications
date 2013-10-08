@@ -9,10 +9,13 @@
 #include <utils/util.h>
 
 #include <QtCore/QTextStream>
+#include <QtCore/qdir.h>
 
 #include <tetgen/tetgen.h>
 
 #include <render/graphRender.h>
+#include <computation/HarmonicCoords.h>
+
 
 #define ratioExpansion_DEF 0.7
 
@@ -650,7 +653,7 @@ void GLWidget::doTests(string fileName, string name, string path) {
 
 void GLWidget::BuildTetrahedralization()
 {
-	
+
 	tetgenio in, out;
 	tetgenio::facet *f;
 	tetgenio::polygon *p;
@@ -880,6 +883,11 @@ void GLWidget::computeProcess() {
 	//printf("Tengo comentada la parte de procesado para ver la tetrahedralizacion.\n");
 	//BuildTetrahedralization();
 	//return;
+
+	Modelo* m = (Modelo*)escena->models[0];
+	grid3d grid;
+	getHC_insideModel(*m, grid, 6, (QDir::currentPath()+QString("/pruebas_gridHC.bin")).toStdString().c_str());
+	return;
 
     printf("Voxelization de modelos:\n");
     if(escena->models.size() <= 0) return;
@@ -1752,8 +1760,9 @@ bool GLWidget::processMeanValueCoordinates()
 
 bool GLWidget::processHarmonicCoordinates()
 {
+	/*
     //TODO
-    /*
+    
     QTime time;
     time.start();
 
