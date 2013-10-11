@@ -17,13 +17,6 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
     //connect(ui->GridDraw_boundary, SIGNAL(released()), ui->glCustomWidget, SLOT(updateGridRender()));
 
     // Actualizaciones del grid.
-    connect(ui->GridDraw_interior, SIGNAL(released()), ui->glCustomWidget, SLOT(updateGridRender()));
-    connect(ui->GridDraw_exterior, SIGNAL(released()), ui->glCustomWidget, SLOT(updateGridRender()));
-    connect(ui->allGrid_button, SIGNAL(released()), ui->glCustomWidget, SLOT(updateGridRender()));
-    connect(ui->gridSlices_button, SIGNAL(released()), ui->glCustomWidget, SLOT(updateGridRender()));
-    connect(ui->SliceSelectorXY, SIGNAL(valueChanged(int)), ui->glCustomWidget, SLOT(ChangeSliceXY(int)));
-    connect(ui->SliceSelectorXZ, SIGNAL(valueChanged(int)), ui->glCustomWidget, SLOT(ChangeSliceXZ(int)));
-
 	connect(ui->voxelization_btn, SIGNAL(released()), this, SLOT(Compute()));
 
 	//connect(ui->nextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(nextProcessStep()));
@@ -234,7 +227,7 @@ void MainWindow::toogleToShowSegmentation(bool toogle)
 	widget->toogleToShowSegmentation(toogle);
 }
 
-void AdriMainWindow::changeExpansionSlider()
+void MainWindow::changeExpansionSlider()
 {
     float valueAux = ui->expansionSlider->value();
     float value = 0;
@@ -472,11 +465,7 @@ void MainWindow::changeSmoothingPasses(int)
     widget->changeSmoothingPasses(valueAux);
 }
 
-void MainWindow::changeAuxValueInt(int value)
-{
-    widget->valueAux = value;
-	widget->paintModelWithData();
-}
+
 
 void MainWindow::updateThresholdSlidervalue(int value)
 {

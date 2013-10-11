@@ -34,8 +34,6 @@ public:
 	GLWidget(QWidget * parent = 0, const QGLWidget * shareWidget = 0, Qt::WindowFlags flags = 0);
 
     gridRenderer* currentProcessGrid;
-	
-	int valueAux;
 
     // CAGES
     bool processGreenCoordinates();
@@ -49,8 +47,6 @@ public:
     void showHCoordinatesSlot();
     void ChangeStillCage(int id);
 
-    float calculateDistancesForISOLines(grid3d* grid, vector<double>&  embeddedPoint);
-    void paintGrid(gridRenderer* grRend);
     void updateGridVisualization();
 
     void cleanWeights(gridRenderer* grRend);
@@ -60,7 +56,6 @@ public:
     void PropFunctionConf();
     void setPlaneData(bool drawPlane, int pointPos, int mode, float sliderPos, int orient);
 
-    void paintModelWithGrid();
     void setThreshold(double value);
 
     void nextProcessStep();
@@ -77,10 +72,9 @@ public:
     void drawWithCages();
 
     void ChangeViewingMode(int);
-    void updateGridRender();
+    //void updateGridRender();
 
 	void paintPlaneWithData(bool compute = false);
-	void paintModelWithData();
 
 	virtual void changeVisualizationMode(int);
 
