@@ -9,3 +9,9 @@ ModelViewer/lib_to_softimage.bat
 ModelViewer/intermediateDir/
 ModelViewer/ModelViewer.opensdf
 ModelViewer/ModelViewer.vcxproj.filters
+StatisticsPro/statisticsProWin32.opensdf
+StatisticsPro/statisticsProWin32.sdf
+StatisticsPro/statisticsProWin32/GeneratedFiles/
+StatisticsPro/statisticsProWin32/Release/
+StatisticsPro/statisticsProWin32/x64/
+StatisticsPro/x64/

@@ -1,0 +1,30 @@
+GOOGLE_WEB http://www.google.com/search?q=%1&aql=&oq=?v=1.0
+<div id=resultStats>
+<div>Aproximadamente
+result
+</span>
+GOOGLE_NEWS http://ajax.googleapis.com/ajax/services/search/news?v=1.0%1&%2q=%3
+<div id=resultStats>
+</b> de <b>
+</div>
+</span>
+GOOGLE_NEWS_HTML http://www.google.com/search?q=%1&aql=&oq=?v=1.0&tbs=li:1
+<div id=resultStats>
+</b> de <b>
+</div>
+</span>
+YAHOO_WEB http://es.search.yahoo.com/search?p=%1&fr=yfp-t-705&vm=r&rd=r1
+id="resultCount">
+otro prefijo
+</span>
+</span>
+YAHOO_NEWS http://es.news.search.yahoo.com/search/news?vc=&p=%1&toggle=1&cop=mss&ei=UTF-8&fr=yfp-t-705
+id="resultCount" class="count">
+otro prefijo
+</span>
+</span>
+ARCHIVE http://www.google.com/search?tbm=nws&as_q=%1
+<div id=resultStats>
+</b> de <b>
+</div>
+</span>
