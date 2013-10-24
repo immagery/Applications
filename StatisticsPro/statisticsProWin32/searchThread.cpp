@@ -13,7 +13,7 @@
 #include <iostream>
 #include <fstream>
 
-#define DEBUG_SEARCHES false
+#define DEBUG_SEARCHES true
 
 searchThread::searchThread(int id)
 {

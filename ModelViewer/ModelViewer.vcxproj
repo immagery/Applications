@@ -434,6 +434,7 @@
     <ClCompile Include="..\..\adri\DataStructures\Modelo.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Node.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Object.cpp" />
+    <ClCompile Include="..\..\adri\DataStructures\Particles.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Scene.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\skeleton.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Skinning.cpp" />
@@ -467,7 +468,6 @@
     <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\Segmentation.cpp" />
     <ClCompile Include="..\..\air\AirLib\tetgen\predicates.cxx" />
-    <ClCompile Include="..\..\air\AirLib\tetgen\tetgen.cxx" />
     <ClCompile Include="GeneratedFiles\moc_adrimainwindow.cpp" />
     <ClCompile Include="GeneratedFiles\moc_AdriViewer.cpp" />
     <ClCompile Include="GeneratedFiles\moc_GLWidget.cpp" />
@@ -500,6 +500,7 @@
     <ClInclude Include="..\..\adri\DataStructures\Modelo.h" />
     <ClInclude Include="..\..\adri\DataStructures\Node.h" />
     <ClInclude Include="..\..\adri\DataStructures\Object.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Particles.h" />
     <ClInclude Include="..\..\adri\DataStructures\Scene.h" />
     <ClInclude Include="..\..\adri\DataStructures\skeleton.h" />
     <ClInclude Include="..\..\adri\DataStructures\Skinning.h" />
@@ -545,7 +546,6 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include"</Command>
     </CustomBuild>
     <ClInclude Include="..\..\adri\render\graphRender.h" />
-    <ClInclude Include="..\..\air\AirLib\tetgen\tetgen.h" />
     <CustomBuild Include="mainwindow.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>

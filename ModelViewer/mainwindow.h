@@ -14,8 +14,11 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow ();
 
+	GLWidget* widget;
+
+public slots:
 	void changeSmoothSlider();
-	void changeSmoothingPasses(int);
+	void changeSmoothingPasses(int value);
 	void changeAuxValueInt(int value);
 	void updateThresholdSlidervalue(int value);
 	void enableThreshold(bool toogle);
@@ -34,9 +37,6 @@ public:
 
 	void enableAdaptativeThreshold(bool toogle);
 
-	GLWidget* widget;
-
-	public slots:
 	 void Compute();
 };
 

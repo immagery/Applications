@@ -1,7 +1,7 @@
 #include <QtWidgets\qapplication.h>
 #include "mainwindow.h"
 
-#define DEBUG_FLAG 1
+#define DEBUG_FLAG 0
 
 #include "SearchEngine.h"
 //#include "guicon.h"

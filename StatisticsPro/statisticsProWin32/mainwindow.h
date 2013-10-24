@@ -7,7 +7,8 @@
 
 //#define VERSION 0001 // versi—n inicial
 //#define VERSION 0002 // arreglos de interficie, ahora más independiente (08/02/2012)
-#define VERSION 0003 // Google por paises, verbatim, no funciona archive. (13/11/2012)
+//#define VERSION 0003 // Google por paises, verbatim, no funciona archive. (13/11/2012)
+#define VERSION 0004 // Google por fechas sustituyendo archive. (13/11/2012)
 
 class SearchEngine;
 

@@ -10,33 +10,50 @@
 
 MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 {
+	ui->setupUi(this);
+
+	ui->verticalLayout_4->removeWidget(ui->glCustomWidget);
+	ui->glCustomWidget = new GLWidget(ui->frame);
+
+	ui->glCustomWidget->setObjectName(QStringLiteral("glCustomWidget"));
+	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	sizePolicy.setHorizontalStretch(0);
+	sizePolicy.setVerticalStretch(0);
+	sizePolicy.setHeightForWidth(ui->glCustomWidget->sizePolicy().hasHeightForWidth());
+	ui->glCustomWidget->setSizePolicy(sizePolicy);
+	ui->verticalLayout_4->addWidget(ui->glCustomWidget);
 	widget = (GLWidget*)ui->glCustomWidget;
+
 	widget->parent = this;
 
+	
     // conexiones
     //connect(ui->GridDraw_boundary, SIGNAL(released()), ui->glCustomWidget, SLOT(updateGridRender()));
 
     // Actualizaciones del grid.
+	//connect(ui->voxelization_btn, SIGNAL(released()), ui->glCustomWidget, SLOT(computeProcess()));
 	connect(ui->voxelization_btn, SIGNAL(released()), this, SLOT(Compute()));
+	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeSmoothingPasses(int)));
+	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
 
 	//connect(ui->nextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(nextProcessStep()));
 	//connect(ui->allNextStep_button, SIGNAL(released()), ui->glCustomWidget, SLOT(allNextProcessSteps()));
 
-    connect(ui->prop_function_updt, SIGNAL(released()), ui->glCustomWidget, SLOT(PropFunctionConf()));
+    connect(ui->prop_function_updt, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
 
-    connect(ui->paintModel_btn, SIGNAL(released()), ui->glCustomWidget, SLOT(paintModelWithGrid()));
-    connect(ui->metricUsedCheck, SIGNAL(released()), ui->glCustomWidget, SLOT(PropFunctionConf()));
+    connect(ui->paintModel_btn, SIGNAL(released()), widget, SLOT(paintModelWithGrid()));
+    connect(ui->metricUsedCheck, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
 
-    connect(ui->drawInfluences_check, SIGNAL(released()), ui->glCustomWidget, SLOT(showHCoordinatesSlot()));
+    connect(ui->drawInfluences_check, SIGNAL(released()), widget, SLOT(showHCoordinatesSlot()));
 
-    connect(ui->coordTab, SIGNAL(currentChanged(int)), ui->glCustomWidget, SLOT(active_GC_vs_HC(int)));
+    connect(ui->coordTab, SIGNAL(currentChanged(int)), widget, SLOT(active_GC_vs_HC(int)));
 
     connect(ui->glCustomWidget, SIGNAL(updateSceneView()), this, SLOT(updateSceneView()));
     connect(ui->outlinerView, SIGNAL(clicked(QModelIndex)), this, SLOT(selectObject(QModelIndex)));
 
     connect(ui->segmentation_btn, SIGNAL(toggled(bool)), this, SLOT(toogleToShowSegmentation(bool)));
 
-    connect(ui->exportWeights_btn, SIGNAL(released()), ui->glCustomWidget, SLOT(exportWeightsToMaya()));
+    connect(ui->exportWeights_btn, SIGNAL(released()), widget, SLOT(exportWeightsToMaya()));
 
     connect(ui->expansionSlider, SIGNAL(sliderReleased()), this, SLOT(changeExpansionSlider()));
     connect(ui->expansionSlider, SIGNAL(valueChanged(int)), this, SLOT(updateExpansionSlidervalue(int)));
@@ -45,11 +62,8 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->threshold_enable, SIGNAL(toggled(bool)), this, SLOT(enableThreshold(bool)));
 	connect(ui->threshold_enable_adaptative, SIGNAL(toggled(bool)), this, SLOT(enableAdaptativeThreshold(bool)));
 	
-
     connect(ui->smoothPropagationSlider, SIGNAL(sliderReleased()), this, SLOT(changeSmoothSlider()));
     connect(ui->smoothPropagationSlider, SIGNAL(valueChanged(int)), this, SLOT(updateSmoothSlidervalue(int)));
-
-	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeSmoothingPasses(int)));
 
 	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
 
@@ -69,6 +83,8 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->PlaneDataCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeVisModeForPlane(int)));
 	
 	connect(ui->positionPlaneSlider, SIGNAL(sliderMoved(int)), this, SLOT(changeSelPointForPlane(int)));
+
+	connectSignals();
 
 }
 
@@ -96,7 +112,7 @@ void MainWindow::changeSmoothSlider()
     widget->changeSmoothPropagationDistanceRatio(value);
 }
 
-void MainWindow::changeSmoothingPasses(int)
+void MainWindow::changeSmoothingPasses(int value)
 {
     float valueAux = ui->smoothingPasses->value();
     widget->changeSmoothingPasses(valueAux);
@@ -106,6 +122,7 @@ void MainWindow::changeAuxValueInt(int value)
 {
     widget->valueAux = value;
 	widget->paintModelWithData();
+	widget->updateGridRender();
 }
 
 void MainWindow::updateThresholdSlidervalue(int value)

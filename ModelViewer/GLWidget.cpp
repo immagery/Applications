@@ -329,7 +329,7 @@ void GLWidget::doTests(string fileName, string name, string path) {
 
 void GLWidget::BuildTetrahedralization()
 {
-
+	/*
 	tetgenio in, out;
 	tetgenio::facet *f;
 	tetgenio::polygon *p;
@@ -523,6 +523,7 @@ void GLWidget::BuildTetrahedralization()
 	m->nodes[5]->connections.push_back(m->nodes[1]);
 	m->nodes[6]->connections.push_back(m->nodes[2]);
 	m->nodes[7]->connections.push_back(m->nodes[3]);
+	*/
 
 	/*p->vertexlist[0] = 1;
 	p->vertexlist[1] = 5;
@@ -543,7 +544,7 @@ void GLWidget::BuildTetrahedralization()
 	p->vertexlist[1] = 8;
 	p->vertexlist[2] = 5;
 	p->vertexlist[3] = 1;*/
-
+	
 	/*for(int faces = 0; faces< 6; faces++)
 	{
 		m->nodes[points] = new GraphNode(points);
@@ -555,6 +556,124 @@ void GLWidget::BuildTetrahedralization()
 
 void GLWidget::computeProcess() {
 
+	// test de interpolacion
+	// Definimos un grid de 50x50x50
+	/*
+	Modelo* m2 = (Modelo*)escena->models[0];
+	escena->visualizers.push_back((shadingNode*)new gridRenderer());
+	gridRenderer* grRend2 = (gridRenderer*)escena->visualizers.back();
+	grRend2->iam = GRIDRENDERER_NODE;
+	grRend2->model = m2;
+	Box3d newBound(Point3d(0,0,0), Point3d(10,10,10));
+	Point3i res(50, 50, 50);
+	grRend2->grid = new grid3d(newBound, res, m2->nodes.size());
+	
+	for(int i = 0; i< res.X(); i++)
+    {
+        for(int j = 0; j< res.Y(); j++)
+        {
+            for(int k = 0; k< res.Z(); k++)
+            {
+                grRend2->grid->cells[i][j][k]->setType(INTERIOR);
+				grRend2->grid->cells[i][j][k]->data = new cellData();
+            }
+        }
+    }
+
+	Point3i  ptminIdx(0,0,0);
+	Point3i  ptmaxIdx(0,0,0);
+
+	grRend2->grid->cells[0][0][0]->data->influences.push_back(weight(0,1));
+	grRend2->grid->cells[0][0][0]->data->influences.push_back(weight(1,0));
+	grRend2->grid->cells[0][0][0]->data->influences.push_back(weight(2,0));
+
+	grRend2->grid->cells[0][49][0]->data->influences.push_back(weight(0,0));
+	grRend2->grid->cells[0][49][0]->data->influences.push_back(weight(1,1));
+	grRend2->grid->cells[0][49][0]->data->influences.push_back(weight(2,0));
+
+	grRend2->grid->cells[0][49][49]->data->influences.push_back(weight(0,1));
+	grRend2->grid->cells[0][49][49]->data->influences.push_back(weight(1,0));
+	grRend2->grid->cells[0][49][49]->data->influences.push_back(weight(2,0));
+
+	grRend2->grid->cells[0][0][49]->data->influences.push_back(weight(0,0));
+	grRend2->grid->cells[0][0][49]->data->influences.push_back(weight(1,0));
+	grRend2->grid->cells[0][0][49]->data->influences.push_back(weight(2,1));
+
+	grRend2->grid->cells[49][0][0]->data->influences.push_back(weight(0,1));
+	grRend2->grid->cells[49][0][0]->data->influences.push_back(weight(1,1));
+	grRend2->grid->cells[49][0][0]->data->influences.push_back(weight(2,1));
+
+	grRend2->grid->cells[49][49][0]->data->influences.push_back(weight(0,1));
+	grRend2->grid->cells[49][49][0]->data->influences.push_back(weight(1,0));
+	grRend2->grid->cells[49][49][0]->data->influences.push_back(weight(2,1));
+
+	grRend2->grid->cells[49][49][49]->data->influences.push_back(weight(0,0));
+	grRend2->grid->cells[49][49][49]->data->influences.push_back(weight(1,1));
+	grRend2->grid->cells[49][49][49]->data->influences.push_back(weight(2,1));
+
+	grRend2->grid->cells[49][0][49]->data->influences.push_back(weight(0,0));
+	grRend2->grid->cells[49][0][49]->data->influences.push_back(weight(1,0));
+	grRend2->grid->cells[49][0][49]->data->influences.push_back(weight(2,1));
+	*/
+
+	//interpolacion lineal
+	/*for(int i = 1; i< 49; i++)
+	{
+		float interpolationValues = (float)i/49.0;
+		interpolateLinear(grRend2->grid->cells[0][i][0]->data->influences, grRend2->grid->cells[0][0][0]->data->influences , grRend2->grid->cells[0][49][0]->data->influences, interpolationValues);
+	}
+	*/
+	
+	// interpolacion bilineal
+	/*for(int i = 1; i< 49; i++)
+	{
+		float interpolationValues1 = (float)i/49.0;
+		for(int j = 1; j< 49; j++)
+		{
+				float interpolationValues2 = (float)j/49.0;
+				interpolateBiLinear(grRend2->grid->cells[0][i][j]->data->influences, 
+								grRend2->grid->cells[0][0][0]->data->influences ,
+								grRend2->grid->cells[0][49][0]->data->influences ,
+								grRend2->grid->cells[0][49][49]->data->influences , 
+								grRend2->grid->cells[0][0][49]->data->influences ,
+								interpolationValues1, 
+								interpolationValues2);
+		}
+	}
+	*/
+
+	/*
+	vector< vector<weight>* > pts;
+
+	pts.push_back(&grRend2->grid->cells[0][0][0]->data->influences);
+	pts.push_back(&grRend2->grid->cells[0][49][0]->data->influences);
+	pts.push_back(&grRend2->grid->cells[0][49][49]->data->influences);
+	pts.push_back(&grRend2->grid->cells[0][0][49]->data->influences);
+
+	pts.push_back(&grRend2->grid->cells[49][0][0]->data->influences);
+	pts.push_back(&grRend2->grid->cells[49][49][0]->data->influences);
+	pts.push_back(&grRend2->grid->cells[49][49][49]->data->influences);
+	pts.push_back(&grRend2->grid->cells[49][0][49]->data->influences);
+
+	for(int k = 1; k< 49; k++)
+	{
+		float interpolationValues3 = (float)k/49.0;
+		for(int i = 1; i< 49; i++)
+		{
+			float interpolationValues1 = (float)i/49.0;
+			for(int j = 1; j< 49; j++)
+			{
+					float interpolationValues2 = (float)j/49.0;
+					interpolateTriLinear(grRend2->grid->cells[k][i][j]->data->influences, pts, interpolationValues1, interpolationValues2, interpolationValues3);
+			}
+		}
+	}
+
+	grRend2->updateGridColorsAndValuesRGB();
+
+	return;
+	*/
+
 	//// Pruebas de tetrahedralizacion
 	//printf("Tengo comentada la parte de procesado para ver la tetrahedralizacion.\n");
 	//BuildTetrahedralization();
@@ -562,18 +681,29 @@ void GLWidget::computeProcess() {
 
 	//printf("Voxelization de modelos:\n");
 
-	/*Modelo* m = (Modelo*)escena->models[0];
+	if(!useMVC)
+	{
+		Modelo* m = (Modelo*)escena->models[0];
 	
-	escena->visualizers.push_back((shadingNode*)new gridRenderer());
-    gridRenderer* grRend = (gridRenderer*)escena->visualizers.back();
-    grRend->iam = GRIDRENDERER_NODE;
-    grRend->model = m;
+		escena->visualizers.push_back((shadingNode*)new gridRenderer());
+		gridRenderer* grRend = (gridRenderer*)escena->visualizers.back();
+		grRend->iam = GRIDRENDERER_NODE;
+		grRend->model = m;
 
-    // grid creation for computation
+		// grid creation for computation
 
-    grRend->grid = new grid3d();
-	getHC_insideModel(*m, *grRend->grid, pow(2,6), (QDir::currentPath()+QString("/pruebas_gridHC.bin")).toStdString().c_str());
-	return;*/
+		grRend->grid = new grid3d();
+		QString sGridFileName = (QString("%1%2_gridHC.bin").arg(m->sPath.c_str()).arg(m->sName.c_str()));
+		if(!QFile(sGridFileName).exists())
+			getHC_insideModel(*m, *grRend->grid, pow(2,6), sGridFileName.toStdString().c_str());
+		else
+			grRend->grid->LoadGridFromFile(sGridFileName.toStdString().c_str());
+	
+
+		m->HCgrid = grRend->grid;
+	}
+	
+	//return;
 
     printf("Voxelization de modelos:\n");
     if(escena->models.size() <= 0) return;
@@ -656,10 +786,13 @@ void GLWidget::computeProcess() {
         printf("Computing skinning:\n");
 
         // Realizamos el calculo para cada binding
+		clock_t ini = clock();
         ComputeSkining(*m);
+		clock_t fin = clock();
+
         //reportResults(*m, m->bindings[bind]);
 
-        printf("Computing skinning:\n");
+        printf("Computed skinning taking %d ms.\n", fin-ini);
         fflush(0);
 
 		// save the binding computed
@@ -1703,6 +1836,8 @@ void GLWidget::changeSmoothingPasses(int value)
 			
 			bd->smoothingPasses = value;
 			computeHierarchicalSkinning(*((Modelo*)escena->models[mod]), bd);
+
+			computeSecondaryWeights((Modelo*)escena->models[mod]);
 		}
 	}
 
