@@ -554,8 +554,8 @@ void GLWidget::BuildTetrahedralization()
 	emit updateSceneView();
 }
 
-void GLWidget::computeProcess() {
-
+void testGridValuesInterpolation()
+{
 	// test de interpolacion
 	// Definimos un grid de 50x50x50
 	/*
@@ -673,25 +673,31 @@ void GLWidget::computeProcess() {
 
 	return;
 	*/
+}
 
-	//// Pruebas de tetrahedralizacion
-	//printf("Tengo comentada la parte de procesado para ver la tetrahedralizacion.\n");
-	//BuildTetrahedralization();
-	//return;
+void GLWidget::computeProcess() {
 
-	//printf("Voxelization de modelos:\n");
+	// Get all the parameters.
+	float subditionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
+	// Test de interpolacion
+	//testGridValuesInterpolation();
+
+	// Voxelize the model and compute HC.
 	if(!useMVC)
 	{
+		printf("Computing HC grid.\n"); fflush(0);
+
+		// Just taking only the first model
 		Modelo* m = (Modelo*)escena->models[0];
-	
+		
+		// Gird visualizer creation
 		escena->visualizers.push_back((shadingNode*)new gridRenderer());
 		gridRenderer* grRend = (gridRenderer*)escena->visualizers.back();
 		grRend->iam = GRIDRENDERER_NODE;
 		grRend->model = m;
 
 		// grid creation for computation
-
 		grRend->grid = new grid3d();
 		QString sGridFileName = (QString("%1%2_gridHC.bin").arg(m->sPath.c_str()).arg(m->sName.c_str()));
 		if(!QFile(sGridFileName).exists())
@@ -702,37 +708,31 @@ void GLWidget::computeProcess() {
 
 		m->HCgrid = grRend->grid;
 	}
-	
-	//return;
+    
+	if(escena->models.size() <= 0) return;
 
-    printf("Voxelization de modelos:\n");
-    if(escena->models.size() <= 0) return;
-
-	float subditionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
-
+    printf("Preparing in data:\n"); fflush(0);
+	clock_t iniProcess = clock();
     for(unsigned int i = 0; i< escena->models.size(); i++)
     {
         Modelo* m = (Modelo*)escena->models[i];
         printf("Modelo: %s\n", m->sModelPrefix.c_str());
 
-        // Bind skeletons: Now all the skeletons
-        printf("Skeleton Binding: %s\n", m->sModelPrefix.c_str());
-
-        // Construimos tantos grafos como partes tiene el modelo
-        //BuildSurfaceGraphs(*m, m->bindings);
-
+		// Process to fusion several parts.
         bool usePatches = false;
         if(usePatches)
         {
+			printf("Computing virtual triangles.\n");
             AddVirtualTriangles(*m);
         }
+		else
+		{
+			printf("We consider the model as a single piece\n");
+		}
 
         // Si no se ha calculado las distancias biharmonicas lo hacemos
-        // Eso es que no tiene embedding.
-        //if(m->embedding.size() == 0)
         if(!m->computedBindings)
         {
-
             char bindingFileName[150];
             char bindingFileNameComplete[150];
             sprintf(bindingFileName, "%s/bind_%s", m->sPath.c_str(), m->sName.c_str());
@@ -762,12 +762,13 @@ void GLWidget::computeProcess() {
                 }
                 else SaveEmbeddings(*m, bindingFileName, ascii);
             }
-
-            //bool success = ComputeEmbeddingWithBD(*m, usePatches);
         }
 
+		// That was a preprocess for the distances that could be recovered, 
+		// somehow there will be a reason for stabilize the data.
         //normalizeDistances(*m);
 
+		printf("Linking skeletons with models:\n");
         // de momento asignamos todos los esqueletos a todos los bindings... ya veremos luego.
         for(int i = 0; i< escena->skeletons.size(); i++)
         {
@@ -783,7 +784,9 @@ void GLWidget::computeProcess() {
             m->bindings[i]->weightsCutThreshold = 1;//escena->weightsThreshold;
         }
 
-        printf("Computing skinning:\n");
+		clock_t finProcess = clock();
+        printf("Until here: %f s.\n Now computing skinning:\n", double(timelapse(iniProcess,finProcess)));
+		fflush(0);
 
         // Realizamos el calculo para cada binding
 		clock_t ini = clock();
@@ -792,7 +795,7 @@ void GLWidget::computeProcess() {
 
         //reportResults(*m, m->bindings[bind]);
 
-        printf("Computed skinning taking %d ms.\n", fin-ini);
+        printf("Computed skinning has taken %f s.\n", double(timelapse(ini,fin)));
         fflush(0);
 
 		// save the binding computed
