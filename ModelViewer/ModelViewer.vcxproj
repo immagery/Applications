@@ -461,12 +461,15 @@
     <ClCompile Include="..\..\adri\utils\ioWeights.cpp" />
     <ClCompile Include="..\..\adri\utils\util.cpp" />
     <ClCompile Include="..\..\adri\utils\UtilQT.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\AirSegmentation.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\GreenCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\Segmentation.cpp" />
+    <ClCompile Include="..\..\air\AirLib\DataStructures\AirRig.cpp" />
+    <ClCompile Include="..\..\air\AirLib\DataStructures\AirSkinning.cpp" />
     <ClCompile Include="..\..\air\AirLib\tetgen\predicates.cxx" />
     <ClCompile Include="GeneratedFiles\moc_adrimainwindow.cpp" />
     <ClCompile Include="GeneratedFiles\moc_AdriViewer.cpp" />
@@ -508,6 +511,10 @@
     <ClInclude Include="..\..\adri\DataStructures\Transform.h" />
     <ClInclude Include="..\..\adri\global.h" />
     <ClInclude Include="..\..\adri\globalDefinitions.h" />
+    <ClInclude Include="..\..\air\AirLib\Computation\AirSegmentation.h" />
+    <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
+    <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
+    <ClInclude Include="Header.h" />
     <CustomBuild Include="..\..\adri\gui\KeyframeBar.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing KeyframeBar.h...</Message>

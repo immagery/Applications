@@ -81,6 +81,7 @@ public:
 
 protected:
     virtual void postSelection(const QPoint& point);
+	virtual void draw();
 
 public slots:
 

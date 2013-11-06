@@ -16,6 +16,8 @@
 #include <render/graphRender.h>
 #include <computation/HarmonicCoords.h>
 
+#include <Computation\AirSegmentation.h>
+
 
 #define ratioExpansion_DEF 0.7
 
@@ -170,7 +172,7 @@ void GLWidget::doTests(string fileName, string name, string path) {
 
                         ini = clock();
 
-                        mvcAllBindings(interiorPoints[i][j], weights, m->bindings, *m);
+                        mvcAllBindings(interiorPoints[i][j], weights, *m);
 
                         fin = clock();
                         time_MVC[j] = timelapse(fin,ini)*1000;
@@ -677,6 +679,79 @@ void testGridValuesInterpolation()
 
 void GLWidget::computeProcess() {
 
+	/*
+	// test over joints, to learn about quaternions
+	Eigen::Quaterniond rot1, rot2, rot3;
+	Eigen::Quaterniond orient1, orient2, orient3;
+
+	joint jt1((unsigned int)0);
+	jt1.addRotation(90,0,0);
+	jt1.addTranslation(10,10,10);
+
+	rot1 = Eigen::Quaterniond(jt1.qrot.X(), jt1.qrot.Y(), jt1.qrot.Z(), jt1.qrot.W());
+	orient1.setFromTwoVectors(Eigen::Vector3d(0,0,1), Eigen::Vector3d(1,0,0));
+
+	joint jt2(&jt1, (unsigned int)1);
+	jt2.addRotation(90,0,0);
+	jt2.addTranslation(0,10,0);
+
+	rot2 = Eigen::Quaterniond(jt2.qrot.X(), jt2.qrot.Y(), jt2.qrot.Z(), jt2.qrot.W());
+	orient2 =  Eigen::Quaterniond(jt2.qOrient.X(), jt2.qOrient.Y(), jt2.qOrient.Z(), jt2.qOrient.W());
+
+	joint jt3(&jt2, (unsigned int)2);
+	jt3.addRotation(90,0,0);
+	jt3.addTranslation(0,10,0);
+
+	rot3 = Eigen::Quaterniond(jt3.qrot.X(), jt3.qrot.Y(), jt3.qrot.Z(), jt3.qrot.W());
+	orient3 =  Eigen::Quaterniond(jt3.qOrient.X(), jt3.qOrient.Y(), jt3.qOrient.Z(), jt3.qOrient.W());
+
+	joint jt4(&jt3, (unsigned int)3);
+	jt4.addRotation(0,0,0);
+	jt4.addTranslation(0,10,0);
+
+	//qAux.setFromTwoVectors(Eigen::Vector3d(0,1,0), Eigen::Vector3d(0,0,1));
+	Eigen::Vector3d pt(10,10,10);
+
+	Eigen::Quaterniond pack1 = orient1*rot1;
+	Eigen::Quaterniond pack2 = orient2*rot2;
+	Eigen::Quaterniond pack3 = orient3*rot3;
+
+	Eigen::Quaterniond acum = pack1;
+
+	Eigen::Vector3d aux = acum._transformVector(Eigen::Vector3d(jt2.pos.X(),jt2.pos.Y(),jt2.pos.Z()));
+	Eigen::Vector3d pt1 = pt + aux;
+
+	acum = acum*pack2;
+
+	aux = acum._transformVector(Eigen::Vector3d(jt3.pos.X(),jt3.pos.Y(),jt3.pos.Z()));
+	Eigen::Vector3d pt2 = pt1 + aux;
+
+	acum = acum*pack3;
+
+	aux = acum._transformVector(Eigen::Vector3d(jt4.pos.X(),jt4.pos.Y(),jt4.pos.Z()));
+	Eigen::Vector3d pt3 = pt2 + aux;
+
+	return;
+	*/
+
+	//Testing new optimized processing
+	// AirRig creation
+	escena->rig = new AirRig(*(Modelo*)escena->models[0], escena->skeletons);
+	BuildGroupTree(escena->rig->defRig);
+	updateAirSkinning(escena->rig->defRig, *escena->rig->model);
+
+	escena->rig->skinning.bindings[0] = vector<binding*> ();
+
+	for(int i = 0; i< escena->rig->model->bindings.size(); i++)
+		escena->rig->skinning.bindings[0].push_back(escena->rig->model->bindings[i]);
+
+	escena->rig->skinning.deformedModels.push_back(escena->rig->model);
+	escena->rig->skinning.originalModels.push_back(escena->rig->model->originalModel);
+
+	escena->rig->skinning.rig = escena->rig;
+
+	return;
+
 	// Get all the parameters.
 	float subditionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
@@ -862,7 +937,7 @@ void GLWidget::paintPlaneWithData(bool compute)
         for(int i = 0; i < planeRender->points.size(); i++)
         {
             //mvcSingleBinding(planeRender->points[i]+planeRender->plane->pos, weights[i], m.bindings[0], m);
-            mvcAllBindings(planeRender->points[i]+planeRender->plane->pos, weights[i], m.bindings, m);
+            mvcAllBindings(planeRender->points[i]+planeRender->plane->pos, weights[i], m);
         }
     }
 
@@ -2498,6 +2573,18 @@ void GLWidget::drawWithDistances()
     }
             */
 }
+
+ void GLWidget::draw()
+ {
+	//escena->skinner->computeDeformationsWithSW(escena->skeletons);
+	for(int j = 0; j < escena->skeletons.size(); j++) 
+	{
+		escena->skeletons[j]->root->computeWorldPos();
+	}
+	if(escena->rig) escena->rig->skinning.computeDeformations();
+
+	 AdriViewer::draw();
+ }
 
 void GLWidget::drawModel()
 {
