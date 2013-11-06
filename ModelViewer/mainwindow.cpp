@@ -589,7 +589,7 @@ void MainWindow::changeInteriorPointPosition()
 	ui->axisY_edit->setText(QString("%1").arg(valueAuxY));
 	ui->axisZ_edit->setText(QString("%1").arg(valueAuxZ));
 
-	widget->interiorPoint = Point3d(valueAuxX,valueAuxY,valueAuxZ);
+	widget->interiorPoint = Vector3d(valueAuxX,valueAuxY,valueAuxZ);
 	widget->setPlanePosition(valueAuxX,valueAuxY,valueAuxZ);
 }
 

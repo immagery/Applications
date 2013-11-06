@@ -69,7 +69,7 @@ void GLWidget::doTests(string fileName, string name, string path) {
             vector<QString> modelSkeletonFile(modelCount);
             vector<QString> modelNames(modelCount);
             vector< vector<QString> >modelFiles(modelCount);
-            vector< vector<Point3d> >interiorPoints(modelCount);
+            vector< vector<Vector3d> >interiorPoints(modelCount);
 
             QStringList thresholdsString = in.readLine().split(" ");
             vector< double >thresholds(thresholdsString.size());
@@ -96,7 +96,7 @@ void GLWidget::doTests(string fileName, string name, string path) {
                     double v1 = intPointsModel[j].toDouble();
                     double v2 = intPointsModel[j+1].toDouble();
                     double v3 = intPointsModel[j+2].toDouble();
-                    interiorPoints[i][j/3] = Point3d(v1, v2, v3);
+                    interiorPoints[i][j/3] = Vector3d(v1, v2, v3);
                 }
             }
             file.close();
@@ -483,7 +483,7 @@ void GLWidget::BuildTetrahedralization()
 	for(int points = 0; points< 8; points++)
 	{
 		m->nodes[points] = new GraphNode(points);
-		m->nodes[points]->position = Point3d( in.pointlist[points*3],in.pointlist[points*3+1],in.pointlist[points*3+2]);
+		m->nodes[points]->position = Vector3d( in.pointlist[points*3],in.pointlist[points*3+1],in.pointlist[points*3+2]);
 	}
 
 	m->nodes[0]->connections.push_back(m->nodes[1]);
@@ -550,7 +550,7 @@ void GLWidget::BuildTetrahedralization()
 	/*for(int faces = 0; faces< 6; faces++)
 	{
 		m->nodes[points] = new GraphNode(points);
-		m->nodes[points]->position = Point3d( in.pointlist[points*3],in.pointlist[points*3+1],in.pointlist[points*3+2]);
+		m->nodes[points]->position = Vector3d( in.pointlist[points*3],in.pointlist[points*3+1],in.pointlist[points*3+2]);
 	}*/
 
 	emit updateSceneView();
@@ -566,8 +566,8 @@ void testGridValuesInterpolation()
 	gridRenderer* grRend2 = (gridRenderer*)escena->visualizers.back();
 	grRend2->iam = GRIDRENDERER_NODE;
 	grRend2->model = m2;
-	Box3d newBound(Point3d(0,0,0), Point3d(10,10,10));
-	Point3i res(50, 50, 50);
+	Box3d newBound(Vector3d(0,0,0), Vector3d(10,10,10));
+	Vector3i res(50, 50, 50);
 	grRend2->grid = new grid3d(newBound, res, m2->nodes.size());
 	
 	for(int i = 0; i< res.X(); i++)
@@ -582,8 +582,8 @@ void testGridValuesInterpolation()
         }
     }
 
-	Point3i  ptminIdx(0,0,0);
-	Point3i  ptmaxIdx(0,0,0);
+	Vector3i  ptminIdx(0,0,0);
+	Vector3i  ptmaxIdx(0,0,0);
 
 	grRend2->grid->cells[0][0][0]->data->influences.push_back(weight(0,1));
 	grRend2->grid->cells[0][0][0]->data->influences.push_back(weight(1,0));
@@ -883,6 +883,7 @@ void GLWidget::computeProcess() {
 
 void GLWidget::paintPlaneWithData(bool compute)
 {
+	/*
     Modelo& m = *((Modelo*)escena->models[0]);
 
     clipingPlaneRenderer* planeRender = NULL;
@@ -903,29 +904,29 @@ void GLWidget::paintPlaneWithData(bool compute)
         escena->visualizers.push_back(new clipingPlaneRenderer(escena->getNewId()));
         planeRender = (clipingPlaneRenderer*)escena->visualizers.back();
 
-        Point3d AxisX(1,0,0);
-        Point3d AxisY(0,1,0);
-        Point3d AxisZ(0,0,1);
+        Vector3d AxisX(1,0,0);
+        Vector3d AxisY(0,1,0);
+        Vector3d AxisZ(0,0,1);
 
         double length = (m.maxBBox - m.minBBox).Norm();
-        Point3d center = (m.maxBBox + m.minBBox)/2.0;
-        planeRender->minPoint = Point3d(center[0]-length/2,center[1]-length/2,center[2]-length/2);
-        planeRender->maxPoint = Point3d(center[0]+length/2,center[1]+length/2,center[2]+length/2);
+        Vector3d center = (m.maxBBox + m.minBBox)/2.0;
+        planeRender->minPoint = Vector3d(center[0]-length/2,center[1]-length/2,center[2]-length/2);
+        planeRender->maxPoint = Vector3d(center[0]+length/2,center[1]+length/2,center[2]+length/2);
         planeRender->plane->addTranslation(center[0]-length/2,center[1]-length/2,center[2]-length/2);
         planeRender->subdivisions = subdivisions;
         planeRender->points.resize(subdivisions*subdivisions);
 
-        vector<Point3d>& points = planeRender->points;
+        vector<Vector3d>& points = planeRender->points;
         double pass = length/subdivisions;
         for(unsigned int planoX = 0; planoX < subdivisions; planoX++)
         {
             for(unsigned int planoZ = 0; planoZ < subdivisions; planoZ++)
             {
-                points[planoX*subdivisions+planoZ] = Point3d(planoX*pass, planoZ*pass, 0);
+                points[planoX*subdivisions+planoZ] = Vector3d(planoX*pass, planoZ*pass, 0);
             }
         }
     }
-    vector<Point3f>& colors = planeRender->colors;
+    vector<Vector3f>& colors = planeRender->colors;
     colors.resize(planeRender->points.size());
 
     vector< vector<double> >& weights = planeRender->weights;
@@ -937,7 +938,7 @@ void GLWidget::paintPlaneWithData(bool compute)
         for(int i = 0; i < planeRender->points.size(); i++)
         {
             //mvcSingleBinding(planeRender->points[i]+planeRender->plane->pos, weights[i], m.bindings[0], m);
-            mvcAllBindings(planeRender->points[i]+planeRender->plane->pos, weights[i], m);
+            mvcAllBindings(planeRender->points[i] + planeRender->plane->pos, weights[i], m);
         }
     }
 
@@ -976,7 +977,7 @@ void GLWidget::paintPlaneWithData(bool compute)
 
                 //GetColour(weightAux, minValue, maxValue, r, g, b);
                 GetColourGlobal(weightAux, minValue, maxValue, r, g, b);
-                colors[planoX*planeRender->subdivisions+planoZ] = Point3f(r,g,b);
+                colors[planoX*planeRender->subdivisions+planoZ] = Vector3f(r,g,b);
             }
         }
 
@@ -1006,10 +1007,11 @@ void GLWidget::paintPlaneWithData(bool compute)
 
                 //GetColour(weightAux, minValue, maxValue, r, g, b);
                 GetColourGlobal(distance, 0, maxDistance, r, g, b);
-                colors[planoX*planeRender->subdivisions+planoZ] = Point3f(r,g,b);
+                colors[planoX*planeRender->subdivisions+planoZ] = Vector3f(r,g,b);
             }
         }
     }
+	*/
 }
 
 void GLWidget::VoxelizeModel(Modelo* m, bool onlyBorders)
@@ -1167,7 +1169,7 @@ void GLWidget::doTestsSkinning(string fileName, string name, string path)
     vector<QString> modelSkeletonFile(modelCount);
     vector<QString> modelNames(modelCount);
     vector< vector<QString> >modelFiles(modelCount);
-    vector< vector<Point3d> >interiorPoints(modelCount);
+    vector< vector<Vector3d> >interiorPoints(modelCount);
 
     QStringList thresholdsString = in.readLine().split(" ");
     vector< double >thresholds(thresholdsString.size());
@@ -1194,7 +1196,7 @@ void GLWidget::doTestsSkinning(string fileName, string name, string path)
             double v1 = intPointsModel[j].toDouble();
             double v2 = intPointsModel[j+1].toDouble();
             double v3 = intPointsModel[j+2].toDouble();
-            interiorPoints[i][j/3] = Point3d(v1, v2, v3);
+            interiorPoints[i][j/3] = Vector3d(v1, v2, v3);
         }
     }
     file.close();
@@ -1337,9 +1339,9 @@ void AdriViewer::readCage(QString fileName, Modelo& m_)
        m_.cage.Clear();
        m_.dynCage.Clear();
 
-       vcg::tri::io::ImporterOFF<MyMesh>::Open(m_.cage,fileName.toStdString().c_str());
+        tri::io::ImporterOFF<MyMesh>::Open(m_.cage,fileName.toStdString().c_str());
        gpUpdateNormals(m_.cage, false);
-       vcg::tri::Append<MyMesh, MyMesh>::Mesh(m_.dynCage,m_.cage, false);
+        tri::Append<MyMesh, MyMesh>::Mesh(m_.dynCage,m_.cage, false);
        gpUpdateNormals(m_.dynCage, false);
 
        loadedModel = loaded = true;
@@ -1370,7 +1372,7 @@ void AdriViewer::readCage(QString fileName, Modelo& m_)
 
            sciTS >> cageName >> str;
            printf("Caja original: %s\n", (sPathModels+str).toStdString().c_str()); fflush(0);
-           vcg::tri::io::ImporterOFF<MyMesh>::Open(m_.cage,cageName.toStdString().c_str());
+            tri::io::ImporterOFF<MyMesh>::Open(m_.cage,cageName.toStdString().c_str());
            gpUpdateNormals(m_.cage, false);
 
            for(unsigned int i = 0; i< m_.stillCages.size(); i++)
@@ -1386,7 +1388,7 @@ void AdriViewer::readCage(QString fileName, Modelo& m_)
                parent->ui->cagesComboBox->addItem(cageName, i);
 
                m_.stillCages[i] = new MyMesh();
-               vcg::tri::io::ImporterOFF<MyMesh>::Open(*m_.stillCages[i],(sPathModels+str).toStdString().c_str());
+                tri::io::ImporterOFF<MyMesh>::Open(*m_.stillCages[i],(sPathModels+str).toStdString().c_str());
                gpUpdateNormals(*m_.stillCages[i], false);
            }
            stillCagesDef.close();
@@ -1404,8 +1406,8 @@ void AdriViewer::readCage(QString fileName, Modelo& m_)
 
    if(loaded)
    {
-       vcg::tri::UpdateBounding<MyMesh>::Box(m_.modeloOriginal);
-       vcg::tri::UpdateBounding<MyMesh>::Box(m_.cage);
+        tri::UpdateBounding<MyMesh>::Box(m_.modeloOriginal);
+        tri::UpdateBounding<MyMesh>::Box(m_.cage);
 
        //buildCube(cage, model.bbox.Center(), model.bbox.Diag());
        //loadSelectVertexCombo(cage);
@@ -1437,7 +1439,7 @@ void GLWidget::exportWeightsToMaya()
    MyMesh::VertexIterator vi;
    for(vi = m->vert.begin(); vi!=m->vert.end(); ++vi )
    {
-       Point3i pt = grRend->grid->cellId((*vi).P());
+       Vector3i pt = grRend->grid->cellId((*vi).P());
        cell3d* cell = grRend->grid->cells[pt.X()][pt.Y()][pt.Z()];
 
        meshWeights[idxCounter].resize(grRend->grid->valueRange, 0.0);
@@ -1568,7 +1570,7 @@ void GLWidget::updateColorLayersWithSegmentation(int maxIdx)
         int different = 0;
         int neighbours = 0;
         int idxOfVii = BHD_indices[vii->IMark()];
-        vcg::face::VFIterator<MyFace> vfi(&(*vii)); //initialize the iterator to the first face
+         face::VFIterator<MyFace> vfi(&(*vii)); //initialize the iterator to the first face
         for(;!vfi.End();++vfi)
         {
           MyFace* f = vfi.F();
@@ -1609,7 +1611,7 @@ bool GLWidget::processGreenCoordinates()
     time.start();
 
     //newModeloGC.Clear();
-    //vcg::tri::Append<MyMesh, MyMesh>::Mesh(newModeloGC,modeloOriginal, false);
+    // tri::Append<MyMesh, MyMesh>::Mesh(newModeloGC,modeloOriginal, false);
     //gpCalculateGreenCoordinates( modeloOriginal, cage, PerVertGC, PerFaceGC );
 
     m.processGreenCoordinates();
@@ -1637,7 +1639,7 @@ bool GLWidget::processMeanValueCoordinates()
     time.start();
 
     //newModeloGC.Clear();
-    //vcg::tri::Append<MyMesh, MyMesh>::Mesh(newModeloGC,modeloOriginal, false);
+    // tri::Append<MyMesh, MyMesh>::Mesh(newModeloGC,modeloOriginal, false);
     //gpCalculateGreenCoordinates( modeloOriginal, cage, PerVertGC, PerFaceGC );
 
     m.processMeanValueCoordinates();
@@ -1665,7 +1667,7 @@ bool GLWidget::processHarmonicCoordinates()
     time.start();
 
     //newModeloHC.Clear();
-    //vcg::tri::Append<MyMesh, MyMesh>::Mesh(newModeloHC,modeloOriginal, false);
+    // tri::Append<MyMesh, MyMesh>::Mesh(newModeloHC,modeloOriginal, false);
 
     //unsigned int resolution = pow(2,7);
     //QString sHCSavedGrid = QDir::currentPath()+"/"+HC_GRID_FILE_NAME;
@@ -1721,7 +1723,7 @@ bool GLWidget::processAllCoords()
     total.start();
 
     //newModeloGC.Clear();
-    //vcg::tri::Append<MyMesh, MyMesh>::Mesh(newModeloGC,modeloOriginal, false);
+    // tri::Append<MyMesh, MyMesh>::Mesh(newModeloGC,modeloOriginal, false);
     //gpCalculateGreenCoordinates( modeloOriginal, cage, PerVertGC, PerFaceGC );
 
     QString texto("Obteniendo Green Coords....");
@@ -2023,17 +2025,17 @@ void GLWidget::setPlaneData(bool drawPlane, int pointPos, int mode, float slider
             if(orient == 0) // X
             {
                 double length = (planeRender->maxPoint[0]-planeRender->minPoint[0]);
-                planeRender->plane->pos = planeRender->minPoint + Point3d(length*sliderPos,0,0);
+                planeRender->plane->pos = planeRender->minPoint + Vector3d(length*sliderPos,0,0);
             }
             else if(orient == 1) // Y
             {
                 double length = (planeRender->maxPoint[1]-planeRender->minPoint[1]);
-                planeRender->plane->pos = planeRender->minPoint + Point3d(0,length*sliderPos,0);
+                planeRender->plane->pos = planeRender->minPoint + Vector3d(0,length*sliderPos,0);
             }
             else if(orient == 2) // Z
             {
                 double length = (planeRender->maxPoint[2]-planeRender->minPoint[2]);
-                planeRender->plane->pos = planeRender->minPoint + Point3d(0,0,length*sliderPos);
+                planeRender->plane->pos = planeRender->minPoint + Vector3d(0,0,length*sliderPos);
             }
 
             planeRender->dirtyFlag = true;
@@ -2128,8 +2130,8 @@ void reportResults(Modelo& model, binding* bb)
         assert(false);
 
         // Obtener celda
-        Point3d ptPos = vi->P();
-        Point3i pt = grid.cellId(ptPos);
+        Vector3d ptPos = vi->P();
+        Vector3i pt = grid.cellId(ptPos);
         cell3d* cell = grid.cells[pt.X()][pt.Y()][pt.Z()];
 
         fprintf(fout, "Influences: %d -> ", cell->data->influences.size()); fflush(fout);
@@ -2349,18 +2351,18 @@ void GLWidget::readDistances(QString fileName)
 }
 
 /*
-void AdriViewer::drawCube(Point3d o, double cellSize, Point3f color, bool blend)
+void AdriViewer::drawCube(Vector3d o, double cellSize, Vector3f color, bool blend)
 {
-    Point3f v[8];
+    Vector3f v[8];
 
-    v[0] = Point3f(o.X(), o.Y()+cellSize, o.Z());
-    v[1] = Point3f(o.X(), o.Y()+cellSize, o.Z()+cellSize);
-    v[2] = Point3f(o.X(), o.Y(), o.Z()+cellSize);
-    v[3] = Point3f(o.X(), o.Y(), o.Z());
-    v[4] = Point3f(o.X()+cellSize, o.Y()+cellSize, o.Z());
-    v[5] = Point3f(o.X()+cellSize, o.Y()+cellSize, o.Z()+cellSize);
-    v[6] = Point3f(o.X()+cellSize, o.Y(), o.Z()+cellSize);
-    v[7] = Point3f(o.X()+cellSize, o.Y(), o.Z());
+    v[0] = Vector3f(o.X(), o.Y()+cellSize, o.Z());
+    v[1] = Vector3f(o.X(), o.Y()+cellSize, o.Z()+cellSize);
+    v[2] = Vector3f(o.X(), o.Y(), o.Z()+cellSize);
+    v[3] = Vector3f(o.X(), o.Y(), o.Z());
+    v[4] = Vector3f(o.X()+cellSize, o.Y()+cellSize, o.Z());
+    v[5] = Vector3f(o.X()+cellSize, o.Y()+cellSize, o.Z()+cellSize);
+    v[6] = Vector3f(o.X()+cellSize, o.Y(), o.Z()+cellSize);
+    v[7] = Vector3f(o.X()+cellSize, o.Y(), o.Z());
 
     glDisable(GL_LIGHTING);
 
@@ -2630,7 +2632,7 @@ void GLWidget::drawWithCages()
     }
 
 
-     //MyMesh::PerVertexAttributeHandle<unsigned int > vertIdxHnd = vcg::tri::Allocator<MyMesh>::GetPerVertexAttribute<unsigned int >(*currentModelo,"vertIdx");
+     //MyMesh::PerVertexAttributeHandle<unsigned int > vertIdxHnd =  tri::Allocator<MyMesh>::GetPerVertexAttribute<unsigned int >(*currentModelo,"vertIdx");
 
     glShadeModel(GL_SMOOTH);
     if(loadedModel)
@@ -2824,9 +2826,9 @@ void GLWidget::drawWithCages()
 
         if(m_bShowHCGrid)
         {
-            Point3f greenCube(0.5,1.0,0.5);
-            Point3f redCube(1.0,0.5,0.5);
-            Point3f blueCube(0.5,0.5,1.0);
+            Vector3f greenCube(0.5,1.0,0.5);
+            Vector3f redCube(1.0,0.5,0.5);
+            Vector3f blueCube(0.5,0.5,1.0);
 
             if(m_bShowAllGrid)
             {
@@ -2836,7 +2838,7 @@ void GLWidget::drawWithCages()
                     {
                         for(int k = 0; k< m.HCgrid.dimensions.Z(); k++)
                         {
-                            Point3d o(m.HCgrid.bounding.min + Point3d(i,j,k)*m.HCgrid.cellSize);
+                            Vector3d o(m.HCgrid.bounding.min + Vector3d(i,j,k)*m.HCgrid.cellSize);
 
                             if(m_bShowHCGrid_interior && m.HCgrid.cells[i][j][k]->tipo == INTERIOR)
                                 drawCube(o, m.HCgrid.cellSize, greenCube);
@@ -2859,7 +2861,7 @@ void GLWidget::drawWithCages()
                 {
                     for( int k = 0; k< m.HCgrid.dimensions.Z(); k++)
                     {
-                        Point3d o(m.HCgrid.bounding.min + Point3d(i,j,k)*m.HCgrid.cellSize);
+                        Vector3d o(m.HCgrid.bounding.min + Vector3d(i,j,k)*m.HCgrid.cellSize);
 
                         if(m_bDrawHCInfluences)
                         {
@@ -2877,7 +2879,7 @@ void GLWidget::drawWithCages()
                             c = GetColour(sliceValues[i][k],maxMinHC[1],maxMinHC[0]);
 
 
-                            Point3f color(c.redF(),c.greenF(), c.blueF());
+                            Vector3f color(c.redF(),c.greenF(), c.blueF());
 
                             if(m_bShowHCGrid_interior && m.HCgrid.cells[i][j][k]->tipo == INTERIOR)
                                 drawCube(o, m.HCgrid.cellSize, color, m_bDrawHCInfluences);

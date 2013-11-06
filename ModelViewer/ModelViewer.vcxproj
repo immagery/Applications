@@ -439,7 +439,6 @@
     <ClCompile Include="..\..\adri\DataStructures\skeleton.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Skinning.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\SurfaceData.cpp" />
-    <ClCompile Include="..\..\adri\DataStructures\Transform.cpp" />
     <ClCompile Include="..\..\adri\gui\adrimainwindow.cpp" />
     <ClCompile Include="..\..\adri\gui\AdriViewer.cpp" />
     <ClCompile Include="..\..\adri\gui\bar.cpp" />
@@ -494,6 +493,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\adri\DataStructures\Animation.h" />
     <ClInclude Include="..\..\adri\DataStructures\AnimationManager.h" />
+    <ClInclude Include="..\..\adri\DataStructures\Box3.h" />
     <ClInclude Include="..\..\adri\DataStructures\Cage.h" />
     <ClInclude Include="..\..\adri\DataStructures\DefNode.h" />
     <ClInclude Include="..\..\adri\DataStructures\Deformer.h" />
