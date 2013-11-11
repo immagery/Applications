@@ -677,6 +677,358 @@ void testGridValuesInterpolation()
 	*/
 }
 
+void GLWidget::paintModelWithData() {
+
+	AirRig* rig = escena->rig;
+	if(!rig) return;
+
+    for(unsigned int modelIdx = 0; modelIdx < escena->models.size(); modelIdx++)
+    {
+        Modelo* m = (Modelo*)escena->models[modelIdx];
+
+		if(m->shading->colors.size() != m->vn())
+            m->shading->colors.resize(m->vn());
+
+        m->cleanSpotVertexes();
+
+        double maxdistance = 0.001;
+        vector<double> pointdistances;
+        vector<double> maxdistances;
+        maxdistances.resize(m->bindings.size());
+
+        vector<double> weights;
+        vector<int> weightssort(m->vn());
+        vector<bool> weightsrepresentative(m->vn());
+
+        vector<double> completedistances;
+        double threshold = escena->weightsThreshold;//1/pow(10.0, 3);
+
+		if(escena->iVisMode == VIS_ISODISTANCES || escena->iVisMode == VIS_POINTDISTANCES || escena->iVisMode == VIS_ERROR || escena->iVisMode == VIS_WEIGHT_INFLUENCE)
+        {
+			/*
+            printf("tiempos de computacion para %d vertices: \n", m->vn()); fflush(0);
+
+            clock_t ini, fin;
+            ini = clock();
+
+            weights.resize(m->vn());
+            int currentbinding = 1;
+            pointdistances.resize(m->vn());
+            //pointdistances.resize(m->bindings[currentbinding]->pointdata.size());
+            //mvcsinglebinding(interiorpoint, weights, m->bindings[currentbinding], *m);
+            mvcAllBindings(interiorPoint, weights, m->bindings, *m);
+
+            fin = clock();
+            printf("mean value coordinates: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
+            ini = clock();
+
+            //for(int si = 0; si < weights.size(); si++)
+            //{
+            //	weightssort[si] = si;
+            //}
+            //doublearrangeelements(weights, weightssort, true, threshold);
+            vector<double> stats;
+            doubleArrangeElements_withStatistics(weights, weightssort, stats, threshold);
+
+
+            fin = clock();
+            printf("ordenacion: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
+            ini = clock();
+
+            double prevalue = 0;
+            for(int currentbinding = 0; currentbinding < m->bindings.size(); currentbinding++)
+            {
+                int iniidx = m->bindings[currentbinding]->globalIndirection.front();
+                int finidx = m->bindings[currentbinding]->globalIndirection.back();
+                prevalue += PrecomputeDistancesSingular_sorted(weights, weightssort,  m->bindings[currentbinding]->BihDistances, threshold);
+            }
+
+            fin = clock();
+            printf("precomputo: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
+            ini = clock();
+
+            for(int i = 0; i< m->modelVertexBind.size(); i++)
+            {
+                int ibind = m->modelVertexBind[i];
+                int iniidx = m->bindings[ibind]->globalIndirection.front();
+                int finidx = m->bindings[ibind]->globalIndirection.back();
+
+                int ivertexbind = m->modelVertexDataPoint[i];
+
+                pointdistances[i] = -BiharmonicDistanceP2P_sorted(weights, weightssort, ivertexbind , m->bindings[ibind], 1.0, prevalue, threshold);
+
+                maxdistances[ibind] = max(maxdistances[ibind],pointdistances[i]);
+                maxdistance = max(pointdistances[i], maxdistance);
+            }
+
+            fin = clock();
+            printf("calculo distancias: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
+            ini = clock();
+
+            for(int md = 0; md< maxdistances.size(); md++)
+            {
+                printf("bind %d con maxdist: %f\n", md, maxdistances[md]);
+                fflush(0);
+            }
+			*/
+
+            if(escena->iVisMode == VIS_ERROR)
+            {
+				/*
+                completedistances.resize(m->vn());
+                double prevalue2 = 0;
+                for(int currentbinding = 0; currentbinding < m->bindings.size(); currentbinding++)
+                {
+                    int iniidx = m->bindings[currentbinding]->globalIndirection.front();
+                    int finidx = m->bindings[currentbinding]->globalIndirection.back();
+                    prevalue2 += PrecomputeDistancesSingular_sorted(weights, weightssort,  m->bindings[currentbinding]->BihDistances, -10);
+                }
+
+                for(int i = 0; i< m->modelVertexBind.size(); i++)
+                {
+                    int ibind = m->modelVertexBind[i];
+                    int iniidx = m->bindings[ibind]->globalIndirection.front();
+                    int finidx = m->bindings[ibind]->globalIndirection.back();
+
+                    int ivertexbind = m->modelVertexDataPoint[i];
+                    completedistances[i] = -BiharmonicDistanceP2P_sorted(weights, weightssort, ivertexbind , m->bindings[ibind], 1.0, prevalue2, -10);
+                }
+				*/
+            }
+        }
+
+        double maxError = -9999;
+        if(m->bindings.size() <= 0) continue;
+        for(int currentbinding = 0; currentbinding < m->bindings.size(); currentbinding++)
+        {
+            for(int count = 0; count< m->bindings[currentbinding]->pointData.size(); count++)
+            {
+                if(m->bindings[currentbinding]->pointData[count].isBorder)
+                    m->addSpotVertex(m->bindings[currentbinding]->pointData[count].node->id);
+
+                float value = 0.0;
+                // deberia ser al reves, recorrer el binding y este pinta los puntos del modelo.
+                // hacer un reset antes con el color propio del modelo.
+                binding* bd = m->bindings[currentbinding];
+                PointData& pd = bd->pointData[count];
+                int newvalue = 0;
+                if(escena->iVisMode == VIS_LABELS)
+                {
+                    value = (float)pd.component/(float)m->bindings.size();
+                }
+                else if(escena->iVisMode == VIS_SEGMENTATION)
+                {
+                    newvalue = (pd.segmentId-100)*13;
+                    value = ((float)(newvalue%50))/50.0;
+                }
+                else if(escena->iVisMode == VIS_BONES_SEGMENTATION)
+                {
+					newvalue = (rig->defRig.defNodesRef[pd.segmentId]->boneId-100)*13;
+                    //newvalue = (newvalue * 25) % 100;
+                    value = ((float)(newvalue%25))/25.0;
+                }
+                else if(escena->iVisMode == VIS_WEIGHTS)
+                {
+					int actualDesiredNumber = escena->desiredVertex;
+					for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
+					{
+						if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
+						{
+							actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
+							break;
+						}
+					}
+
+                    //float sum = 0;
+                    value = 0.0;
+
+                    int searchedindex = -1;
+                    for(unsigned int ce = 0; ce < pd.influences.size(); ce++)
+                    {
+                        if(pd.influences[ce].label == actualDesiredNumber)
+                        {
+                            searchedindex = ce;
+                            break;
+                        }
+                        //sum += pd.influences[ce].weightvalue;
+                    }
+                    if(searchedindex >= 0)
+                            value = pd.influences[searchedindex].weightValue;
+
+                    //if (sum < 1)
+                    //	printf("no se cumple la particion de unidad: %f.\n", sum);
+                }
+                else if(escena->iVisMode == VIS_SEG_PASS)
+                {
+                    value = 0.0;
+					int actualDesiredNumber = escena->desiredVertex;
+					for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
+					{
+						if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
+						{
+							actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
+							break;
+						}
+					}
+
+					
+					if(rig->defRig.defNodesRef[pd.segmentId]->boneId == escena->desiredVertex)
+                    {
+                        value = 1.0;
+                    }
+                }
+                else if(escena->iVisMode == VIS_CONFIDENCE_LEVEL)
+                {
+					value = 0.0;
+
+					int actualDesiredNumber = escena->desiredVertex;
+					for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
+					{
+						if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
+						{
+							actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
+							break;
+						}
+					}
+
+                    int searchedindex = -1;
+                    for(unsigned int ce = 0; ce < pd.influences.size(); ce++)
+                    {
+                        if(pd.influences[ce].label == actualDesiredNumber)
+                        {
+                            searchedindex = ce;
+                            break;
+                        }
+                        //sum += pd.influences[ce].weightvalue;
+                    }
+                    if(searchedindex >= 0)
+					{
+						if(pd.secondInfluences[searchedindex].size()> 0)
+						{
+							if(valueAux < pd.secondInfluences[searchedindex].size())
+								value = pd.secondInfluences[searchedindex][valueAux];
+							else
+								value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1];
+						}
+						else
+						{
+							value = 1.0;
+						}
+					}
+
+					/*
+                    value = 0.0;
+                    if(count == escena->desiredVertex)
+                    {
+                        value = 1.0;
+                    }
+                    else
+                    {
+                        for(int elemvecino = 0; elemvecino < bd->surface.nodes[count]->connections.size() ; elemvecino++)
+                        {
+                            if(bd->surface.nodes[count]->connections[elemvecino]->id == escena->desiredVertex)
+                            {
+                                value = 0.5;
+                                break;
+                            }
+                        }
+                    }
+					*/
+                }
+                else if(escena->iVisMode == VIS_ISODISTANCES)
+                {
+                    if(escena->desiredVertex <0 || escena->desiredVertex >= bd->pointData.size())
+                        value = 0;
+                    else
+                    {
+                        if(maxdistance <= 0)
+                            value = 0;
+                        else
+                            value = m->bindings[currentbinding]->BihDistances.get(count,escena->desiredVertex) / maxdistance;
+                    }
+                }
+                else if(escena->iVisMode == VIS_POINTDISTANCES)
+                {
+                    if(maxdistance <= 0)
+                        value = 0;
+                    else
+                    {
+                        int modelvert = m->bindings[currentbinding]->pointData[count].node->id;
+                        value = pointdistances[modelvert] / maxdistances[currentbinding];
+                    }
+                }
+                else if(escena->iVisMode == VIS_ERROR)
+                {
+					value = 0.0;
+
+                    int searchedindex = -1;
+                    for(unsigned int ce = 0; ce < pd.influences.size(); ce++)
+                    {
+                        if(pd.influences[ce].label == escena->desiredVertex)
+                        {
+                            searchedindex = ce;
+                            break;
+                        }
+                        //sum += pd.influences[ce].weightvalue;
+                    }
+                    if(searchedindex >= 0)
+					{
+						if(pd.secondInfluences[searchedindex].size()> 0)
+						{
+							if(valueAux < pd.secondInfluences[searchedindex].size())
+								value = pd.secondInfluences[searchedindex][valueAux]*pd.influences[searchedindex].weightValue;
+							else
+								value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1]*pd.influences[searchedindex].weightValue;
+						}
+						else
+						{
+							value = 1.0*pd.influences[searchedindex].weightValue;
+						}
+					}
+                    /*int modelvert = m->bindings[currentbinding]->pointData[count].node->id;
+
+                    if(completedistances[modelvert] > 0)
+                        value = pointdistances[modelvert] - completedistances[modelvert];
+
+                    maxError = max((double)maxError, (double)value);
+					*/
+
+                }
+                else if(escena->iVisMode == VIS_WEIGHT_INFLUENCE)
+                {
+
+
+                    int modelVert = m->bindings[currentbinding]->pointData[count].node->id;
+                    value = weights[modelVert];
+                    //if(maxDistance <= 0)
+                    //	value = 0;
+                    //else
+                    //{
+                    //	int modelVert = m->bindings[currentBinding]->pointData[count].modelVert;
+                    //	value = pointDistances[modelVert] / maxDistances[currentBinding];
+                    //}
+                }
+                else
+                {
+                    value = 1.0;
+                }
+
+                float r,g,b;
+                GetColourGlobal(value,0.0,1.0, r, g, b);
+                //QColor c(r,g,b);
+                m->shading->colors[bd->surface.nodes[count]->id].resize(3);
+                m->shading->colors[bd->surface.nodes[count]->id][0] = r;
+                m->shading->colors[bd->surface.nodes[count]->id][1] = g;
+                m->shading->colors[bd->surface.nodes[count]->id][2] = b;
+            }
+        }
+
+        //printf("Corte:%f\n", threshold); fflush(0);
+        //printf("Error max:%f\n", maxError); fflush(0);
+
+    }
+}
+
 void GLWidget::computeProcess() {
 
 	/*
@@ -749,6 +1101,8 @@ void GLWidget::computeProcess() {
 	escena->rig->skinning.originalModels.push_back(escena->rig->model->originalModel);
 
 	escena->rig->skinning.rig = escena->rig;
+
+	paintModelWithData();
 
 	return;
 
@@ -1917,7 +2271,7 @@ void GLWidget::changeSmoothingPasses(int value)
 			bd->smoothingPasses = value;
 			computeHierarchicalSkinning(*((Modelo*)escena->models[mod]), bd);
 
-			computeSecondaryWeights((Modelo*)escena->models[mod]);
+			//computeSecondaryWeights((Modelo*)escena->models[mod]);
 		}
 	}
 

@@ -19,13 +19,13 @@ public:
 public slots:
 	void changeSmoothSlider();
 	void changeSmoothingPasses(int value);
-	void changeAuxValueInt(int value);
 	void updateThresholdSlidervalue(int value);
 	void enableThreshold(bool toogle);
 
 	virtual void keyPressEvent(QKeyEvent* event);
 
 	virtual void UpdateScene();
+	virtual void changeAuxValueInt(int value);
 
 	void updateClipingPlaneData();
 	void updateClipingPlaneColor();

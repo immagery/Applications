@@ -77,12 +77,13 @@ public:
 	void paintPlaneWithData(bool compute = false);
 
 	virtual void changeVisualizationMode(int);
+	virtual void paintModelWithData();
 
 
 protected:
     virtual void postSelection(const QPoint& point);
 	virtual void draw();
-
+	
 public slots:
 
     // GENERAL

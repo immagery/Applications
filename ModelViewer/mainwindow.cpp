@@ -97,10 +97,9 @@ MainWindow::~MainWindow()
 {
 }
 
-
 void MainWindow::UpdateScene()
 {
-	widget->paintModelWithData();
+	//widget->paintModelWithData();
 }
 
 void MainWindow::changeSmoothSlider()
