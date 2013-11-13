@@ -45,6 +45,11 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	valueAux = 0;
 
+	if(escena->rig)
+		delete escena->rig;
+
+	escena->rig = new AirRig(scene::getNewId());
+
 }
 
 void GLWidget::doTests(string fileName, string name, string path) {
@@ -679,7 +684,7 @@ void testGridValuesInterpolation()
 
 void GLWidget::paintModelWithData() {
 
-	AirRig* rig = escena->rig;
+	AirRig* rig = (AirRig*)escena->rig;
 	if(!rig) return;
 
     for(unsigned int modelIdx = 0; modelIdx < escena->models.size(); modelIdx++)
@@ -1088,19 +1093,19 @@ void GLWidget::computeProcess() {
 
 	//Testing new optimized processing
 	// AirRig creation
-	escena->rig = new AirRig(*(Modelo*)escena->models[0], escena->skeletons);
-	BuildGroupTree(escena->rig->defRig);
-	updateAirSkinning(escena->rig->defRig, *escena->rig->model);
+	if(escena->rig)
+		delete escena->rig;
 
-	escena->rig->skinning.bindings[0] = vector<binding*> ();
+	escena->rig = new AirRig((Modelo*)escena->models[0], escena->skeletons, scene::getNewId());
+	AirRig* rig = (AirRig*) escena->rig;
 
-	for(int i = 0; i< escena->rig->model->bindings.size(); i++)
-		escena->rig->skinning.bindings[0].push_back(escena->rig->model->bindings[i]);
+	BuildGroupTree(rig->defRig);
+	updateAirSkinning(rig->defRig, *escena->rig->model);
 
-	escena->rig->skinning.deformedModels.push_back(escena->rig->model);
-	escena->rig->skinning.originalModels.push_back(escena->rig->model->originalModel);
-
-	escena->rig->skinning.rig = escena->rig;
+	rig->skinning->bind = rig->model->bindings[0]; 
+	rig->skinning->deformedModels.push_back(rig->model);
+	rig->skinning->originalModels.push_back(rig->model->originalModel);
+	rig->skinning->rig = rig;
 
 	paintModelWithData();
 
@@ -2259,6 +2264,16 @@ void GLWidget::cleanWeights(gridRenderer* grRend)
     }
 }
 
+void GLWidget::setSliderParams(double ini, double fin, bool enable)
+{
+	AirRig* rig = (AirRig*)escena->rig;
+	if(rig)
+	{
+		rig->iniTwist = ini;
+		rig->finTwist = fin;
+		rig->enableTwist = enable;
+	}
+}
 
 void GLWidget::changeSmoothingPasses(int value)
 {
@@ -2937,7 +2952,15 @@ void GLWidget::drawWithDistances()
 	{
 		escena->skeletons[j]->root->computeWorldPos();
 	}
-	if(escena->rig) escena->rig->skinning.computeDeformations();
+
+	if(escena->rig) 
+	{
+		AirRig* rig = (AirRig*)escena->rig;
+		if(!rig->enableTwist)
+			rig->skinning->computeDeformations();
+		else
+			rig->skinning->computeDeformationsWithSW();
+	}
 
 	 AdriViewer::draw();
  }
@@ -3337,3 +3360,89 @@ void GLWidget::ChangeSliceXY(int slice)
 
 }
 
+ void GLWidget::readScene(string fileName, string name, string path)
+ {
+     QFile modelDefFile(fileName.c_str());
+     if(modelDefFile.exists())
+     {
+        modelDefFile.open(QFile::ReadOnly);
+        QTextStream in(&modelDefFile);
+
+        QString sSceneName = in.readLine(); in.readLine();
+        QString sGlobalPath = in.readLine(); in.readLine();
+        QString sPath = in.readLine(); in.readLine(); in.readLine();
+        QString sModelFile = in.readLine(); in.readLine(); in.readLine();
+
+		QString sSkeletonFile, sEmbeddingFile, sBindingFile, sGridFile, sRiggingFile;
+
+		QStringList flags = in.readLine().split(" "); in.readLine(); in.readLine();
+		if(flags.size() != 5)
+			return;
+
+		if(flags[0].toInt() != 0 && !in.atEnd())
+		{
+			sSkeletonFile = in.readLine(); in.readLine(); in.readLine();
+		}
+
+		if(flags[1].toInt() != 0 && !in.atEnd())
+		{
+			sEmbeddingFile = in.readLine(); in.readLine(); in.readLine();
+		}
+
+		if(flags[2].toInt() != 0 && !in.atEnd())
+		{
+			sBindingFile = in.readLine(); in.readLine(); in.readLine();
+		}
+
+		if(flags[3].toInt() != 0 && !in.atEnd())
+		{
+			sGridFile = in.readLine(); in.readLine(); in.readLine();
+		}
+
+		if(flags[4].toInt() != 0 && !in.atEnd())
+		{
+			sRiggingFile = in.readLine(); in.readLine(); in.readLine();
+		}
+
+		modelDefFile.close();
+
+		QString newPath(path.c_str());
+        newPath = newPath +"/";
+        if(!sPath.isEmpty())
+            newPath = newPath+"/"+sPath +"/";
+
+        // Leer modelo
+        readModel( (newPath+sModelFile).toStdString(), sSceneName.toStdString(), newPath.toStdString());
+
+		// Constuir datos sobre el modelo
+        Modelo* m = ((Modelo*)escena->models.back());
+        m->sPath = newPath.toStdString(); // importante para futuras referencias
+		BuildSurfaceGraphs(*m, m->bindings);
+
+        // Leer esqueleto
+		if(!sSkeletonFile.isEmpty())
+		{
+			string sSkeletonFileFullPath = (newPath+sSkeletonFile).toStdString();
+			readSkeletons(sSkeletonFileFullPath, escena->skeletons);
+		}
+
+		// Load Rigging
+		if(!sRiggingFile.isEmpty())
+		{
+			string sRiggingFileFullPath = (newPath+sRiggingFile).toStdString();//path.toStdString();
+			escena->rig->loadRigging(sRiggingFileFullPath);
+
+			// By now is with the skeleton, but soon will be alone
+			escena->rig->bindRigToScene(*m, escena->skeletons);
+		}
+
+		// Skinning
+		if(!sBindingFile.isEmpty())
+		{
+			string sBindingFileFullPath = (newPath+sBindingFile).toStdString();//path.toStdString();
+			escena->loadBindingForModel(m,sBindingFileFullPath);
+			escena->rig->skinning->computeRestPositions(escena->skeletons);
+		}
+
+    }
+ }

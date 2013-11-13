@@ -79,6 +79,8 @@ public:
 	virtual void changeVisualizationMode(int);
 	virtual void paintModelWithData();
 
+	virtual void readScene(string fileName, string name, string path);
+
 
 protected:
     virtual void postSelection(const QPoint& point);
@@ -99,6 +101,8 @@ public slots:
     void UpdateVertexSource(int id);
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);
+
+	virtual void setSliderParams(double ini, double fin, bool enable);
 
 };
 
