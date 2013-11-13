@@ -467,7 +467,6 @@
     <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
-    <ClCompile Include="..\..\air\AirLib\Computation\Segmentation.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirRig.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirSkinning.cpp" />
     <ClCompile Include="..\..\air\AirLib\tetgen\predicates.cxx" />
@@ -632,7 +631,6 @@
     <ClInclude Include="..\..\air\AirLib\Computation\HarmonicCoords.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\MeanValueCoords.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\mvc_interiorDistances.h" />
-    <ClInclude Include="..\..\air\AirLib\Computation\Segmentation.h" />
     <CustomBuild Include="..\..\adri\gui\treemodel.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing treemodel.h...</Message>
