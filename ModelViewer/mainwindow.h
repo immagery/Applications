@@ -17,8 +17,10 @@ public:
 	GLWidget* widget;
 
 public slots:
-	void changeSmoothSlider();
-	void changeSmoothingPasses(int value);
+	
+	void changeGlobalSmoothingPasses(int value);
+	void changeLocalSmoothingPasses(int value);
+
 	void updateThresholdSlidervalue(int value);
 	void enableThreshold(bool toogle);
 

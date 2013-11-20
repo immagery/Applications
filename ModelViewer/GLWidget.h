@@ -50,8 +50,10 @@ public:
     void updateGridVisualization();
 
     void cleanWeights(gridRenderer* grRend);
-    void changeSmoothPropagationDistanceRatio(float smoothRatioValue);
-	void changeSmoothingPasses(int value);
+	void toogleToShowSegmentation(bool toogle);    
+
+    void getStatisticsFromData(string fileName, string name, string path);
+    void readDistances(QString fileName);
 
     void PropFunctionConf();
     void setPlaneData(bool drawPlane, int pointPos, int mode, float sliderPos, int orient);
@@ -60,12 +62,6 @@ public:
 
     void nextProcessStep();
     void allNextProcessSteps();
-
-    void getStatisticsFromData(string fileName, string name, string path);
-    void readDistances(QString fileName);
-
-    void toogleToShowSegmentation(bool toogle);
-    void changeExpansionFromSelectedJoint(float expValue);
 
     void drawModel();
     void drawWithDistances();
@@ -80,6 +76,7 @@ public:
 	virtual void paintModelWithData();
 
 	virtual void readScene(string fileName, string name, string path);
+	virtual void saveScene(string fileName, string name, string path);
 
 
 protected:
@@ -95,6 +92,7 @@ public slots:
 	//Metodos especificos
     virtual void doTests(string fileName, string name, string path);
     void computeProcess();
+	virtual void selectElements(vector<unsigned int > lst);
 	void BuildTetrahedralization();
     void VoxelizeModel(Modelo *m, bool onlyBorders = true);
     void exportWeightsToMaya();
@@ -102,7 +100,15 @@ public slots:
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);
 
-	virtual void setSliderParams(double ini, double fin, bool enable);
+	
+	
+	virtual void setTwistParams(double ini, double fin, bool enable);
+
+	virtual void setGlobalSmoothPasses(int globalSmooth);
+	virtual void setLocalSmoothPasses(int localSmooth);
+
+    virtual void changeSmoothPropagationDistanceRatio(float smoothRatioValue);
+	virtual void changeExpansionFromSelectedJoint(float expValue);
 
 };
 

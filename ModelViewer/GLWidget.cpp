@@ -4,7 +4,6 @@
 
 #include <Computation\BiharmonicDistances.h>
 #include <Computation\mvc_interiorDistances.h>
-//#include <Computation/Segmentation.h>
 #include <DataStructures\InteriorDistancesData.h>
 #include <utils/util.h>
 
@@ -15,6 +14,8 @@
 
 #include <render/graphRender.h>
 #include <computation/HarmonicCoords.h>
+
+#include <render/defGorupRender.h>
 
 #include <Computation\AirSegmentation.h>
 
@@ -52,7 +53,8 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 }
 
-void GLWidget::doTests(string fileName, string name, string path) {
+void GLWidget::doTests(string fileName, string name, string path) 
+{
 
 	assert(false);
 	// To fix for the latest structure changes [13/11/2013]
@@ -1033,79 +1035,65 @@ void GLWidget::paintModelWithData() {
     }
 }
 
+void GLWidget::selectElements(vector<unsigned int > lst)
+{
+	// model and skeleton
+	AdriViewer::selectElements(lst);
+
+	if( !escena || !escena->rig) return;
+
+	AirRig* rig = (AirRig*)escena->rig;
+	// rig
+	for(unsigned int i = 0; i< lst.size(); i++)
+    {
+		for(int group = 0; group < rig->defRig.defGroups.size(); group++)
+		{
+			if(rig->defRig.defGroups[group]->nodeId == lst[i])
+			{
+				// pos, rot, expansion, smoothing, twist
+				joint* jt = rig->defRig.defGroups[group]->transformation;
+				emit jointDataShow(rig->defRig.defGroups[group]->expansion, rig->defRig.defGroups[group]->nodeId);
+
+				emit defGroupData(rig->defRig.defGroups[group]->iniTwist, 
+								  rig->defRig.defGroups[group]->finTwist, 
+								  rig->defRig.defGroups[group]->enableTwist,
+								  rig->defRig.defGroups[group]->smoothingPasses);
+
+				double alfa,beta,gamma;
+				toEulerAngles(jt->qrot, alfa, beta, gamma);
+				emit jointTransformationValues(jt->pos[0], jt->pos[1], jt->pos[2], alfa, beta, gamma);
+
+				selMgr.selection.push_back((object*)rig->defRig.defGroups[group]);
+			}
+		}
+	}
+}
+
 void GLWidget::computeProcess() {
-
-	/*
-	// test over joints, to learn about quaternions
-	Eigen::Quaterniond rot1, rot2, rot3;
-	Eigen::Quaterniond orient1, orient2, orient3;
-
-	joint jt1((unsigned int)0);
-	jt1.addRotation(90,0,0);
-	jt1.addTranslation(10,10,10);
-
-	rot1 = Eigen::Quaterniond(jt1.qrot.X(), jt1.qrot.Y(), jt1.qrot.Z(), jt1.qrot.W());
-	orient1.setFromTwoVectors(Eigen::Vector3d(0,0,1), Eigen::Vector3d(1,0,0));
-
-	joint jt2(&jt1, (unsigned int)1);
-	jt2.addRotation(90,0,0);
-	jt2.addTranslation(0,10,0);
-
-	rot2 = Eigen::Quaterniond(jt2.qrot.X(), jt2.qrot.Y(), jt2.qrot.Z(), jt2.qrot.W());
-	orient2 =  Eigen::Quaterniond(jt2.qOrient.X(), jt2.qOrient.Y(), jt2.qOrient.Z(), jt2.qOrient.W());
-
-	joint jt3(&jt2, (unsigned int)2);
-	jt3.addRotation(90,0,0);
-	jt3.addTranslation(0,10,0);
-
-	rot3 = Eigen::Quaterniond(jt3.qrot.X(), jt3.qrot.Y(), jt3.qrot.Z(), jt3.qrot.W());
-	orient3 =  Eigen::Quaterniond(jt3.qOrient.X(), jt3.qOrient.Y(), jt3.qOrient.Z(), jt3.qOrient.W());
-
-	joint jt4(&jt3, (unsigned int)3);
-	jt4.addRotation(0,0,0);
-	jt4.addTranslation(0,10,0);
-
-	//qAux.setFromTwoVectors(Eigen::Vector3d(0,1,0), Eigen::Vector3d(0,0,1));
-	Eigen::Vector3d pt(10,10,10);
-
-	Eigen::Quaterniond pack1 = orient1*rot1;
-	Eigen::Quaterniond pack2 = orient2*rot2;
-	Eigen::Quaterniond pack3 = orient3*rot3;
-
-	Eigen::Quaterniond acum = pack1;
-
-	Eigen::Vector3d aux = acum._transformVector(Eigen::Vector3d(jt2.pos.X(),jt2.pos.Y(),jt2.pos.Z()));
-	Eigen::Vector3d pt1 = pt + aux;
-
-	acum = acum*pack2;
-
-	aux = acum._transformVector(Eigen::Vector3d(jt3.pos.X(),jt3.pos.Y(),jt3.pos.Z()));
-	Eigen::Vector3d pt2 = pt1 + aux;
-
-	acum = acum*pack3;
-
-	aux = acum._transformVector(Eigen::Vector3d(jt4.pos.X(),jt4.pos.Y(),jt4.pos.Z()));
-	Eigen::Vector3d pt3 = pt2 + aux;
-
-	return;
-	*/
 
 	//Testing new optimized processing
 	// AirRig creation
 	if(escena->rig)
 		delete escena->rig;
 
-	escena->rig = new AirRig((Modelo*)escena->models[0], escena->skeletons, scene::getNewId());
+	// Crear rig nuevo
+	escena->rig = new AirRig(scene::getNewId());
 	AirRig* rig = (AirRig*) escena->rig;
 
-	BuildGroupTree(rig->defRig);
-	updateAirSkinning(rig->defRig, *escena->rig->model);
+	// Get values from UI
+	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
-	rig->skinning->bind = rig->model->bind; 
-	rig->skinning->deformedModels.push_back(rig->model);
-	rig->skinning->originalModels.push_back(rig->model->originalModel);
-	rig->skinning->rig = rig;
+	//Vincular a escena: modelo y esqueletos
+	rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
 
+	// Build deformers structure for computations.
+	rig->preprocessModelForComputations();
+
+	// Skinning computations
+	updateAirSkinning(rig->defRig, *rig->model);
+
+	// enable deformations and render data
+	rig->enableDeformation = true;
 	paintModelWithData();
 
 	return;
@@ -2267,32 +2255,64 @@ void GLWidget::cleanWeights(gridRenderer* grRend)
     }
 }
 
-void GLWidget::setSliderParams(double ini, double fin, bool enable)
+void GLWidget::setLocalSmoothPasses(int localSmooth)
 {
+	object *selectedObject = NULL;
+    if (selMgr.selection.size() > 0)
+        selectedObject = selMgr.selection.back();
+
+	if (selectedObject != NULL) 
+	{
+		if(selectedObject->iam == DEFGROUP_NODE)
+		{
+			DefGroup* group = (DefGroup*) selectedObject;
+			group->smoothingPasses = localSmooth;
+			group->localSmooth = true;
+
+			AirRig* rig = (AirRig*)escena->rig;
+			computeSecondaryWeights(*rig->model, rig->airSkin->bind, rig->defRig);
+		}
+	}
+
+	paintModelWithData();
+}
+
+void GLWidget::setGlobalSmoothPasses(int value)
+{	
 	AirRig* rig = (AirRig*)escena->rig;
 	if(rig)
 	{
-		rig->iniTwist = ini;
-		rig->finTwist = fin;
-		rig->enableTwist = enable;
+		rig->defaultSmoothPasses = value;
+		computeSecondaryWeights(*rig->model, rig->airSkin->bind, rig->defRig);
 	}
+
+	paintModelWithData();
 }
 
-void GLWidget::changeSmoothingPasses(int value)
+void GLWidget::setTwistParams(double ini, double fin, bool enable)
 {
-	for(int mod = 0; mod < escena->models.size(); mod++)
-	{
-		Modelo* m = (Modelo*)escena->models[mod];
-		binding* bd = m->bind;
-			
-		bd->smoothingPasses = value;
-		
-		assert(false);
-		// Recompute skinning.... hay que ver qué toca.
-		//computeHierarchicalSkinning(*m, bd);
+	object *selectedObject = NULL;
+    if (selMgr.selection.size() > 0)
+        selectedObject = selMgr.selection.back();
 
-		AirRig* rig = (AirRig*)escena->rig;
-		computeSecondaryWeights(*m, bd, rig->defRig);
+	if (selectedObject != NULL) 
+	{
+		if(selectedObject->iam == DEFGROUP_NODE)
+		{
+			DefGroup* group = (DefGroup*) selectedObject;
+			group->iniTwist = ini;
+			group->finTwist = fin;
+			group->enableTwist = enable;
+		}
+		/*
+			AirRig* rig = (AirRig*)escena->rig;
+			if(rig)
+			{
+				rig->iniTwist = ini;
+				rig->finTwist = fin;
+				rig->enableTwist = enable;
+			}
+		*/
 	}
 
 	paintModelWithData();
@@ -2303,6 +2323,7 @@ void GLWidget::changeSmoothPropagationDistanceRatio(float smoothRatioValue)
 {
 	// TODEBUG: estoy reescribiendo esta función para calcular con smoothing variable.
 
+	/*
 	for(int mod = 0; mod < escena->models.size(); mod++)
 	{
 			binding* bd = ((Modelo*)escena->models[mod])->bind;
@@ -2315,6 +2336,9 @@ void GLWidget::changeSmoothPropagationDistanceRatio(float smoothRatioValue)
 	}
 
 	paintModelWithData();
+
+	*/
+
 
 	/*
     smoothRatioValue = (float)0.15;
@@ -2958,16 +2982,25 @@ void GLWidget::drawWithDistances()
 		escena->skeletons[j]->root->computeWorldPos();
 	}
 
-	if(escena->rig) 
+	AirRig* rig = (AirRig*)escena->rig;
+
+	if(rig) 
 	{
-		AirRig* rig = (AirRig*)escena->rig;
-		if(!rig->enableTwist)
-			rig->skinning->computeDeformations();
-		else
-			rig->skinning->computeDeformationsWithSW();
+		if(rig->enableDeformation && !rig->rigginMode)
+		{
+			if(!rig->enableTwist)
+				rig->airSkin->computeDeformations(rig);
+			else
+				rig->airSkin->computeDeformationsWithSW(rig);
+		}
 	}
 
-	 AdriViewer::draw();
+	AdriViewer::draw();
+ 
+	for(unsigned int i = 0; i< rig->defRig.defGroups.size(); i++)
+     {
+         ((DefGroupRender*)rig->defRig.defGroups[i]->shading)->drawFunc();
+     }
  }
 
 void GLWidget::drawModel()
@@ -3365,6 +3398,95 @@ void GLWidget::ChangeSliceXY(int slice)
 
 }
 
+void GLWidget::saveScene(string fileName, string name, string path)
+ {
+     QFile modelDefFile(fileName.c_str());
+     if(modelDefFile.exists())
+     {
+		modelDefFile.open(QFile::WriteOnly);
+        QTextStream out(&modelDefFile);
+
+		out << escena->sSceneName.c_str() << endl << endl;
+		out << escena->sGlobalPath.c_str() << endl << endl ;
+		out << escena->sPath.c_str() << endl << endl ;
+
+		if(escena->models.size() == 0 )
+			return;
+
+		int modelFlag = 0, sktFlag = 0, embeddingFlag = 0, bindingFlag = 0, rigFlag = 0;
+
+		if(escena->models.size() > 0) modelFlag = 1;
+		if(escena->skeletons.size() > 0) sktFlag = 1;
+		embeddingFlag = 1;
+		if(escena->rig) 
+		{
+			rigFlag = 1;
+			if(escena->rig->skin->bind) bindingFlag = 1;
+		}
+
+		out << "## Flags: model, skeleton, embedding, binding, grid, rig" << endl ;
+		out << modelFlag << " " << sktFlag << " " << embeddingFlag << " " << bindingFlag << " " << rigFlag << endl << endl;
+
+		QString sSaveRigFile, sSaveBindingFile;
+
+		if(modelFlag)
+		{
+			out << "## Modelo" << endl ;
+			out << escena->sSceneName.c_str() << ".off" << endl << endl;
+		}
+
+		if(sktFlag)
+		{
+			out << "## Esqueletos" << endl ;
+			out << escena->sSceneName.c_str() << "_skeleton.txt" << endl << endl;
+		}
+
+		if(embeddingFlag)
+		{
+			out << "## Embedding" << endl ;
+			out << escena->sSceneName.c_str() << "_embeding.txt" << endl << endl;
+		}
+
+		if(bindingFlag)
+		{
+			out << "## Point weights" << endl ;
+			sSaveBindingFile = (escena->sSceneName + "_binding.txt").c_str();
+			out << sSaveBindingFile << endl << endl;
+
+			sSaveBindingFile = (escena->sGlobalPath + escena->sPath + sSaveBindingFile.toStdString()).c_str();
+		}
+
+		if(rigFlag)
+		{
+			out << "## Rig" << endl ;
+			sSaveRigFile = (escena->sSceneName + "_rig.txt").c_str();
+			out << sSaveRigFile << endl << endl;
+
+			sSaveRigFile = (escena->sGlobalPath + escena->sPath + sSaveRigFile.toStdString()).c_str();
+
+		}
+
+		out << fileName.c_str();
+		modelDefFile.close();
+
+		if(rigFlag)
+		{
+			AirRig* rig = (AirRig*)escena->rig;
+
+			// Save Rigging
+			FILE* fout = fopen(sSaveRigFile.toStdString().c_str(), "w");
+			if(fout) 
+			{
+				rig->saveToFile(fout);
+				fclose(fout);
+			}
+			
+			// Save Skinning
+			saveAirBinding(rig->skin->bind, sSaveBindingFile.toStdString());
+		}
+    }
+ }
+
  void GLWidget::readScene(string fileName, string name, string path)
  {
      QFile modelDefFile(fileName.c_str());
@@ -3376,9 +3498,12 @@ void GLWidget::ChangeSliceXY(int slice)
         QString sSceneName = in.readLine(); in.readLine();
         QString sGlobalPath = in.readLine(); in.readLine();
         QString sPath = in.readLine(); in.readLine(); in.readLine();
-        QString sModelFile = in.readLine(); in.readLine(); in.readLine();
 
-		QString sSkeletonFile, sEmbeddingFile, sBindingFile, sGridFile, sRiggingFile;
+		escena->sSceneName = sSceneName.toStdString();
+		escena->sGlobalPath = sGlobalPath.toStdString();
+		escena->sPath = sPath.toStdString();
+
+		QString sModelFile = "", sSkeletonFile = "", sEmbeddingFile = "", sBindingFile = "", sRiggingFile = "";
 
 		QStringList flags = in.readLine().split(" "); in.readLine(); in.readLine();
 		if(flags.size() != 5)
@@ -3386,22 +3511,22 @@ void GLWidget::ChangeSliceXY(int slice)
 
 		if(flags[0].toInt() != 0 && !in.atEnd())
 		{
-			sSkeletonFile = in.readLine(); in.readLine(); in.readLine();
+			sModelFile = in.readLine(); in.readLine(); in.readLine();
 		}
 
 		if(flags[1].toInt() != 0 && !in.atEnd())
 		{
-			sEmbeddingFile = in.readLine(); in.readLine(); in.readLine();
+			sSkeletonFile = in.readLine(); in.readLine(); in.readLine();
 		}
 
 		if(flags[2].toInt() != 0 && !in.atEnd())
 		{
-			sBindingFile = in.readLine(); in.readLine(); in.readLine();
+			sEmbeddingFile = in.readLine(); in.readLine(); in.readLine();
 		}
 
 		if(flags[3].toInt() != 0 && !in.atEnd())
 		{
-			sGridFile = in.readLine(); in.readLine(); in.readLine();
+			sBindingFile = in.readLine(); in.readLine(); in.readLine();
 		}
 
 		if(flags[4].toInt() != 0 && !in.atEnd())
@@ -3411,7 +3536,7 @@ void GLWidget::ChangeSliceXY(int slice)
 
 		modelDefFile.close();
 
-		QString newPath(path.c_str());
+		QString newPath( path.c_str());
         newPath = newPath +"/";
         if(!sPath.isEmpty())
             newPath = newPath+"/"+sPath +"/";
@@ -3431,23 +3556,49 @@ void GLWidget::ChangeSliceXY(int slice)
 			readSkeletons(sSkeletonFileFullPath, escena->skeletons);
 		}
 
-		// Load Rigging
-		if(!sRiggingFile.isEmpty())
-		{
-			string sRiggingFileFullPath = (newPath+sRiggingFile).toStdString();//path.toStdString();
-			escena->rig->loadRigging(sRiggingFileFullPath);
-
-			// By now is with the skeleton, but soon will be alone
-			escena->rig->bindRigToScene(*m, escena->skeletons);
-		}
+		bool skinLoaded = false, riggLoaded = false;
 
 		// Skinning
 		if(!sBindingFile.isEmpty())
 		{
 			string sBindingFileFullPath = (newPath+sBindingFile).toStdString();//path.toStdString();
-			escena->loadBindingForModel(m,sBindingFileFullPath);
-			escena->rig->skinning->computeRestPositions(escena->skeletons);
+			
+			//Copia del modelo para poder hacer deformaciones
+			if(!m->originalModelLoaded)
+				initModelForDeformation(m);
+
+			// Cargar en memoria los datos del binding tal cual
+			loadAirBinding(m->bind, sBindingFileFullPath);
+			skinLoaded = true;
 		}
+
+		// Rigging
+		if(!sRiggingFile.isEmpty())
+		{
+			// Load from disc
+			string sRiggingFileFullPath = (newPath+sRiggingFile).toStdString();//path.toStdString();
+			((AirRig*)escena->rig)->loadRigging(sRiggingFileFullPath);	
+			riggLoaded = true;
+		}
+
+
+		if(riggLoaded)
+		{
+			// By now is with the skeleton, but soon will be alone
+			((AirRig*)escena->rig)->bindLoadedRigToScene(m, escena->skeletons);
+		}
+
+		if(skinLoaded)
+		{
+			// Now it's time to do a correspondence with the loaded data and the scene.
+			((AirRig*)escena->rig)->airSkin->loadBindingForModel(m, (AirRig*)escena->rig);
+
+			((AirRig*)escena->rig)->airSkin->computeRestPositions(escena->skeletons);
+
+			((AirRig*)escena->rig)->enableDeformation = true;
+		}
+
+		paintModelWithData();
 
     }
  }

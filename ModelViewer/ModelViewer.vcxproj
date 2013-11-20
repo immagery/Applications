@@ -272,12 +272,14 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Image Include="..\..\adri\gui\icons\3floppy_unmount.png" />
     <Image Include="..\..\adri\gui\icons\barra_color.jpg">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Image>
+    <Image Include="..\..\adri\gui\icons\Files-New-File-icon.png" />
     <Image Include="..\..\adri\gui\icons\folder-icon.png">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -296,6 +298,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Image>
+    <Image Include="..\..\adri\gui\icons\open-file-icon.png" />
+    <Image Include="..\..\adri\gui\icons\rig_animation_toogle.png" />
     <Image Include="..\..\adri\gui\icons\rotateIcon.png">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -452,6 +456,7 @@
     <ClCompile Include="..\..\adri\gui\treeitem.cpp" />
     <ClCompile Include="..\..\adri\gui\treemodel.cpp" />
     <ClCompile Include="..\..\adri\render\clipingPlaneRender.cpp" />
+    <ClCompile Include="..\..\adri\render\defGroupRender.cpp" />
     <ClCompile Include="..\..\adri\render\GeometryRender.cpp" />
     <ClCompile Include="..\..\adri\render\graphRender.cpp" />
     <ClCompile Include="..\..\adri\render\gridRender.cpp" />
@@ -513,6 +518,7 @@
     <ClInclude Include="..\..\adri\DataStructures\Transform.h" />
     <ClInclude Include="..\..\adri\global.h" />
     <ClInclude Include="..\..\adri\globalDefinitions.h" />
+    <ClInclude Include="..\..\adri\render\defGorupRender.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\AirSegmentation.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />

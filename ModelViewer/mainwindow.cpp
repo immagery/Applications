@@ -23,8 +23,10 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 
 
 	connect(ui->voxelization_btn, SIGNAL(released()), this, SLOT(Compute()));
-	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeSmoothingPasses(int)));
 	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
+
+	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeLocalSmoothingPasses(int)));
+	connect(ui->localSmoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalSmoothingPasses(int)));
 
     connect(ui->prop_function_updt, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
 
@@ -49,8 +51,8 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->threshold_enable, SIGNAL(toggled(bool)), this, SLOT(enableThreshold(bool)));
 	connect(ui->threshold_enable_adaptative, SIGNAL(toggled(bool)), this, SLOT(enableAdaptativeThreshold(bool)));
 	
-    connect(ui->smoothPropagationSlider, SIGNAL(sliderReleased()), this, SLOT(changeSmoothSlider()));
-    connect(ui->smoothPropagationSlider, SIGNAL(valueChanged(int)), this, SLOT(updateSmoothSlidervalue(int)));
+    //connect(ui->smoothPropagationSlider, SIGNAL(sliderReleased()), this, SLOT(changeSmoothSlider()));
+    //connect(ui->smoothPropagationSlider, SIGNAL(valueChanged(int)), this, SLOT(updateSmoothSlidervalue(int)));
 
 	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
 
@@ -89,6 +91,7 @@ void MainWindow::UpdateScene()
 	//widget->paintModelWithData();
 }
 
+/*
 void MainWindow::changeSmoothSlider()
 {
     float valueAux = ui->smoothPropagationSlider->value();
@@ -97,11 +100,18 @@ void MainWindow::changeSmoothSlider()
     ui->smoothPropagationEdit->setText(QString("%1").arg(value));
     widget->changeSmoothPropagationDistanceRatio(value);
 }
+*/
 
-void MainWindow::changeSmoothingPasses(int value)
+void MainWindow::changeGlobalSmoothingPasses(int value)
 {
     float valueAux = ui->smoothingPasses->value();
-    widget->changeSmoothingPasses(valueAux);
+    widget->setGlobalSmoothPasses(valueAux);
+}
+
+void MainWindow::changeLocalSmoothingPasses(int value)
+{
+    float valueAux = ui->smoothingPasses->value();
+    widget->setLocalSmoothPasses(valueAux);
 }
 
 void MainWindow::changeAuxValueInt(int value)
