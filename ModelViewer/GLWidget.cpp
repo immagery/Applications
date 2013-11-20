@@ -3398,7 +3398,7 @@ void GLWidget::ChangeSliceXY(int slice)
 
 }
 
-void GLWidget::saveScene(string fileName, string name, string path)
+void GLWidget::saveScene(string fileName, string name, string path, bool compactMode)
  {
      QFile modelDefFile(fileName.c_str());
      if(modelDefFile.exists())
@@ -3482,7 +3482,20 @@ void GLWidget::saveScene(string fileName, string name, string path)
 			}
 			
 			// Save Skinning
-			saveAirBinding(rig->skin->bind, sSaveBindingFile.toStdString());
+			if(compactMode)
+			{
+				// Build the deformers name map.
+				map<int, string> deformersNamesMap;
+
+				for(int sktIdx = 0; sktIdx < rig->defRig.defGroups.size(); sktIdx++)
+				{
+					deformersNamesMap[rig->defRig.defGroups[sktIdx]->nodeId] = rig->defRig.defGroups[sktIdx]->transformation->sName;
+				}
+				rig->skin->bind->saveCompactBinding(sSaveBindingFile.toStdString(), deformersNamesMap);
+				saveAirBinding(rig->skin->bind, (sSaveBindingFile.append("_extend.txt")).toStdString());
+			}
+			else
+				saveAirBinding(rig->skin->bind, sSaveBindingFile.toStdString());
 		}
     }
  }
@@ -3566,9 +3579,12 @@ void GLWidget::saveScene(string fileName, string name, string path)
 			//Copia del modelo para poder hacer deformaciones
 			if(!m->originalModelLoaded)
 				initModelForDeformation(m);
+			
+			QString extendedBinding = sBindingFileFullPath.c_str();
+			extendedBinding.append("_extended.txt");
 
 			// Cargar en memoria los datos del binding tal cual
-			loadAirBinding(m->bind, sBindingFileFullPath);
+			loadAirBinding(m->bind, extendedBinding.toStdString());
 			skinLoaded = true;
 		}
 

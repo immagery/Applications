@@ -39,7 +39,9 @@ public slots:
 
 	void enableAdaptativeThreshold(bool toogle);
 
-	 void Compute();
+	virtual void updateSceneView();
+
+	void Compute();
 };
 
 /*

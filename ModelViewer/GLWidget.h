@@ -76,7 +76,7 @@ public:
 	virtual void paintModelWithData();
 
 	virtual void readScene(string fileName, string name, string path);
-	virtual void saveScene(string fileName, string name, string path);
+	virtual void saveScene(string fileName, string name, string path, bool compactMode = false);
 
 
 protected:

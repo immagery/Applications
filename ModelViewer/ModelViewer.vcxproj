@@ -312,6 +312,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Image>
+    <Image Include="..\..\adri\gui\icons\save_compact.png" />
     <Image Include="..\..\adri\gui\icons\seleccion_obj_off.png">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -474,6 +475,7 @@
     <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirRig.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirSkinning.cpp" />
+    <ClCompile Include="..\..\air\AirLib\gui\AirOutliner.cpp" />
     <ClCompile Include="..\..\air\AirLib\tetgen\predicates.cxx" />
     <ClCompile Include="GeneratedFiles\moc_adrimainwindow.cpp" />
     <ClCompile Include="GeneratedFiles\moc_AdriViewer.cpp" />
@@ -522,6 +524,7 @@
     <ClInclude Include="..\..\air\AirLib\Computation\AirSegmentation.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
+    <ClInclude Include="..\..\air\AirLib\gui\AirOutliner.h" />
     <ClInclude Include="Header.h" />
     <CustomBuild Include="..\..\adri\gui\KeyframeBar.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>

@@ -3,6 +3,10 @@
 
 #include <QtGui/qevent.h>
 
+#include <gui/treeitem.h>
+#include <gui/treemodel.h>
+#include <gui/AirOutliner.h>
+
 MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 {
 	ui->setupUi(this);
@@ -84,6 +88,29 @@ void MainWindow::Compute()
 
 MainWindow::~MainWindow()
 {
+}
+
+
+void MainWindow::updateSceneView()
+{
+    //treeViewModel->clear(); // Limpiamos la lista.
+
+
+    TreeModel* treeViewModel;
+    treeViewModel = new TreeModel();
+    ui->outlinerView->setModel(treeViewModel);
+
+    treeNode* root = new treeNode();
+	AirOutliner outl(ui->glCustomWidget->escena);
+    outl.getSceneTree(root);
+
+    QList<TreeItem*> parents;
+    parents << treeViewModel->rootItem;
+    AdriMainWindow::updateSceneView(parents.back(), root);
+
+    emit ui->outlinerView->dataChanged(ui->outlinerView->rootIndex(), ui->outlinerView->rootIndex());
+    repaint();
+    // Hay que actualizar la vista para que aparezca todo.
 }
 
 void MainWindow::UpdateScene()
