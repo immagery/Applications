@@ -1096,7 +1096,7 @@ void GLWidget::computeProcess() {
 	rig->enableDeformation = true;
 	paintModelWithData();
 
-	return;
+	emit updateSceneView();
 
 	/*
 
@@ -2270,7 +2270,7 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 			group->localSmooth = true;
 
 			AirRig* rig = (AirRig*)escena->rig;
-			computeSecondaryWeights(*rig->model, rig->airSkin->bind, rig->defRig);
+			updateAirSkinning(rig->defRig, *rig->model);
 		}
 	}
 
@@ -2283,7 +2283,13 @@ void GLWidget::setGlobalSmoothPasses(int value)
 	if(rig)
 	{
 		rig->defaultSmoothPasses = value;
-		computeSecondaryWeights(*rig->model, rig->airSkin->bind, rig->defRig);
+		for(int defIdx = 0; defIdx < rig->defRig.defGroups.size(); defIdx++)
+		{
+			if(!rig->defRig.defGroups[defIdx]->localSmooth)
+				rig->defRig.defGroups[defIdx]->smoothingPasses = value;
+		}
+
+		updateAirSkinning(rig->defRig, *rig->model);
 	}
 
 	paintModelWithData();
@@ -2808,6 +2814,26 @@ void GLWidget::toogleToShowSegmentation(bool toogle)
 
 void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 {
+	object *selectedObject = NULL;
+	if (selMgr.selection.size() > 0)
+		selectedObject = selMgr.selection.back();
+
+	if (selectedObject != NULL) 
+	{
+		if(selectedObject->iam == DEFGROUP_NODE)
+		{
+			DefGroup* group = (DefGroup*) selectedObject;
+			group->expansion = expValue;
+			propagateExpansion(*group);
+
+			AirRig* rig = (AirRig*)escena->rig;
+			updateAirSkinning(rig->defRig, *rig->model);
+		}
+	}
+
+	paintModelWithData();
+
+	/*
      for(unsigned int i = 0; i< selMgr.selection.size(); i++)
      {
          if(((object*)selMgr.selection[i])->iam == JOINT_NODE)
@@ -2852,6 +2878,9 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 
      grRend->propagateDirtyness();
      updateGridRender();
+	 */
+
+
  }
 
 void GLWidget::postSelection(const QPoint&)
@@ -3561,6 +3590,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
         Modelo* m = ((Modelo*)escena->models.back());
         m->sPath = newPath.toStdString(); // importante para futuras referencias
 		BuildSurfaceGraphs(m);
+		getBDEmbedding(m);
 
         // Leer esqueleto
 		if(!sSkeletonFile.isEmpty())
@@ -3581,7 +3611,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 				initModelForDeformation(m);
 			
 			QString extendedBinding = sBindingFileFullPath.c_str();
-			extendedBinding.append("_extended.txt");
+			extendedBinding.append("_extend.txt");
 
 			// Cargar en memoria los datos del binding tal cual
 			loadAirBinding(m->bind, extendedBinding.toStdString());
@@ -3607,7 +3637,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 		if(skinLoaded)
 		{
 			// Now it's time to do a correspondence with the loaded data and the scene.
-			((AirRig*)escena->rig)->airSkin->loadBindingForModel(m, (AirRig*)escena->rig);
+			//((AirRig*)escena->rig)->airSkin->loadBindingForModel(m, (AirRig*)escena->rig);
 
 			((AirRig*)escena->rig)->airSkin->computeRestPositions(escena->skeletons);
 

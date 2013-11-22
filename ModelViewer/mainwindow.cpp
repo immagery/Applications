@@ -29,8 +29,8 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->voxelization_btn, SIGNAL(released()), this, SLOT(Compute()));
 	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
 
-	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeLocalSmoothingPasses(int)));
-	connect(ui->localSmoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalSmoothingPasses(int)));
+	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalSmoothingPasses(int)));
+	connect(ui->localSmoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeLocalSmoothingPasses(int)));
 
     connect(ui->prop_function_updt, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
 
@@ -137,7 +137,7 @@ void MainWindow::changeGlobalSmoothingPasses(int value)
 
 void MainWindow::changeLocalSmoothingPasses(int value)
 {
-    float valueAux = ui->smoothingPasses->value();
+	float valueAux = ui->localSmoothingPasses->value();
     widget->setLocalSmoothPasses(valueAux);
 }
 
