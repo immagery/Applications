@@ -51,6 +51,8 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	escena->rig = new AirRig(scene::getNewId());
 
+	bDrawStatistics = false;
+
 }
 
 void GLWidget::doTests(string fileName, string name, string path) 
@@ -869,26 +871,7 @@ void GLWidget::paintModelWithData() {
                 //if (sum < 1)
                 //	printf("no se cumple la particion de unidad: %f.\n", sum);
             }
-            else if(escena->iVisMode == VIS_SEG_PASS)
-            {
-                value = 0.0;
-				int actualDesiredNumber = escena->desiredVertex;
-				for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
-				{
-					if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
-					{
-						actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
-						break;
-					}
-				}
-
-					
-				if(rig->defRig.defNodesRef[pd.segmentId]->boneId == escena->desiredVertex)
-                {
-                    value = 1.0;
-                }
-            }
-            else if(escena->iVisMode == VIS_CONFIDENCE_LEVEL)
+            else if(escena->iVisMode == VIS_SECW_WIDE)
             {
 				value = 0.0;
 
@@ -917,9 +900,48 @@ void GLWidget::paintModelWithData() {
 					if(pd.secondInfluences[searchedindex].size()> 0)
 					{
 						if(valueAux < pd.secondInfluences[searchedindex].size())
-							value = pd.secondInfluences[searchedindex][valueAux];
+							value = pd.secondInfluences[searchedindex][valueAux].wideBone;
 						else
-							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1];
+							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1].wideBone;
+					}
+					else
+					{
+						value = 1.0;
+					}
+				}
+            }
+            else if(escena->iVisMode == VIS_SECW_ALONG)
+            {
+				value = 0.0;
+
+				int actualDesiredNumber = escena->desiredVertex;
+				for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
+				{
+					if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
+					{
+						actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
+						break;
+					}
+				}
+
+                int searchedindex = -1;
+                for(unsigned int ce = 0; ce < pd.influences.size(); ce++)
+                {
+                    if(pd.influences[ce].label == actualDesiredNumber)
+                    {
+                        searchedindex = ce;
+                        break;
+                    }
+                    //sum += pd.influences[ce].weightvalue;
+                }
+                if(searchedindex >= 0)
+				{
+					if(pd.secondInfluences[searchedindex].size()> 0)
+					{
+						if(valueAux < pd.secondInfluences[searchedindex].size())
+							value = pd.secondInfluences[searchedindex][valueAux].alongBone;
+						else
+							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1].alongBone;
 					}
 					else
 					{
@@ -955,7 +977,7 @@ void GLWidget::paintModelWithData() {
                     if(maxdistance <= 0)
                         value = 0;
                     else
-                        value = m->bind->BihDistances.get(count,escena->desiredVertex) / maxdistance;
+                        value = m->bind->BihDistances[0].get(count,escena->desiredVertex) / maxdistance;
                 }
             }
             else if(escena->iVisMode == VIS_POINTDISTANCES)
@@ -987,9 +1009,9 @@ void GLWidget::paintModelWithData() {
 					if(pd.secondInfluences[searchedindex].size()> 0)
 					{
 						if(valueAux < pd.secondInfluences[searchedindex].size())
-							value = pd.secondInfluences[searchedindex][valueAux]*pd.influences[searchedindex].weightValue;
+							value = pd.secondInfluences[searchedindex][valueAux].alongBone*pd.influences[searchedindex].weightValue;
 						else
-							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1]*pd.influences[searchedindex].weightValue;
+							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1].alongBone*pd.influences[searchedindex].weightValue;
 					}
 					else
 					{
@@ -1076,6 +1098,8 @@ void GLWidget::computeProcess() {
 	if(escena->rig)
 		delete escena->rig;
 
+	clock_t ini = clock();
+
 	// Crear rig nuevo
 	escena->rig = new AirRig(scene::getNewId());
 	AirRig* rig = (AirRig*) escena->rig;
@@ -1089,6 +1113,9 @@ void GLWidget::computeProcess() {
 	// Build deformers structure for computations.
 	rig->preprocessModelForComputations();
 
+	clock_t fin = clock();
+	printf("Preprocess: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
+
 	// Skinning computations
 	updateAirSkinning(rig->defRig, *rig->model);
 
@@ -1097,6 +1124,8 @@ void GLWidget::computeProcess() {
 	paintModelWithData();
 
 	emit updateSceneView();
+
+	bDrawStatistics = true;
 
 	/*
 
@@ -3005,10 +3034,19 @@ void GLWidget::drawWithDistances()
 
  void GLWidget::draw()
  {
-	//escena->skinner->computeDeformationsWithSW(escena->skeletons);
+	clock_t ini = clock();
+	clock_t fin;
+
 	for(int j = 0; j < escena->skeletons.size(); j++) 
 	{
 		escena->skeletons[j]->root->computeWorldPos();
+	}
+
+	if(bDrawStatistics)
+	{
+		fin = clock();
+		printf("Calculo de computeWorldPos: %f segs.\n", timelapse(fin,ini)); fflush(0);
+		ini = clock();
 	}
 
 	AirRig* rig = (AirRig*)escena->rig;
@@ -3024,12 +3062,36 @@ void GLWidget::drawWithDistances()
 		}
 	}
 
+	if(bDrawStatistics)
+	{
+		fin = clock();
+		printf("Calculo de deformaciones: %f segs.\n", timelapse(fin,ini)); fflush(0);
+		ini = clock();
+	}
+
 	AdriViewer::draw();
- 
+	
+	if(bDrawStatistics)
+	{
+		fin = clock();
+		printf("AdriViewer Draw: %f segs.\n", timelapse(fin,ini)); fflush(0);
+		ini = clock();
+	}
+
 	for(unsigned int i = 0; i< rig->defRig.defGroups.size(); i++)
      {
          ((DefGroupRender*)rig->defRig.defGroups[i]->shading)->drawFunc();
      }
+
+	if(bDrawStatistics)
+	{
+		fin = clock();
+		printf("GroupRender Draw: %f segs.\n", timelapse(fin,ini)); fflush(0);
+		ini = clock();
+
+		bDrawStatistics = false;
+	}
+
  }
 
 void GLWidget::drawModel()

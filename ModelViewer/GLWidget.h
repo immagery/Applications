@@ -99,9 +99,6 @@ public slots:
     void UpdateVertexSource(int id);
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);
-
-	
-	
 	virtual void setTwistParams(double ini, double fin, bool enable);
 
 	virtual void setGlobalSmoothPasses(int globalSmooth);
