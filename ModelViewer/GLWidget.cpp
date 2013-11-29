@@ -1079,6 +1079,7 @@ void GLWidget::selectElements(vector<unsigned int > lst)
 				emit defGroupData(rig->defRig.defGroups[group]->iniTwist, 
 								  rig->defRig.defGroups[group]->finTwist, 
 								  rig->defRig.defGroups[group]->enableTwist,
+								  rig->defRig.defGroups[group]->smoothTwist,
 								  rig->defRig.defGroups[group]->smoothingPasses);
 
 				double alfa,beta,gamma;
@@ -2324,7 +2325,7 @@ void GLWidget::setGlobalSmoothPasses(int value)
 	paintModelWithData();
 }
 
-void GLWidget::setTwistParams(double ini, double fin, bool enable)
+void GLWidget::setTwistParams(double ini, double fin, bool enable, bool smooth)
 {
 	object *selectedObject = NULL;
     if (selMgr.selection.size() > 0)
@@ -2338,6 +2339,7 @@ void GLWidget::setTwistParams(double ini, double fin, bool enable)
 			group->iniTwist = ini;
 			group->finTwist = fin;
 			group->enableTwist = enable;
+			group->smoothTwist = smooth;
 		}
 		/*
 			AirRig* rig = (AirRig*)escena->rig;
@@ -2853,6 +2855,7 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 		{
 			DefGroup* group = (DefGroup*) selectedObject;
 			group->expansion = expValue;
+
 			propagateExpansion(*group);
 
 			AirRig* rig = (AirRig*)escena->rig;

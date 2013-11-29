@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 
     connect(ui->exportWeights_btn, SIGNAL(released()), widget, SLOT(exportWeightsToMaya()));
 
-    connect(ui->expansionSlider, SIGNAL(sliderReleased()), this, SLOT(changeExpansionSlider()));
+    //connect(ui->expansionSlider, SIGNAL(sliderReleased()), this, SLOT(changeExpansionSlider()));
     connect(ui->expansionSlider, SIGNAL(valueChanged(int)), this, SLOT(updateExpansionSlidervalue(int)));
 
 	connect(ui->thresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(updateThresholdSlidervalue(int)));
@@ -79,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 
 	connectSignals();
 
+	ui->defNodesSize->setValue(scene::drawingNodeStdSize*1000);
 }
 
 void MainWindow::Compute()
@@ -270,13 +271,16 @@ void MainWindow::toogleToShowSegmentation(bool toogle)
 void MainWindow::changeExpansionSlider()
 {
     float valueAux = ui->expansionSlider->value();
-    float value = 0;
-    if(valueAux <= 100)
+	float value = valueAux / 1000.0;
+    
+	/*
+	if(valueAux <= 100)
         value = ((float)ui->expansionSlider->value())/100.0;
     else
     {
         value = (((valueAux-100)/100)*2)+1.0;
     }
+	*/
 
     ui->expansionValueEdit->setText(QString("%1").arg(value));
     ((GLWidget*)ui->glCustomWidget)->changeExpansionFromSelectedJoint(value);
