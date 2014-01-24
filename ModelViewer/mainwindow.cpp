@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 
     connect(ui->exportWeights_btn, SIGNAL(released()), widget, SLOT(exportWeightsToMaya()));
 
-    //connect(ui->expansionSlider, SIGNAL(sliderReleased()), this, SLOT(changeExpansionSlider()));
+    connect(ui->expansionSlider, SIGNAL(sliderReleased()), this, SLOT(changeExpansionSlider()));
     connect(ui->expansionSlider, SIGNAL(valueChanged(int)), this, SLOT(updateExpansionSlidervalue(int)));
 
 	connect(ui->thresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(updateThresholdSlidervalue(int)));

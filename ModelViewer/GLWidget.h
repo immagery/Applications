@@ -2,6 +2,7 @@
 #define GLWIDGET_H
 
 #include <gui/AdriViewer.h>
+#include <gui/manipulator.h>
 
 #include <DataStructures/DataStructures.h>
 #include <DataStructures/Scene.h>
@@ -13,6 +14,10 @@
 #include <render/gridRender.h>
 #include <render/clipingPlaneRender.h>
 #include "mainwindow.h"
+
+#include <gui/sktCreator.h>
+
+//#include "gui\sktCreator.h"
 
 using namespace std;
 
@@ -78,11 +83,36 @@ public:
 	virtual void readScene(string fileName, string name, string path);
 	virtual void saveScene(string fileName, string name, string path, bool compactMode = false);
 
+	// Skeleton creator tool
+	sktCreator* sktCr;
+
+	// Interface management
+	Vector2i pressMouse;
+	bool pressed;
+
+	virtual void mouseReleaseEvent(QMouseEvent* e);
+	virtual void mousePressEvent(QMouseEvent* e);
+	virtual void mouseMoveEvent(QMouseEvent* e);
+
+	virtual void keyPressEvent(QKeyEvent *e);
+
+	int getSelection();
+
+	manipulator ToolManip;
+
+	virtual void traceRayToObject(Geometry* geom, Vector2i& pt , Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx);
+	virtual void getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point);
 
 protected:
-    virtual void postSelection(const QPoint& point);
+    //virtual void postSelection(const QPoint& point);
 	virtual void draw();
-	
+	virtual void drawWithNames();
+
+	virtual void init();
+
+	virtual void setContextMode(contextMode ctx);
+	virtual void endContextMode(contextMode ctx);
+
 public slots:
 
     // GENERAL

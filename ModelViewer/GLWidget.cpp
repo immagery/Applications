@@ -53,12 +53,84 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	bDrawStatistics = false;
 
+	sktCr = new sktCreator();
+
 }
+
+void GLWidget::init()
+{
+	//setHandlerKeyboardModifiers(QGLViewer::SELECT, Qt::KeyboardModifier::NoModifier);
+	//setHandlerKeyboardModifiers(QGLViewer::CAMERA, Qt::KeyboardModifier::AltModifier);
+	//setHandlerKeyboardModifiers(QGLViewer::FRAME, Qt::KeyboardModifier::NoModifier);
+	//setHandlerKeyboardModifiers(QGLViewer::CAMERA, Qt::KeyboardModifier::ControlModifier);
+	//setMouseBinding(Qt::NoModifier, Qt::MouseButton::LeftButton, NO_CLICK_ACTION);
+	//setMouseBinding(Qt::ControlModifier | Qt::ShiftModifier, NO_CLICK_ACTION, false, Qt::LeftButton);
+
+	//setMouseBinding(Qt::ControlModifier | Qt::ShiftModifier | Qt::RightButton, SELECT);
+	
+	//setMouseBinding(Qt::AltModifier | Qt::LeftButton , NO_CLICK_ACTION);
+	//setMouseBinding(Qt::LeftButton, NO_CLICK_ACTION);
+
+	/*
+		setMouseBinding(Qt::ControlModifier | Qt::LeftButton, CAMERA, NO_MOUSE_ACTION);
+		setMouseBinding(Qt::ControlModifier | Qt::LeftButton, NO_CLICK_ACTION);
+
+		setMouseBinding(Qt::LeftButton, CAMERA, NO_MOUSE_ACTION);
+		setMouseBinding(Qt::LeftButton, NO_CLICK_ACTION);
+
+		setMouseBinding(Qt::ControlModifier, CAMERA, NO_MOUSE_ACTION);
+		setMouseBinding(Qt::ControlModifier, NO_CLICK_ACTION);
+
+		setMouseBinding(Qt::ControlModifier | Qt::LeftButton, CAMERA, ROTATE);
+	*/
+
+	//setMouseBinding(Qt::LeftButton, CAMERA, ROTATE);
+
+	AdriViewer::init();
+}
+
+void GLWidget::setContextMode(contextMode ctx)
+ {
+    selMgr.ctx = ctx;
+
+	// activamos la opcion de creation
+	if(ctx == CTX_CREATE_SKT)
+	{
+		//TODO if there is needed some process
+		//sktCr->dynRig->clear();
+		ToolManip.type = MANIP_NONE;
+	}
+	else if(ctx == CTX_MOVE)
+	{
+		ToolManip.type = MANIP_MOVE;
+	}
+	else if(ctx == CTX_ROTATION)
+	{
+		ToolManip.type = MANIP_ROT;
+	}
+	else if(ctx == CTX_SCALE)
+	{
+		ToolManip.type = MANIP_SCL;
+	}
+ }
+
+ void GLWidget::endContextMode(contextMode ctx)
+ {
+	// limpiamos la opcion de creacion
+	if(ctx == CTX_CREATE_SKT)
+	{
+		delete sktCr;
+		sktCr = NULL;
+	}
+ }
+ 
 
 void GLWidget::doTests(string fileName, string name, string path) 
 {
+	// Load 2 cylinders, with colored faces.
 
-	assert(false);
+
+	//assert(false);
 	// To fix for the latest structure changes [13/11/2013]
 
 /*
@@ -915,9 +987,14 @@ void GLWidget::paintModelWithData() {
 				value = 0.0;
 
 				int actualDesiredNumber = escena->desiredVertex;
+				
 				for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
 				{
-					if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
+					// parche para video
+					if(rig->defRig.defGroups[groupIdx]->relatedGroups.size() == 0) continue;
+
+					if(rig->defRig.defGroups[groupIdx]->relatedGroups[0]->nodeId == actualDesiredNumber)
+					//if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
 					{
 						actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
 						break;
@@ -949,24 +1026,6 @@ void GLWidget::paintModelWithData() {
 					}
 				}
 
-				/*
-                value = 0.0;
-                if(count == escena->desiredVertex)
-                {
-                    value = 1.0;
-                }
-                else
-                {
-                    for(int elemvecino = 0; elemvecino < bd->surface.nodes[count]->connections.size() ; elemvecino++)
-                    {
-                        if(bd->surface.nodes[count]->connections[elemvecino]->id == escena->desiredVertex)
-                        {
-                            value = 0.5;
-                            break;
-                        }
-                    }
-                }
-				*/
             }
             else if(escena->iVisMode == VIS_ISODISTANCES)
             {
@@ -1123,6 +1182,19 @@ void GLWidget::computeProcess() {
 	// enable deformations and render data
 	rig->enableDeformation = true;
 	paintModelWithData();
+
+	// Set Some parameters for better animation
+	for(int i = 0; i< rig->defRig.defGroups.size(); i++)
+	{
+		int nodeIdAux = rig->defRig.defGroups[i]->nodeId;
+		int trandsfromIdAux = rig->defRig.defGroups[i]->transformation->nodeId;
+
+		//if(nodeIdAux == 178 || trandsfromIdAux == 178) rig->defRig.defGroups[i]->parentType = 1;
+		//if(nodeIdAux == 179 || trandsfromIdAux == 179) rig->defRig.defGroups[i]->parentType = 1;
+		//if(nodeIdAux == 182 || trandsfromIdAux == 182) rig->defRig.defGroups[i]->parentType = 1;
+		//if(nodeIdAux == 200 || trandsfromIdAux == 200) rig->defRig.defGroups[i]->parentType = 1;
+		//if(nodeIdAux == 110 || trandsfromIdAux == 110) rig->defRig.defGroups[i]->parentType = 1;
+	}
 
 	emit updateSceneView();
 
@@ -2915,9 +2987,9 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 
  }
 
-void GLWidget::postSelection(const QPoint&)
-{
-    int i = 0;
+//void GLWidget::postSelection(const QPoint&)
+//{
+//    int i = 0;
     //TODO
     /*
     if(!bHComputed && !bGCcomputed && !bMVCComputed )
@@ -2985,7 +3057,7 @@ void GLWidget::postSelection(const QPoint&)
     printf("\nMax MVC: %f Min MVC: %f \n\n", maxMinMVC[0], maxMinMVC[1]);
     fflush(0);
     */
-}
+//}
 
 void GLWidget::drawWithDistances()
 {
@@ -3072,7 +3144,15 @@ void GLWidget::drawWithDistances()
 		ini = clock();
 	}
 
-	AdriViewer::draw();
+	// Dynamic creative rigg
+	if(sktCr && sktCr->dynRig) 
+	{
+		sktCr->dynRig->update();
+		for(unsigned int i = 0; i< sktCr->dynRig->defRig.defGroups.size(); i++)
+		{
+			((DefGroupRender*)sktCr->dynRig->defRig.defGroups[i]->shading)->drawFunc();
+		}
+	}
 	
 	if(bDrawStatistics)
 	{
@@ -3095,6 +3175,451 @@ void GLWidget::drawWithDistances()
 		bDrawStatistics = false;
 	}
 
+	AdriViewer::draw();
+
+	if(selMgr.selection.size() >0 )
+	{
+		// quizás hay que quitar opciones de zbuffer para pintar siempre
+		// encima de todo
+		// Hay seleccion
+		ToolManip.size = 3;
+		ToolManip.drawFunc();
+	}
+
+ }
+
+  void GLWidget::drawWithNames()
+ {
+	 if(selMgr.ctx == CTX_CREATE_SKT)
+	 {
+		 if(sktCr->dynRig->defRig.defGroups.size() == 0)
+		 {
+			 // Enable selection with defGroups
+			 // from "all the rigs" in the scene
+			 AirRig* rig = (AirRig*)escena->rig;
+			 for(int rigIdx = 0; rigIdx < rig->defRig.defGroups.size(); rigIdx++)
+			 {
+				 glPushName(rigIdx);
+				 ((DefGroupRender*)rig->defRig.defGroups[rigIdx]->shading)->drawFunc();
+				 glPopName();
+			 }
+		 }
+		 else if(selMgr.selection.size() == 1)
+		 {
+			 // Disable selection
+			 return;
+		 }
+
+	 }
+	 else if(selMgr.ctx == CTX_MOVE || selMgr.ctx == CTX_ROTATION || selMgr.ctx == CTX_SCALE)
+	 {
+		 AdriViewer::drawWithNames();
+	 }
+  }
+
+void GLWidget::keyPressEvent(QKeyEvent* e)
+{
+	bool handled = false;
+	//const Qt::ButtonState modifiers = (Qt::ButtonState)(e->state() & Qt::KeyButtonMask);
+	if(e->key() == Qt::Key_Enter)
+	{
+		if(sktCr->state == CTX_CREATE_SKT)
+		{
+			printf("Finalizando operacion\n");
+			sktCr->finishRig();
+			
+			handled = true;
+		}
+	}
+	else if(e->key() == Qt::Key_Alt)
+	{
+
+}	
+
+	if (!handled)
+		QGLViewer::keyPressEvent(e);
+}
+
+
+int GLWidget::getSelection()
+{
+  // Flush GL buffers
+  glFlush();
+
+  // Get the number of objects that were seen through the pick matrix frustum. Reset GL_RENDER mode.
+  GLint nbHits = glRenderMode(GL_RENDER);
+
+  if (nbHits > 0)
+    {
+	  return (selectBuffer())[4*0+3];
+      // Interpret results : each object created 4 values in the selectBuffer().
+      // (selectBuffer())[4*i+3] is the id pushed on the stack.
+      //for (int i=0; i<nbHits; ++i)
+	  //{
+	//	selectBuffer()[4*i+3]
+	  //}
+  }
+
+  return  -1;
+}
+
+void GLWidget::mousePressEvent(QMouseEvent* e)
+{
+	if(e->button() == Qt::LeftButton)
+	{
+		//printf("pressed Left Button\n");
+		pressMouse = Vector2i(e->pos().x(), e->pos().y());
+		pressed = true;
+
+		if(selMgr.ctx == CTX_MOVE || selMgr.ctx == CTX_ROTATION || selMgr.ctx == CTX_SCALE)
+		{
+			beginSelection(e->pos());
+			ToolManip.drawFuncNames();
+			int node = getSelection();
+
+			if(node >= 0 && node <10)
+			{
+				ToolManip.bModifierMode = true;
+
+				qglviewer::Vec orig, dir, selectedPoint;
+  
+				// Compute orig and dir, used to draw a representation of the intersecting line
+				camera()->convertClickToLine(QPoint(e->pos().x(), e->pos().y()), orig, dir);
+
+				ToolManip.pressMouse = Vector2i(e->pos().x(), e->pos().y());
+
+				bool found;
+				selectedPoint = camera()->pointUnderPixel(QPoint(e->pos().x(), e->pos().y()), found);
+
+				// This will be used to compute the right modification like in maya.
+				// For build plane of movement
+				ToolManip.orig = Vector3d(orig.x, orig.y, orig.z);
+				ToolManip.dir = Vector3d(dir.x, dir.y, dir.z);
+				ToolManip.selectedPoint = Vector3d(selectedPoint.x, selectedPoint.y, selectedPoint.z);
+
+				ToolManip.previousframe = ToolManip.currentframe;
+
+				if(node == 0) ToolManip.axis = AXIS_VIEW;
+				if(node == 1) ToolManip.axis = AXIS_X;
+				if(node == 2) ToolManip.axis = AXIS_Y;
+				if(node == 3) ToolManip.axis = AXIS_Z;
+
+				//Ver si es un manipulador.
+				printf("Es el elemento %d del manipulador\n", node);
+				
+			}			
+		}
+	}
+
+	AdriViewer::mousePressEvent(e);
+
+}
+
+void GLWidget::mouseMoveEvent(QMouseEvent* e)
+{
+	if(e->modifiers() & Qt::ControlModifier)
+	{
+		//e->setModifiers(e->modifiers()&=!Qt::ControlModifier);
+		//printf("Hola");
+	}
+	else if(pressed && ToolManip.bModifierMode)
+	{
+		//printf("dragging\n");
+		Vector2i currentMouse(e->pos().x(), e->pos().y());
+
+		qglviewer::Vec orig, dir, selectedPoint;
+		camera()->convertClickToLine(QPoint(e->pos().x(), e->pos().y()), orig, dir);
+
+		if(e->pos().x() == ToolManip.pressMouse.x() && e->pos().y() == ToolManip.pressMouse.y() )
+			return;
+
+		Vector3d rayOrigin(orig.x, orig.y, orig.z);
+		Vector3d rayDir(dir.x, dir.y, dir.z);
+		ToolManip.moveManipulator(rayOrigin, rayDir);
+
+		ToolManip.applyTransformation(selMgr.selection[0]);
+
+		return;
+	}
+
+	AdriViewer::mouseMoveEvent(e);
+	//AdriViewer::mouseMoveEvent(e);
+}
+
+void GLWidget::mouseReleaseEvent(QMouseEvent* e)
+{
+	if(e->button() == Qt::LeftButton)
+	{
+		//printf("released Left Button\n");
+		Vector2i releaseMouse(e->pos().x(), e->pos().y());
+		pressed = false;
+
+		if(selMgr.ctx == CTX_MOVE || selMgr.ctx == CTX_ROTATION || selMgr.ctx == CTX_SCALE)
+		{
+			if(ToolManip.bModifierMode)//node >= 0 && node <10)
+			{
+				//beginSelection(e->pos());
+				//ToolManip.drawNamesWithProjectingPlane();
+				//int node = getSelection();
+
+				ToolManip.bModifierMode = false;
+
+				// Guardar la nueva posición como posición actual en todos los niveles.
+
+				printf("Salimos de modo manipulacion\n");
+				//Ver si es un manipulador.
+				//printf("Es el elemento %d del manipulador\n", node);
+				//no tenemos que realizar nada.
+				
+			}
+			else
+			{
+				//Sino ver si es un modelo.
+				beginSelection(e->pos());
+				drawWithNames();
+				int node = getSelection();
+
+				// Ver si es un objeto de la escena
+				if(selMgr.selection.size() == 0)
+				{
+					int nodeIdx = -1;
+					for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+					{
+						if(node == escena->models[tempIdx]->nodeId)
+						{
+							nodeIdx = tempIdx;
+							break;
+						}
+					}
+
+					if(nodeIdx >= 0 && nodeIdx < escena->models.size())
+					{
+						// Selection
+						selMgr.selection.push_back(escena->models[nodeIdx]);
+						escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+
+						object* m = escena->models[nodeIdx];
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = true;
+						ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
+				
+						printf("Model %d selected\n", node);
+					}
+				}
+				else
+				{
+					if(node > 0)
+					{
+						// Si es diferente del que había seleccionado-> cambiar
+						if(selMgr.selection[0]->nodeId == node)
+						{
+
+						}
+						else
+						{
+							// deseleccion
+							int oldId = selMgr.selection[0]->nodeId;
+							selMgr.selection[0]->select(true, oldId);
+							selMgr.selection.clear();
+
+							//seleccionar el nuevo
+							int nodeIdx = -1;
+							for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+							{
+								if(node == escena->models[tempIdx]->nodeId)
+								{
+									nodeIdx = tempIdx;
+									break;
+								}
+							}
+
+							if(nodeIdx >= 0 && nodeIdx < escena->models.size())
+							{
+								// Selection
+								selMgr.selection.push_back(escena->models[nodeIdx]);
+								escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+
+								object* m = escena->models[nodeIdx];
+
+								ToolManip.bModifierMode = false;
+								ToolManip.bEnable = true;
+								ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
+				
+								printf("Cambio de modelo: new model %d selected\n", node);
+							}
+						}
+					}
+					else
+					{
+						// Si no es nada-> deseleccionar
+						// deseleccion
+						int oldId = selMgr.selection[0]->nodeId;
+
+						selMgr.selection[0]->select(true, oldId);
+						selMgr.selection.clear();
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = false;
+					}
+				}
+			}
+
+		}
+		else if(selMgr.ctx == CTX_CREATE_SKT)
+		{
+			int node = getSelection();
+			if(node >= 0)
+			{
+				if(node <  ((AirRig*)escena->rig)->defRig.defGroups.size())
+				{
+					sktCr->parentNode = ((AirRig*)escena->rig)->defRig.defGroups[node];
+					sktCr->parentRig = (AirRig*)escena->rig;
+					sktCr->parentNode->shading->selected = true;
+				}
+
+				// Hay que marcar el nodo que se ha seleccionado
+				return;
+			}
+
+			Vector2i screenPt(e->pos().x(), e->pos().y());
+			Geometry* geom = (Geometry*)(escena->models[0]);
+
+			vector<Vector3d> intersecPoints;
+			Vector3d rayDir;
+			vector<int> triangleIdx;
+
+			Vector3d jointPoint;
+
+			// Get intersections
+			traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
+
+			if(intersecPoints.size() > 0)
+			{
+				// Select the right point
+				getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+
+				// Add the new joint to the temporal dynamic skeleton
+				sktCr->addNewNode(jointPoint);
+			}
+		}
+	}
+
+	AdriViewer::mouseReleaseEvent(e);
+}
+
+void GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point)
+{
+  int firstIn = -1;
+  int firstOut = -1;
+  // A partir del vector ordenado por profundidades cojo el primer rango in/out, para eso usamos la normal
+  // del triangulo -vs- la direccion del rayo
+  for(int intrIdx = 0; intrIdx < triangleIdx.size(); intrIdx++)
+  {
+	  float orient = rayDir.dot(geom->faceNormals[triangleIdx[intrIdx]]);
+	  if(orient >= 0)
+	  {
+		  if(firstIn >= 0)
+			  firstOut = intrIdx;
+		  
+		  if(firstIn >= 0 && firstOut > 0)
+			  break;
+	  }
+	  else
+	  {
+		  if(firstIn < 0) firstIn = intrIdx;
+	  }
+  }
+
+  if(firstIn>=0 && firstOut>0)
+  {
+	printf("El punto seleccionado es...");
+	point = Vector3d((intersecPoints[firstIn] + intersecPoints[firstOut])/2);
+	printf("%f %f %f a profundidad %f", point.x(), point.y(), point.z());//, dephts[firstIn]+dephts[firstOut]/2);
+  }
+  else
+  {
+	  printf("No hay punto...\n");
+  }
+
+}
+
+ void GLWidget::traceRayToObject(Geometry* geom, Vector2i& pt , Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx)
+ {
+  
+  qglviewer::Vec orig, dir, selectedPoint;
+  
+  // Compute orig and dir, used to draw a representation of the intersecting line
+  camera()->convertClickToLine(QPoint(pt.x(), pt.y()), orig, dir);
+
+  // Find the selectedPoint coordinates, using camera()->pointUnderPixel().
+  bool found;
+  selectedPoint = camera()->pointUnderPixel(QPoint(pt.x(), pt.y()), found);
+
+  // Construimos un rayo suficientemente largo
+  Ray r;
+  Vector3d origenPt = Vector3d(orig[0],orig[1],orig[2]);
+  Vector3d selPt = Vector3d(selectedPoint[0],selectedPoint[1],selectedPoint[2]);
+  r.P0 = origenPt;
+  r.P1 = (selPt-origenPt)*10+origenPt;
+
+  rayDir = Vector3d(dir.x, dir.y, dir.z); 
+
+  // Recorremos todos los triángulos y evaluamos si intersecta, en ese caso lo apilamos.
+  vector<unsigned int> ids;
+  TriangleAux tr;
+
+  vector<float> dephts;
+
+  for(int trIdx = 0; trIdx< geom->triangles.size(); trIdx++ )
+  {
+	int pIdx = geom->triangles[trIdx]->verts[0]->id;
+	tr.V0 = geom->nodes[pIdx]->position;
+
+	pIdx = geom->triangles[trIdx]->verts[1]->id;
+	tr.V1 = geom->nodes[pIdx]->position;
+
+ 	pIdx = geom->triangles[trIdx]->verts[2]->id;
+	tr.V2 = geom->nodes[pIdx]->position; 
+
+	Vector3d I;
+	int res = intersect3D_RayTriangle(r, tr, I);
+  
+	if(res > 0 && res < 2)
+	{
+		printf("Interseccion con: %d\n", trIdx);
+		
+		float depth = (origenPt-I).norm();
+
+		vector<float>::iterator it = dephts.begin();
+		vector<Vector3d>::iterator it2 = intersecPoints.begin();
+		vector<int>::iterator it3 = triangleIdx.begin();
+
+		bool inserted = false;
+		// Lo anadimos a la lista de intersecciones, pero ordenado por profundidad.
+		for(int dIdx = 0; dIdx< dephts.size(); dIdx++)
+		{
+			if(dephts[dIdx] > depth)
+			{
+				dephts.insert(it, depth);
+				intersecPoints.insert(it2, I);
+				triangleIdx.insert(it3, trIdx);
+				inserted = true;
+				break;
+			}
+
+			++it2;
+			++it;
+		}
+
+		if(!inserted)
+		{
+			dephts.push_back(depth);
+			intersecPoints.push_back(I);
+			triangleIdx.push_back(trIdx);
+		}
+	}
+  }
  }
 
 void GLWidget::drawModel()
@@ -3704,7 +4229,12 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 			// Now it's time to do a correspondence with the loaded data and the scene.
 			//((AirRig*)escena->rig)->airSkin->loadBindingForModel(m, (AirRig*)escena->rig);
 
-			((AirRig*)escena->rig)->airSkin->computeRestPositions(escena->skeletons);
+			//((AirRig*)escena->rig)->airSkin->computeRestPositions(escena->skeletons);
+
+			for(int ro = 0; ro < ((AirRig*)escena->rig)->defRig.roots.size(); ro++)
+			{
+				((AirRig*)escena->rig)->defRig.roots[ro]->computeRestPos(((AirRig*)escena->rig)->defRig.roots[ro]);
+			}
 
 			((AirRig*)escena->rig)->enableDeformation = true;
 		}

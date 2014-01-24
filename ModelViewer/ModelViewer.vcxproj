@@ -279,6 +279,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Image>
+    <Image Include="..\..\adri\gui\icons\create_joints.png" />
     <Image Include="..\..\adri\gui\icons\Files-New-File-icon.png" />
     <Image Include="..\..\adri\gui\icons\folder-icon.png">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -454,6 +455,7 @@
     <ClCompile Include="..\..\adri\gui\manipulatedFrameSetConstraint.cpp" />
     <ClCompile Include="..\..\adri\gui\outliner.cpp" />
     <ClCompile Include="..\..\adri\gui\selectionManager.cpp" />
+    <ClCompile Include="..\..\adri\gui\sktCreator.cpp" />
     <ClCompile Include="..\..\adri\gui\treeitem.cpp" />
     <ClCompile Include="..\..\adri\gui\treemodel.cpp" />
     <ClCompile Include="..\..\adri\render\clipingPlaneRender.cpp" />
@@ -476,6 +478,7 @@
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirRig.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirSkinning.cpp" />
     <ClCompile Include="..\..\air\AirLib\gui\AirOutliner.cpp" />
+    <ClCompile Include="..\..\air\AirLib\gui\manipulator.cpp" />
     <ClCompile Include="..\..\air\AirLib\tetgen\predicates.cxx" />
     <ClCompile Include="GeneratedFiles\moc_adrimainwindow.cpp" />
     <ClCompile Include="GeneratedFiles\moc_AdriViewer.cpp" />
@@ -520,11 +523,13 @@
     <ClInclude Include="..\..\adri\DataStructures\Transform.h" />
     <ClInclude Include="..\..\adri\global.h" />
     <ClInclude Include="..\..\adri\globalDefinitions.h" />
+    <ClInclude Include="..\..\adri\gui\sktCreator.h" />
     <ClInclude Include="..\..\adri\render\defGorupRender.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\AirSegmentation.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
     <ClInclude Include="..\..\air\AirLib\gui\AirOutliner.h" />
+    <ClInclude Include="..\..\air\AirLib\gui\manipulator.h" />
     <ClInclude Include="Header.h" />
     <CustomBuild Include="..\..\adri\gui\KeyframeBar.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
