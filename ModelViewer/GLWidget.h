@@ -11,6 +11,10 @@
 #include <DataStructures/Modelo.h>
 #include <DataStructures/grid3D.h>
 
+#include <QtGui\qopenglshaderprogram.h>
+#include <QtGui\qopenglbuffer.h>
+#include <QtGui\qopenglvertexarrayobject.h>
+
 #include <render/gridRender.h>
 #include <render/clipingPlaneRender.h>
 #include "mainwindow.h"
@@ -30,6 +34,8 @@ class joint;
 //class gridRenderer;
 class Modelo;
 class grid3d;*/
+
+enum shaderIdx {SHD_BASIC = 0, SHD_XRAY, SHD_VERTEX_COLORS, SHD_NO_SHADE, SHD_LENGTH};
 
 class GLWidget : public AdriViewer
 {
@@ -87,18 +93,33 @@ public:
 	sktCreator* sktCr;
 
 	// Interface management
-	Vector2i pressMouse;
+	Vector2f pressMouse;
 	bool pressed;
+	bool dragged;
+
+	shaderIdx preferredType;
 
 	virtual void mouseReleaseEvent(QMouseEvent* e);
 	virtual void mousePressEvent(QMouseEvent* e);
 	virtual void mouseMoveEvent(QMouseEvent* e);
 
+	virtual void moveEvent(QHoverEvent* e);
+
 	virtual void keyPressEvent(QKeyEvent *e);
 
 	int getSelection();
 
+	void finishRiggingTool();
+
 	manipulator ToolManip;
+
+	// Shaders
+	QOpenGLShaderProgram* m_currentShader;
+	vector<QOpenGLShaderProgram*> m_shaders;
+
+	QOpenGLBuffer m_vertexPositionBuffer;
+	QOpenGLBuffer m_vertexColorBuffer;
+	QOpenGLVertexArrayObject m_vao;
 
 	virtual void traceRayToObject(Geometry* geom, Vector2i& pt , Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx);
 	virtual void getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point);
@@ -108,10 +129,19 @@ protected:
 	virtual void draw();
 	virtual void drawWithNames();
 
+	virtual void setShaderConfiguration(shaderIdx type);
+	virtual void prepareShaderProgram();
 	virtual void init();
+
+	virtual void prepareVertexBufferObject();
+	virtual void updateColorBufferObject();
+	virtual void updateVertexBufferObject();
 
 	virtual void setContextMode(contextMode ctx);
 	virtual void endContextMode(contextMode ctx);
+
+	virtual void setToolCrtMode(int ctx);
+	virtual void setTool(ToolType ctx);
 
 public slots:
 
@@ -122,6 +152,9 @@ public slots:
 	//Metodos especificos
     virtual void doTests(string fileName, string name, string path);
     void computeProcess();
+
+	void initBulges(AirRig* rig);
+
 	virtual void selectElements(vector<unsigned int > lst);
 	void BuildTetrahedralization();
     void VoxelizeModel(Modelo *m, bool onlyBorders = true);
@@ -129,7 +162,9 @@ public slots:
     void UpdateVertexSource(int id);
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);
+	
 	virtual void setTwistParams(double ini, double fin, bool enable, bool smooth);
+	virtual void setBulgeParams(bool enable);
 
 	virtual void setGlobalSmoothPasses(int globalSmooth);
 	virtual void setLocalSmoothPasses(int localSmooth);

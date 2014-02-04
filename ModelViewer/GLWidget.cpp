@@ -55,6 +55,162 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	sktCr = new sktCreator();
 
+	m_currentShader = NULL;
+	preferredType = SHD_BASIC;
+
+}
+
+void GLWidget::updateColorBufferObject()
+{
+
+}
+
+void GLWidget::updateVertexBufferObject()
+{
+
+}
+
+
+void GLWidget::prepareVertexBufferObject()
+{
+
+	int numVertexes = 3;
+	vector<float> positionData;
+	vector<float> colorData;
+
+	// vertex positions
+	m_vertexPositionBuffer.create();
+	m_vertexPositionBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+	m_vertexPositionBuffer.bind();
+	m_vertexPositionBuffer.allocate(positionData.data(), numVertexes*3*sizeof(float));
+
+	// vertex colors
+	m_vertexColorBuffer.create();
+	m_vertexColorBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+	m_vertexColorBuffer.bind();
+	m_vertexColorBuffer.allocate(colorData.data(), numVertexes*3*sizeof(float));
+
+	// make this shader de active one
+	m_currentShader->bind();
+
+	//bind position buffer
+	m_vertexPositionBuffer.bind(); // make it positions as current
+	m_currentShader->enableAttributeArray("vertexPosition");
+	m_currentShader->setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3);
+
+	// bind Color buffer
+	m_vertexColorBuffer.bind(); // make it positions as current
+	m_currentShader->enableAttributeArray("vertexColor");
+	m_currentShader->setAttributeBuffer("vertexColor", GL_FLOAT, 0, 3);
+
+}
+
+void loadShaderAndLink(QOpenGLShaderProgram* shp, string vertFile, string fragFile)
+{
+	if(!shp->addShaderFromSourceFile(QOpenGLShader::Vertex, vertFile.c_str()))
+	{
+		printf("No puedo usar el vertex shader. Log:%s", shp->log().toStdString().c_str()); fflush(0);
+	}
+
+	if(!shp->addShaderFromSourceFile(QOpenGLShader::Fragment, fragFile.c_str()))
+	{
+		printf("No puedo usar el fragment shader. Log:%s", shp->log().toStdString().c_str()); fflush(0);
+	}
+
+	if(!shp->link())
+	{
+		printf("No puedo lincar. Log:%s", shp->log().toStdString().c_str()); fflush(0);
+	}
+}
+
+
+
+void GLWidget::setShaderConfiguration( shaderIdx type)
+{
+	if(type == SHD_XRAY) // XRAY
+	{
+		m_currentShader = m_shaders[SHD_XRAY];
+		m_currentShader->bind();
+
+		// default lighting properties
+		m_currentShader->setUniformValue("light.position", QVector4D(5.0f, 5.0f, 5.0f, 1.0f));
+		m_currentShader->setUniformValue("light.intensity", QVector3D(1.0f, 1.0f, 1.0f));
+
+		// Default matrial properties
+		m_currentShader->setUniformValue("material.ka", QVector3D(0.1f, 0.8f, 0.0f));
+		m_currentShader->setUniformValue("material.kd", QVector3D(0.75f, 0.95f, 0.75f));
+		m_currentShader->setUniformValue("material.ks", QVector3D(0.2f, 0.2f, 0.2f));
+		m_currentShader->setUniformValue("material.shininess", 100.0f);
+		m_currentShader->setUniformValue("material.opacity", 1.0f);
+	}
+	else if(type == SHD_NO_SHADE)
+	{
+		m_currentShader = m_shaders[SHD_NO_SHADE];
+		m_currentShader->bind();
+
+		m_currentShader->setUniformValue("material.ka", QVector3D(1.0f, 1.0f, 1.0f));
+		m_currentShader->setUniformValue("material.shininess", 100.0f);
+		m_currentShader->setUniformValue("material.opacity", 1.0f);
+	}
+	else if(type == SHD_VERTEX_COLORS)
+	{
+		m_currentShader = m_shaders[SHD_VERTEX_COLORS];
+		m_currentShader->bind();
+
+		// default lighting properties
+		m_currentShader->setUniformValue("light.position", QVector4D(5.0f, 5.0f, 5.0f, 1.0f));
+		m_currentShader->setUniformValue("light.intensity", QVector3D(1.0f, 1.0f, 1.0f));
+	}
+	else
+	{
+		m_currentShader = m_shaders[SHD_BASIC];
+		m_currentShader->bind();
+
+		// default lighting properties
+		m_currentShader->setUniformValue("light.position", QVector4D(5.0f, 5.0f, 5.0f, 1.0f));
+		m_currentShader->setUniformValue("light.intensity", QVector3D(1.0f, 1.0f, 1.0f));
+
+		// Default matrial properties
+		m_currentShader->setUniformValue("material.ka", QVector3D(0.15f, 0.15f, 0.15f));
+		m_currentShader->setUniformValue("material.kd", QVector3D(0.65f, 0.65f, 0.65f));
+		m_currentShader->setUniformValue("material.ks", QVector3D(0.1f, 0.1f, 0.1f));
+		m_currentShader->setUniformValue("material.shininess", 200.0f);
+		m_currentShader->setUniformValue("material.opacity", 1.0f);
+	}
+}
+
+void GLWidget::prepareShaderProgram()
+{
+	// Shader phong std 
+	m_shaders.resize(SHD_LENGTH);
+	
+	m_shaders[SHD_BASIC] = new QOpenGLShaderProgram();
+	printf("Basic shader loading\n");
+	loadShaderAndLink(m_shaders[SHD_BASIC],
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.vert",
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.frag");
+
+	m_shaders[SHD_XRAY] = new QOpenGLShaderProgram();
+	printf("XRay loading\n");
+	loadShaderAndLink(m_shaders[SHD_XRAY],
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/xray.vert",
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/xray.frag");
+
+	m_shaders[SHD_VERTEX_COLORS] = new QOpenGLShaderProgram();
+	printf("VertexColor loading\n");
+	loadShaderAndLink(m_shaders[SHD_VERTEX_COLORS],
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.vert",
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong_vertexColors.frag");
+
+
+	m_shaders[SHD_NO_SHADE] = new QOpenGLShaderProgram();
+	printf("No shade loading\n");
+	loadShaderAndLink(m_shaders[SHD_NO_SHADE],
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.vert",
+					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/noLight_vertexColors.frag");
+
+
+	m_currentShader = m_shaders[SHD_BASIC];
 }
 
 void GLWidget::init()
@@ -86,31 +242,75 @@ void GLWidget::init()
 
 	//setMouseBinding(Qt::LeftButton, CAMERA, ROTATE);
 
+	prepareShaderProgram();
+	setMouseTracking(true);
+
 	AdriViewer::init();
+}
+
+void GLWidget::setTool(ToolType ctx)
+{
+	// activamos la opcion de creation
+	if(ctx == CTX_TRANSFORMATION)
+	{
+		// Estabamos en el proceso de creación y hemos cortado
+		if(selMgr.currentTool == CTX_CREATE_SKT && sktCr->state != SKT_CR_IDDLE)
+			finishRiggingTool();
+
+		//sktCr->dynRig->clear();
+		selMgr.currentTool = ctx;
+		preferredType = (SHD_BASIC);
+
+		setCursor(Qt::ArrowCursor);
+	}
+	else if(ctx == CTX_CREATE_SKT)
+	{
+		//sktCr->dynRig->clear();
+		setContextMode(CTX_SELECTION);
+		selMgr.currentTool = ctx;
+		sktCr->mode = SKT_RIGG;
+		preferredType = (SHD_XRAY);
+
+		setCursor(Qt::CrossCursor);
+	}
+}
+
+void GLWidget::setToolCrtMode(int ctx)
+{
+	if(selMgr.currentTool == CTX_CREATE_SKT && sktCr->state != SKT_CR_IDDLE && sktCr->mode == SKT_RIGG)
+			finishRiggingTool();
+
+	sktCr->mode = (sktToolMode)ctx;
+	
+	if(ctx == SKT_ANIM || ctx == SKT_TEST)
+		sktCr->state = SKT_CR_IDDLE;
 }
 
 void GLWidget::setContextMode(contextMode ctx)
  {
-    selMgr.ctx = ctx;
-
-	// activamos la opcion de creation
-	if(ctx == CTX_CREATE_SKT)
+	if(ctx == CTX_SELECTION)
 	{
-		//TODO if there is needed some process
-		//sktCr->dynRig->clear();
 		ToolManip.type = MANIP_NONE;
+		selMgr.toolCtx = ctx;
 	}
 	else if(ctx == CTX_MOVE)
 	{
 		ToolManip.type = MANIP_MOVE;
+		selMgr.toolCtx = ctx;
 	}
 	else if(ctx == CTX_ROTATION)
 	{
 		ToolManip.type = MANIP_ROT;
+		selMgr.toolCtx = ctx;
 	}
 	else if(ctx == CTX_SCALE)
 	{
 		ToolManip.type = MANIP_SCL;
+		selMgr.toolCtx = ctx;
+	}
+	else
+	{
+		printf("No conozco este contexto.\n");
 	}
  }
 
@@ -1151,24 +1351,92 @@ void GLWidget::selectElements(vector<unsigned int > lst)
 	}
 }
 
+//////////////////////////////////////////////
+//             BULGE EFFECT           ////////
+//////////////////////////////////////////////
+void GLWidget::initBulges(AirRig* rig)
+{
+		
+	AirSkinning* skin = rig->airSkin;
+
+	//   Bulge effect inicialization
+	skin->bulge.groups.clear();
+	map<int, int> assignedToBulgeGroup;
+
+	for(int defIdx = 0; defIdx < rig->defRig.defGroups.size(); defIdx++)
+	{
+		if( rig->defRig.defGroups[defIdx]-> bulgeEffect )
+		{
+			skin->bulge.groups.push_back(new BulgeGroup());
+
+			// Get indexes of playing joints
+			int currentJoint = rig->defRig.defGroups[defIdx]->nodeId;
+			int fatherJoint = -1;
+			if(rig->defRig.defGroups[defIdx]->dependentGroups.size() > 0)
+				fatherJoint = rig->defRig.defGroups[defIdx]->dependentGroups[0]->nodeId;
+
+			skin->bulge.groups.back()->deformerIds.push_back(currentJoint);
+
+			if(fatherJoint > 0)
+				skin->bulge.groups.back()->deformerIds.push_back(fatherJoint);
+			else
+				printf("Hay hay un joint marcado sin padre... no tiene sentido!\n");
+			
+			for (int k = 0; k < skin->bind->pointData.size(); k++) 
+			{ 
+				bool founded = false;
+				PointData& data = skin->bind->pointData[k];
+				for (int kk = 0; kk < data.influences.size() && !founded; ++kk) // and check all joints associated to them
+				{
+					founded |= (data.influences[kk].label == currentJoint);
+					founded |= (data.influences[kk].label == fatherJoint);
+				}
+
+				if(founded)
+					skin->bulge.groups.back()->vertexGroup.push_back(k);
+			}
+		}
+	}
+}
+
+
+
+//////////////////////////////////////////////
+//			ALL COMPUTATIONS          ////////
+//////////////////////////////////////////////
 void GLWidget::computeProcess() {
 
 	//Testing new optimized processing
 	// AirRig creation
-	if(escena->rig)
-		delete escena->rig;
+
+	//if(!sktCr->usrCreatedRigg)
+	{
+		// eliminamos el rastro que haya
+		if(escena->rig)
+			delete escena->rig;
+
+		// Creamos un rigg de cero.
+		if(!escena->rig)
+			escena->rig = new AirRig(scene::getNewId());
+	}
 
 	clock_t ini = clock();
 
-	// Crear rig nuevo
-	escena->rig = new AirRig(scene::getNewId());
 	AirRig* rig = (AirRig*) escena->rig;
 
 	// Get values from UI
 	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
-	//Vincular a escena: modelo y esqueletos
-	rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
+	//if(!sktCr->usrCreatedRigg)
+	{
+		//Vincular a escena: modelo y esqueletos
+		rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
+	}
+	//else
+	{
+		// Vincular y preprocesar manteniendo la estructura actual
+
+	}
 
 	// Build deformers structure for computations.
 	rig->preprocessModelForComputations();
@@ -1178,6 +1446,12 @@ void GLWidget::computeProcess() {
 
 	// Skinning computations
 	updateAirSkinning(rig->defRig, *rig->model);
+
+	// TO REMOVE: This patch enables bulging just between the first and the second joint
+	rig->defRig.defGroups[1]->bulgeEffect = true;
+
+	// Bulge initialization over skinning computation
+	initBulges(rig);
 
 	// enable deformations and render data
 	rig->enableDeformation = true;
@@ -2397,6 +2671,15 @@ void GLWidget::setGlobalSmoothPasses(int value)
 	paintModelWithData();
 }
 
+void GLWidget::setBulgeParams(bool enable)
+{
+	AirRig* rig = (AirRig*)escena->rig;
+	if(rig && rig->airSkin)
+	{
+		rig->airSkin->bulge.enabled = enable;
+	}
+}
+
 void GLWidget::setTwistParams(double ini, double fin, bool enable, bool smooth)
 {
 	object *selectedObject = NULL;
@@ -3109,19 +3392,18 @@ void GLWidget::drawWithDistances()
 
  void GLWidget::draw()
  {
+	// Clear the color buffer
+	glClear( GL_COLOR_BUFFER_BIT );
+
+	// Set the shader as current
+	setShaderConfiguration(preferredType);
+
 	clock_t ini = clock();
 	clock_t fin;
 
 	for(int j = 0; j < escena->skeletons.size(); j++) 
 	{
 		escena->skeletons[j]->root->computeWorldPos();
-	}
-
-	if(bDrawStatistics)
-	{
-		fin = clock();
-		printf("Calculo de computeWorldPos: %f segs.\n", timelapse(fin,ini)); fflush(0);
-		ini = clock();
 	}
 
 	AirRig* rig = (AirRig*)escena->rig;
@@ -3137,12 +3419,12 @@ void GLWidget::drawWithDistances()
 		}
 	}
 
-	if(bDrawStatistics)
-	{
-		fin = clock();
-		printf("Calculo de deformaciones: %f segs.\n", timelapse(fin,ini)); fflush(0);
-		ini = clock();
-	}
+	setShaderConfiguration(preferredType);
+	AdriViewer::draw();
+
+	setShaderConfiguration(SHD_NO_SHADE);
+
+	glDisable(GL_DEPTH_TEST);
 
 	// Dynamic creative rigg
 	if(sktCr && sktCr->dynRig) 
@@ -3153,30 +3435,14 @@ void GLWidget::drawWithDistances()
 			((DefGroupRender*)sktCr->dynRig->defRig.defGroups[i]->shading)->drawFunc();
 		}
 	}
-	
-	if(bDrawStatistics)
-	{
-		fin = clock();
-		printf("AdriViewer Draw: %f segs.\n", timelapse(fin,ini)); fflush(0);
-		ini = clock();
-	}
 
+	// AirRig de la escena
 	for(unsigned int i = 0; i< rig->defRig.defGroups.size(); i++)
-     {
-         ((DefGroupRender*)rig->defRig.defGroups[i]->shading)->drawFunc();
-     }
+    {
+        ((DefGroupRender*)rig->defRig.defGroups[i]->shading)->drawFunc();
+    }
 
-	if(bDrawStatistics)
-	{
-		fin = clock();
-		printf("GroupRender Draw: %f segs.\n", timelapse(fin,ini)); fflush(0);
-		ini = clock();
-
-		bDrawStatistics = false;
-	}
-
-	AdriViewer::draw();
-
+	// Manipuladores
 	if(selMgr.selection.size() >0 )
 	{
 		// quizás hay que quitar opciones de zbuffer para pintar siempre
@@ -3186,55 +3452,75 @@ void GLWidget::drawWithDistances()
 		ToolManip.drawFunc();
 	}
 
+	glEnable(GL_DEPTH_TEST);
+
+	// draw the buffers
+	//glDrawArrays( GL_TRIANGLES, 0, 3);
+
  }
 
-  void GLWidget::drawWithNames()
- {
-	 if(selMgr.ctx == CTX_CREATE_SKT)
-	 {
-		 if(sktCr->dynRig->defRig.defGroups.size() == 0)
-		 {
-			 // Enable selection with defGroups
-			 // from "all the rigs" in the scene
-			 AirRig* rig = (AirRig*)escena->rig;
-			 for(int rigIdx = 0; rigIdx < rig->defRig.defGroups.size(); rigIdx++)
-			 {
-				 glPushName(rigIdx);
-				 ((DefGroupRender*)rig->defRig.defGroups[rigIdx]->shading)->drawFunc();
-				 glPopName();
-			 }
-		 }
-		 else if(selMgr.selection.size() == 1)
-		 {
-			 // Disable selection
-			 return;
-		 }
+void GLWidget::drawWithNames()
+{
+	if(selMgr.currentTool == CTX_CREATE_SKT)
+	{
+		// Enable selection with defGroups
+		// from "all the rigs" in the scene
+		AirRig* rig = (AirRig*)escena->rig;
+		for(int rigIdx = 0; rigIdx < rig->defRig.defGroups.size(); rigIdx++)
+		{
+			glPushName(rig->defRig.defGroups[rigIdx]->nodeId);
+			((DefGroupRender*)rig->defRig.defGroups[rigIdx]->shading)->drawWithNames();
+			glPopName();
+		}
+	}
+	else
+	{
+		AdriViewer::drawWithNames();
+	}
+}
 
-	 }
-	 else if(selMgr.ctx == CTX_MOVE || selMgr.ctx == CTX_ROTATION || selMgr.ctx == CTX_SCALE)
-	 {
-		 AdriViewer::drawWithNames();
-	 }
-  }
+void GLWidget::finishRiggingTool()
+{
+	//printf("Finalizando operacion\n");
+	sktCr->finishRig();
+
+	// Deseleccionar todo.
+	for(int i = 0; i< selMgr.selection.size(); i++)
+	{
+		selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
+	}
+
+	selMgr.selection.clear();
+	sktCr->state = SKT_CR_IDDLE;
+
+	// Enables the computation saving the data on the rigg
+	sktCr->usrCreatedRigg = true;
+
+	emit updateSceneView();
+}
 
 void GLWidget::keyPressEvent(QKeyEvent* e)
 {
-	bool handled = false;
+ 	bool handled = false;
 	//const Qt::ButtonState modifiers = (Qt::ButtonState)(e->state() & Qt::KeyButtonMask);
-	if(e->key() == Qt::Key_Enter)
+	if(e->key() == Qt::Key_Return)
 	{
-		if(sktCr->state == CTX_CREATE_SKT)
+		if(sktCr->state == SKT_CR_SELECTED)
 		{
-			printf("Finalizando operacion\n");
-			sktCr->finishRig();
-			
+			finishRiggingTool();
 			handled = true;
 		}
 	}
+	else if(e->key() == Qt::Key_Backspace)
+	{
+		//TODO
+		assert(false);
+		handled = true;
+	}
 	else if(e->key() == Qt::Key_Alt)
 	{
-
-}	
+		handled = true;
+	}	
 
 	if (!handled)
 		QGLViewer::keyPressEvent(e);
@@ -3268,10 +3554,14 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 	if(e->button() == Qt::LeftButton)
 	{
 		//printf("pressed Left Button\n");
-		pressMouse = Vector2i(e->pos().x(), e->pos().y());
+		pressMouse = Vector2f(e->pos().x(), e->pos().y());
 		pressed = true;
+		dragged = false;
 
-		if(selMgr.ctx == CTX_MOVE || selMgr.ctx == CTX_ROTATION || selMgr.ctx == CTX_SCALE)
+		// Just init the manipulator to work properly
+		if(selMgr.toolCtx == CTX_MOVE || 
+		   selMgr.toolCtx == CTX_ROTATION || 
+		   selMgr.toolCtx == CTX_SCALE)
 		{
 			beginSelection(e->pos());
 			ToolManip.drawFuncNames();
@@ -3282,49 +3572,36 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 				ToolManip.bModifierMode = true;
 
 				qglviewer::Vec orig, dir, selectedPoint;
-  
-				// Compute orig and dir, used to draw a representation of the intersecting line
 				camera()->convertClickToLine(QPoint(e->pos().x(), e->pos().y()), orig, dir);
-
-				ToolManip.pressMouse = Vector2i(e->pos().x(), e->pos().y());
-
-				bool found;
-				selectedPoint = camera()->pointUnderPixel(QPoint(e->pos().x(), e->pos().y()), found);
-
-				// This will be used to compute the right modification like in maya.
-				// For build plane of movement
-				ToolManip.orig = Vector3d(orig.x, orig.y, orig.z);
-				ToolManip.dir = Vector3d(dir.x, dir.y, dir.z);
-				ToolManip.selectedPoint = Vector3d(selectedPoint.x, selectedPoint.y, selectedPoint.z);
-
-				ToolManip.previousframe = ToolManip.currentframe;
 
 				if(node == 0) ToolManip.axis = AXIS_VIEW;
 				if(node == 1) ToolManip.axis = AXIS_X;
 				if(node == 2) ToolManip.axis = AXIS_Y;
 				if(node == 3) ToolManip.axis = AXIS_Z;
 
+				Vector3d rayOrigin(orig.x, orig.y, orig.z);
+				Vector3d rayDir(dir.x, dir.y, dir.z);
+				ToolManip.setManipulator(rayOrigin, rayDir);
+
 				//Ver si es un manipulador.
 				printf("Es el elemento %d del manipulador\n", node);
-				
-			}			
+			}
 		}
 	}
 
 	AdriViewer::mousePressEvent(e);
+}
 
+void GLWidget::moveEvent(QHoverEvent* e)
+{
+	int pruebas = 0;
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent* e)
 {
-	if(e->modifiers() & Qt::ControlModifier)
+
+if(pressed && ToolManip.bModifierMode)
 	{
-		//e->setModifiers(e->modifiers()&=!Qt::ControlModifier);
-		//printf("Hola");
-	}
-	else if(pressed && ToolManip.bModifierMode)
-	{
-		//printf("dragging\n");
 		Vector2i currentMouse(e->pos().x(), e->pos().y());
 
 		qglviewer::Vec orig, dir, selectedPoint;
@@ -3333,17 +3610,37 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 		if(e->pos().x() == ToolManip.pressMouse.x() && e->pos().y() == ToolManip.pressMouse.y() )
 			return;
 
+		// Transform manipulator
 		Vector3d rayOrigin(orig.x, orig.y, orig.z);
 		Vector3d rayDir(dir.x, dir.y, dir.z);
 		ToolManip.moveManipulator(rayOrigin, rayDir);
 
+		// Transform the object
 		ToolManip.applyTransformation(selMgr.selection[0]);
 
 		return;
 	}
+	else if(!pressed && selMgr.currentTool == CTX_CREATE_SKT && 
+			((sktCr->state == SKT_CR_IDDLE && sktCr->mode == SKT_RIGG) || 
+			(!sktCr->mode == SKT_RIGG) ))
+	{
+		// Highlight el nodo que salga en el trazado de rayos
+		beginSelection(e->pos());
+		drawWithNames();
+		int node = getSelection();
 
+		AirRig* rig = (AirRig*)escena->rig;
+		rig->highlight(node, true);
+
+	}
+	
+
+	Vector2f desplMouse(e->pos().x(), e->pos().y());
+
+	if((desplMouse-pressMouse).norm()>5.0)
+		dragged = true;
+	
 	AdriViewer::mouseMoveEvent(e);
-	//AdriViewer::mouseMoveEvent(e);
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent* e)
@@ -3354,109 +3651,100 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 		Vector2i releaseMouse(e->pos().x(), e->pos().y());
 		pressed = false;
 
-		if(selMgr.ctx == CTX_MOVE || selMgr.ctx == CTX_ROTATION || selMgr.ctx == CTX_SCALE)
+		if(ToolManip.bModifierMode)//node >= 0 && node <10)
 		{
-			if(ToolManip.bModifierMode)//node >= 0 && node <10)
+			// Estabamos modificando y hemos acabado...
+			ToolManip.bModifierMode = false;
+			return;
+		}
+
+		if(selMgr.currentTool == CTX_TRANSFORMATION && !dragged)
+		{
+			beginSelection(e->pos());
+			drawWithNames();
+			int node = getSelection();
+
+			if(selMgr.selection.size() == 0) // No hay nada seleccionado
 			{
-				//beginSelection(e->pos());
-				//ToolManip.drawNamesWithProjectingPlane();
-				//int node = getSelection();
+				int nodeIdx = -1;
+				// Ver si es un objeto de la escena
+				for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+				{
+					if(node == escena->models[tempIdx]->nodeId)
+					{
+						// Hemos encontrado un objeto
+						nodeIdx = tempIdx;
+						break;
+					}
+				}
 
-				ToolManip.bModifierMode = false;
+				if(nodeIdx >= 0 && nodeIdx < escena->models.size()) // The model exists
+				{
+					// Trigger selection
+					selMgr.selection.push_back(escena->models[nodeIdx]);
+					escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
 
-				// Guardar la nueva posición como posición actual en todos los niveles.
+					object* m = escena->models[nodeIdx];
 
-				printf("Salimos de modo manipulacion\n");
-				//Ver si es un manipulador.
-				//printf("Es el elemento %d del manipulador\n", node);
-				//no tenemos que realizar nada.
+					ToolManip.bModifierMode = false;
+					ToolManip.bEnable = true;
+					ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
 				
+					printf("Model %d selected\n", node);
+				}
 			}
 			else
 			{
-				//Sino ver si es un modelo.
-				beginSelection(e->pos());
-				drawWithNames();
-				int node = getSelection();
-
-				// Ver si es un objeto de la escena
-				if(selMgr.selection.size() == 0)
+				if(node > 0)
 				{
-					int nodeIdx = -1;
-					for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+					// Si es diferente del que había seleccionado-> cambiar
+					if(selMgr.selection[0]->nodeId == node)
 					{
-						if(node == escena->models[tempIdx]->nodeId)
-						{
-							nodeIdx = tempIdx;
-							break;
-						}
+						// es el mismo y no hacemos nada
 					}
-
-					if(nodeIdx >= 0 && nodeIdx < escena->models.size())
+					else
 					{
-						// Selection
-						selMgr.selection.push_back(escena->models[nodeIdx]);
-						escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+						// deseleccion
+						int oldId = selMgr.selection[0]->nodeId;
+						selMgr.selection[0]->select(false, oldId);
+						selMgr.selection.clear();
 
-						object* m = escena->models[nodeIdx];
+						//seleccionar el nuevo
+						int nodeIdx = -1;
+						for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+						{
+							if(node == escena->models[tempIdx]->nodeId)
+							{
+								nodeIdx = tempIdx;
+								break;
+							}
+						}
 
-						ToolManip.bModifierMode = false;
-						ToolManip.bEnable = true;
-						ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
+						if(nodeIdx >= 0 && nodeIdx < escena->models.size())
+						{
+							// Selection
+							selMgr.selection.push_back(escena->models[nodeIdx]);
+							escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+
+							object* m = escena->models[nodeIdx];
+
+							ToolManip.bModifierMode = false;
+							ToolManip.bEnable = true;
+							ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
 				
-						printf("Model %d selected\n", node);
+							printf("Cambio de modelo: new model %d selected\n", node);
+						}
 					}
 				}
 				else
 				{
-					if(node > 0)
+					if(!dragged && selMgr.selection.size() > 0)
 					{
-						// Si es diferente del que había seleccionado-> cambiar
-						if(selMgr.selection[0]->nodeId == node)
-						{
-
-						}
-						else
-						{
-							// deseleccion
-							int oldId = selMgr.selection[0]->nodeId;
-							selMgr.selection[0]->select(true, oldId);
-							selMgr.selection.clear();
-
-							//seleccionar el nuevo
-							int nodeIdx = -1;
-							for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
-							{
-								if(node == escena->models[tempIdx]->nodeId)
-								{
-									nodeIdx = tempIdx;
-									break;
-								}
-							}
-
-							if(nodeIdx >= 0 && nodeIdx < escena->models.size())
-							{
-								// Selection
-								selMgr.selection.push_back(escena->models[nodeIdx]);
-								escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
-
-								object* m = escena->models[nodeIdx];
-
-								ToolManip.bModifierMode = false;
-								ToolManip.bEnable = true;
-								ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
-				
-								printf("Cambio de modelo: new model %d selected\n", node);
-							}
-						}
-					}
-					else
-					{
-						// Si no es nada-> deseleccionar
+						// Si no es nada-> y no es rotar... -> deseleccionar
 						// deseleccion
 						int oldId = selMgr.selection[0]->nodeId;
 
-						selMgr.selection[0]->select(true, oldId);
+						selMgr.selection[0]->select(false, oldId);
 						selMgr.selection.clear();
 
 						ToolManip.bModifierMode = false;
@@ -3464,46 +3752,344 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 					}
 				}
 			}
-
 		}
-		else if(selMgr.ctx == CTX_CREATE_SKT)
+		else if(selMgr.currentTool == CTX_CREATE_SKT && !dragged)
 		{
+			//Sino ver si es un modelo.
+			beginSelection(e->pos());
+			drawWithNames();
 			int node = getSelection();
-			if(node >= 0)
+
+			// Si no hay seleccion previa 
+			if(sktCr->state == SKT_CR_IDDLE)
 			{
-				if(node <  ((AirRig*)escena->rig)->defRig.defGroups.size())
+				// Buscamos si ha seleccionado algo
+				AirRig* rig = (AirRig*)escena->rig;
+				DefGroup* dg = NULL;
+				for(int i = 0; i < rig->defRig.defGroups.size(); i++)
 				{
-					sktCr->parentNode = ((AirRig*)escena->rig)->defRig.defGroups[node];
-					sktCr->parentRig = (AirRig*)escena->rig;
-					sktCr->parentNode->shading->selected = true;
+					if(node == rig->defRig.defGroups[i]->nodeId)
+					{
+						dg = rig->defRig.defGroups[i];
+					}
 				}
 
-				// Hay que marcar el nodo que se ha seleccionado
-				return;
+				if(dg != NULL) // Hay seleccion
+				{
+					// Si estamos en modo creacion -> creamos
+					if(sktCr->mode == SKT_RIGG)
+					{
+						// Seleccionamos un nodo del rigg que ya existe
+						sktCr->parentNode = dg;
+						sktCr->parentRig = (AirRig*)escena->rig;
+						sktCr->parentNode->select(true, sktCr->parentNode->nodeId);
+						sktCr->state = SKT_CR_SELECTED;
+
+						// Add the the existing joint to the temporal dynamic skeleton
+						sktCr->addNewNode(dg->getTranslation(false));
+
+						for(int i = 0; i< selMgr.selection.size(); i++)
+						{
+							if(selMgr.selection[i])
+								selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
+						}
+					
+						selMgr.selection.clear();
+						selMgr.selection.push_back(sktCr->parentNode);
+
+						return;
+					}
+					else // Modo animacion o test -> seleccion y cargar manipulador
+					{
+						// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
+						selMgr.selection.push_back(dg);
+						dg->select(true, dg->nodeId);
+						sktCr->state = SKT_CR_SELECTED;
+
+						object* m = dg;
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = true;
+						ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
+				
+						printf("DefGroup %d selected\n", node);
+					}
+				}
+				else // no se ha seleccionado nada
+				{
+					if(sktCr->mode == SKT_RIGG)
+					{
+						Vector2i screenPt(e->pos().x(), e->pos().y());
+						Geometry* geom = (Geometry*)(escena->models[0]);
+
+						vector<Vector3d> intersecPoints;
+						Vector3d rayDir;
+						vector<int> triangleIdx;
+
+						Vector3d jointPoint;
+
+						// Get intersections
+						traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
+
+						if(intersecPoints.size() > 0)
+						{
+							// Select the right point
+							getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+
+							// Add the new joint to the temporal dynamic skeleton
+							sktCr->addNewNode(jointPoint);
+
+							// Pasamos a modo en que ya hemos seleccionado un elem.
+							sktCr->state = SKT_CR_SELECTED;
+
+							AirRig* rig = (AirRig*)escena->rig;
+							if(!rig)
+							{
+								// He tenido que crearlo de nuevo
+								escena->rig = new AirRig(scene::getNewId());
+							}
+							else
+							{
+								// Simplemente guardarme la referencia para continuar
+								sktCr->parentRig = rig;
+							}
+						}
+					}
+				}
 			}
-
-			Vector2i screenPt(e->pos().x(), e->pos().y());
-			Geometry* geom = (Geometry*)(escena->models[0]);
-
-			vector<Vector3d> intersecPoints;
-			Vector3d rayDir;
-			vector<int> triangleIdx;
-
-			Vector3d jointPoint;
-
-			// Get intersections
-			traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
-
-			if(intersecPoints.size() > 0)
+			else
 			{
-				// Select the right point
-				getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+				// Ya había algo seleccionado, por lo que tenemos que actuar en consecuencia
+				if(sktCr->mode == SKT_RIGG)
+				{
+					// Creo un nuevo elemento... talcu
+					Vector2i screenPt(e->pos().x(), e->pos().y());
+					Geometry* geom = (Geometry*)(escena->models[0]);
 
-				// Add the new joint to the temporal dynamic skeleton
-				sktCr->addNewNode(jointPoint);
+					vector<Vector3d> intersecPoints;
+					Vector3d rayDir;
+					vector<int> triangleIdx;
+
+					Vector3d jointPoint;
+
+					// Get intersections
+					traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
+
+					if(intersecPoints.size() > 0)
+					{
+						// Select the right point
+						getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+
+						// Add the new joint to the temporal dynamic skeleton
+						sktCr->addNewNode(jointPoint);
+
+						// Pasamos a modo en que ya hemos seleccionado un elem.
+						sktCr->state = SKT_CR_SELECTED;
+
+						AirRig* rig = (AirRig*)escena->rig;
+						if(!rig)
+						{
+							// He tenido que crearlo de nuevo
+							escena->rig = new AirRig(scene::getNewId());
+						}
+						else
+						{
+							// Simplemente guardarme la referencia para continuar
+							sktCr->parentRig = rig;
+						}
+					}
+				}
+				else
+				{
+					// Buscamos si ha seleccionado algo
+					AirRig* rig = (AirRig*)escena->rig;
+					DefGroup* dg = NULL;
+					for(int i = 0; i < rig->defRig.defGroups.size(); i++)
+					{
+						if(node == rig->defRig.defGroups[i]->nodeId)
+						{
+							dg = rig->defRig.defGroups[i];
+						}
+					}
+
+					// Deseleccion
+					if(selMgr.selection.size() > 0)
+					{
+						selMgr.selection[0]->select(false, selMgr.selection[0]->nodeId);
+						selMgr.selection.clear();
+					}
+				
+					ToolManip.bModifierMode = false;
+					ToolManip.bEnable = false;
+
+					sktCr->state == SKT_CR_IDDLE;
+
+					printf("DefGroup deselected\n");
+
+					// Cambio la seleccion
+					if(dg != NULL)
+					{
+						selMgr.selection.push_back(dg);
+						dg->select(true, dg->nodeId);
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = true;
+						ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
+
+						sktCr->state == SKT_CR_SELECTED;
+
+						printf("Nueva Seleccion: %d\n", dg->nodeId);
+					}
+
+				}
 			}
+
+			/*
+			// En este caso estamos en modo seleccion
+			if(!(sktCr->mode == SKT_RIGG && sktCr->state == SKT_CR_SELECTED)) 
+			{
+				// PROTOCOLO:
+				// Si estamos en modo iddle y rigg -> seleccion o creacion
+				// Si estamos en modo animacion o test -> seleccion
+
+				AirRig* rig = (AirRig*)escena->rig;
+				DefGroup* dg = NULL;
+				for(int i = 0; i < rig->defRig.defGroups.size(); i++)
+				{
+					if(node == rig->defRig.defGroups[i]->nodeId)
+					{
+						dg = rig->defRig.defGroups[i];
+					}
+				}
+
+				if(sktCr->mode != SKT_RIGG && dg != NULL) // Si hemos seleccionado algo.
+				{
+					if(selMgr.selection.size() == 0)
+					{
+						// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
+						selMgr.selection.push_back(dg);
+						dg->select(true, dg->nodeId);
+
+						object* m = dg;
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = true;
+						ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
+				
+						printf("DefGroup %d selected\n", node);
+					}
+					else if(dg->nodeId != selMgr.selection[0]->nodeId)
+					{
+						// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
+						selMgr.selection[0]->select(false, selMgr.selection[0]->nodeId);
+						selMgr.selection.clear();
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = false;
+					}
+				}
+				else if(sktCr->mode == SKT_RIGG && dg != NULL)
+				{
+
+					// Seleccionamos un nodo del rigg que ya existe
+					sktCr->parentNode = dg;
+					sktCr->parentRig = (AirRig*)escena->rig;
+					sktCr->parentNode->select(true, sktCr->parentNode->nodeId);
+					sktCr->state = SKT_CR_SELECTED;
+
+					// Add the the existing joint to the temporal dynamic skeleton
+					sktCr->addNewNode(dg->getTranslation(false));
+
+					for(int i = 0; i< selMgr.selection.size(); i++)
+					{
+						if(selMgr.selection[i])
+							selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
+					}
+					
+					selMgr.selection.clear();
+					selMgr.selection.push_back(sktCr->parentNode);
+
+					return;
+				}
+				else if(sktCr->mode == SKT_RIGG && dg == NULL)
+				{
+					Vector2i screenPt(e->pos().x(), e->pos().y());
+					Geometry* geom = (Geometry*)(escena->models[0]);
+
+					vector<Vector3d> intersecPoints;
+					Vector3d rayDir;
+					vector<int> triangleIdx;
+
+					Vector3d jointPoint;
+
+					// Get intersections
+					traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
+
+					if(intersecPoints.size() > 0)
+					{
+						// Select the right point
+						getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+
+						// Add the new joint to the temporal dynamic skeleton
+						sktCr->addNewNode(jointPoint);
+
+						// Pasamos a modo en que ya hemos seleccionado un elem.
+						sktCr->state = SKT_CR_SELECTED;
+
+						AirRig* rig = (AirRig*)escena->rig;
+						if(!rig)
+						{
+							// He tenido que crearlo de nuevo
+							escena->rig = new AirRig(scene::getNewId());
+						}
+						else
+						{
+							// Simplemente guardarme la referencia para continuar
+							sktCr->parentRig = rig;
+						}
+					}
+				}
+				else // deseleccion
+				{
+					int oldId = selMgr.selection[0]->nodeId;
+					selMgr.selection[0]->select(false, oldId);
+					selMgr.selection.clear();
+
+					ToolManip.bModifierMode = false;
+					ToolManip.bEnable = false;
+				}
+			}
+			else
+			{
+				// Vamos anadiendo mas nodos
+				int node = getSelection();
+
+				Vector2i screenPt(e->pos().x(), e->pos().y());
+				Geometry* geom = (Geometry*)(escena->models[0]);
+
+				vector<Vector3d> intersecPoints;
+				Vector3d rayDir;
+				vector<int> triangleIdx;
+
+				Vector3d jointPoint;
+
+				// Get intersections
+				traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
+
+				if(intersecPoints.size() > 0)
+				{
+					// Select the right point
+					getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+
+					// Add the new joint to the temporal dynamic skeleton
+					sktCr->addNewNode(jointPoint);
+				}
+			}*/
 		}
 	}
+
+	pressed = false;
+	dragged = false;
 
 	AdriViewer::mouseReleaseEvent(e);
 }
@@ -4014,7 +4600,6 @@ void GLWidget::ChangeSliceXY(int slice)
        }
    }
    */
-
 }
 
 void GLWidget::saveScene(string fileName, string name, string path, bool compactMode)
@@ -4119,6 +4704,11 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
     }
  }
 
+ void LoadBuffersWithModel(Modelo* m)
+ {
+
+ }
+
  void GLWidget::readScene(string fileName, string name, string path)
  {
      QFile modelDefFile(fileName.c_str());
@@ -4181,6 +4771,9 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
         m->sPath = newPath.toStdString(); // importante para futuras referencias
 		BuildSurfaceGraphs(m);
 		getBDEmbedding(m);
+
+		// De momento lo dejamos.
+		//LoadBuffersWithModel(m);
 
         // Leer esqueleto
 		if(!sSkeletonFile.isEmpty())

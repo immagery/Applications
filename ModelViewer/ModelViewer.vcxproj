@@ -314,6 +314,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Image>
     <Image Include="..\..\adri\gui\icons\save_compact.png" />
+    <Image Include="..\..\adri\gui\icons\scaleIcon.png" />
     <Image Include="..\..\adri\gui\icons\seleccion_obj_off.png">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -471,6 +472,7 @@
     <ClCompile Include="..\..\adri\utils\UtilQT.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\AirSegmentation.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\BulgeDeformer.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\GreenCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
@@ -526,6 +528,7 @@
     <ClInclude Include="..\..\adri\gui\sktCreator.h" />
     <ClInclude Include="..\..\adri\render\defGorupRender.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\AirSegmentation.h" />
+    <ClInclude Include="..\..\air\AirLib\Computation\BulgeDeformer.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
     <ClInclude Include="..\..\air\AirLib\gui\AirOutliner.h" />
