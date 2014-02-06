@@ -473,6 +473,7 @@
     <ClCompile Include="..\..\air\AirLib\Computation\AirSegmentation.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\BulgeDeformer.cpp" />
+    <ClCompile Include="..\..\air\AirLib\Computation\ComputationMgr.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\GreenCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
@@ -529,6 +530,8 @@
     <ClInclude Include="..\..\adri\render\defGorupRender.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\AirSegmentation.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\BulgeDeformer.h" />
+    <ClInclude Include="..\..\air\AirLib\Computation\ComputationMgr.h" />
+    <ClInclude Include="..\..\air\AirLib\Computation\spline.hpp" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
     <ClInclude Include="..\..\air\AirLib\gui\AirOutliner.h" />

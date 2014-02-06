@@ -57,6 +57,9 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	m_currentShader = NULL;
 	preferredType = SHD_BASIC;
+	preferredNormalType = SHD_BASIC;
+
+	X_ALT_modifier = false;
 
 }
 
@@ -160,6 +163,11 @@ void GLWidget::setShaderConfiguration( shaderIdx type)
 		// default lighting properties
 		m_currentShader->setUniformValue("light.position", QVector4D(5.0f, 5.0f, 5.0f, 1.0f));
 		m_currentShader->setUniformValue("light.intensity", QVector3D(1.0f, 1.0f, 1.0f));
+		m_currentShader->setUniformValue("material.ka", QVector3D(1.0f, 1.0f, 1.0f));
+		m_currentShader->setUniformValue("material.kd", QVector3D(1.0f, 1.0f, 1.0f));
+		m_currentShader->setUniformValue("material.ks", QVector3D(1.0f, 1.0f, 1.0f));
+		m_currentShader->setUniformValue("material.shininess", 100.0f);
+		m_currentShader->setUniformValue("material.opacity", 1.0f);
 	}
 	else
 	{
@@ -259,7 +267,7 @@ void GLWidget::setTool(ToolType ctx)
 
 		//sktCr->dynRig->clear();
 		selMgr.currentTool = ctx;
-		preferredType = (SHD_BASIC);
+		preferredType = preferredNormalType;
 
 		setCursor(Qt::ArrowCursor);
 	}
@@ -269,21 +277,107 @@ void GLWidget::setTool(ToolType ctx)
 		setContextMode(CTX_SELECTION);
 		selMgr.currentTool = ctx;
 		sktCr->mode = SKT_RIGG;
-		preferredType = (SHD_XRAY);
 
+		AirRig::mode = MODE_RIG;
+		emit setRiggingToolUI();
+
+		// TODO: Emitir signal para poner en rigg, no en anim
+
+		preferredType = (SHD_XRAY);
 		setCursor(Qt::CrossCursor);
 	}
 }
 
 void GLWidget::setToolCrtMode(int ctx)
 {
-	if(selMgr.currentTool == CTX_CREATE_SKT && sktCr->state != SKT_CR_IDDLE && sktCr->mode == SKT_RIGG)
+	if(selMgr.currentTool == CTX_CREATE_SKT && sktCr->state != SKT_CR_IDDLE && sktCr->mode == SKT_CREATE)
 			finishRiggingTool();
+	
+	if(ctx == SKT_CREATE)
+	{
+		((AirRig*)escena->rig)->restorePoses();
+
+		// Restore deformation
+		if(!((AirRig*)escena->rig)->enableTwist)
+			((AirRig*)escena->rig)->airSkin->computeDeformations(((AirRig*)escena->rig));
+		else
+			((AirRig*)escena->rig)->airSkin->computeDeformationsWithSW(((AirRig*)escena->rig));
+
+		((AirRig*)escena->rig)->enableDeformation = false;
+
+		sktCr->state = SKT_CR_IDDLE;
+		preferredType = SHD_XRAY;
+		AirRig::mode = MODE_CREATE;
+		setCursor(Qt::CrossCursor);
+	}
+	if(ctx == SKT_RIGG)
+	{
+		((AirRig*)escena->rig)->restorePoses();
+		
+		// Restore deformation
+		if(!((AirRig*)escena->rig)->enableTwist)
+			((AirRig*)escena->rig)->airSkin->computeDeformations(((AirRig*)escena->rig));
+		else
+			((AirRig*)escena->rig)->airSkin->computeDeformationsWithSW(((AirRig*)escena->rig));
+				
+		// Restore manipulator
+		if(selMgr.selection.size() > 0)
+		{
+			if(selMgr.selection[0]->iam == DEFGROUP_NODE)
+			{
+				DefGroup* dg = (DefGroup*)selMgr.selection[0];
+				ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
+			}
+		}
+
+		((AirRig*)escena->rig)->enableDeformation = false;
+
+		sktCr->state = SKT_CR_IDDLE;
+		preferredType = SHD_XRAY;
+		AirRig::mode = MODE_RIG;
+		setCursor(Qt::ArrowCursor);
+	}
+	if(ctx == SKT_ANIM)
+	{
+		if(sktCr->mode != SKT_ANIM && sktCr->mode != SKT_TEST)
+		{
+			//Guardamos las poses, como poses de reposo.
+			((AirRig*) escena->rig)->saveRestPoses();
+
+			computeWeights();
+
+			// disable deormation until the weights are computed
+			((AirRig*)escena->rig)->enableDeformation = true;
+		}
+
+		sktCr->state = SKT_CR_IDDLE;
+		preferredType = preferredNormalType;
+
+		AirRig::mode = MODE_ANIM;
+		setCursor(Qt::ArrowCursor);
+
+	}
+	else if(ctx == SKT_TEST)
+	{
+		if(sktCr->state != SKT_ANIM && sktCr->state != SKT_TEST)
+		{
+			//Guardamos las poses, como poses de reposo.
+			((AirRig*) escena->rig)->saveRestPoses();
+
+			computeWeights();
+
+			// disable deormation until the weights are computed
+			((AirRig*)escena->rig)->enableDeformation = true;
+		}
+
+		sktCr->state = SKT_CR_IDDLE;
+		preferredType = preferredNormalType;
+
+		AirRig::mode = MODE_TEST;
+		setCursor(Qt::ArrowCursor);
+	}
 
 	sktCr->mode = (sktToolMode)ctx;
-	
-	if(ctx == SKT_ANIM || ctx == SKT_TEST)
-		sktCr->state = SKT_CR_IDDLE;
 }
 
 void GLWidget::setContextMode(contextMode ctx)
@@ -1399,7 +1493,42 @@ void GLWidget::initBulges(AirRig* rig)
 	}
 }
 
+void GLWidget::computeWeights()
+{
+	// Get values from UI
+	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
+	// 0. Vincular el modelo al esqueleto si no se ha hecho todavia
+	AirRig* rig = (AirRig*) escena->rig;
+	rig->initRigWithModel((Modelo*)escena->models[0]);
+
+	// 1. Revisar el rigg y marcar el trabajo a hacer.
+	rig->getWorkToDo(worker.preprocessNodes, worker.segmentationNodes);
+
+	// TOREMOVE: binds the model for computations-> this needs to be done just
+	// one time at the beginning to load all the data in GPU.
+	worker.setModelForComputations((Modelo*)escena->models[0]);
+	
+	// Updates all the necessary nodes depending on the dirty flags
+	worker.updateAllComputations(rig);
+
+	// 3.1. Set-up default deformations -> TODELETE 
+	// Bulge initialization over skinning computation
+	initBulges(rig);
+
+	// 4. Actualizar la escena
+	// enable deformations and render data
+	rig->enableDeformation = true;
+
+	paintModelWithData();
+	emit updateSceneView();
+
+}
+
+void GLWidget::updateComputations()
+{
+
+}
 
 //////////////////////////////////////////////
 //			ALL COMPUTATIONS          ////////
@@ -1409,37 +1538,26 @@ void GLWidget::computeProcess() {
 	//Testing new optimized processing
 	// AirRig creation
 
-	//if(!sktCr->usrCreatedRigg)
-	{
-		// eliminamos el rastro que haya
-		if(escena->rig)
-			delete escena->rig;
-
-		// Creamos un rigg de cero.
-		if(!escena->rig)
-			escena->rig = new AirRig(scene::getNewId());
-	}
+	if(escena->rig)
+		delete escena->rig;
 
 	clock_t ini = clock();
+
+	// Crear rig nuevo en el caso de que no exista
+	if(!escena->rig)
+		escena->rig = new AirRig(scene::getNewId());
 
 	AirRig* rig = (AirRig*) escena->rig;
 
 	// Get values from UI
 	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
-	//if(!sktCr->usrCreatedRigg)
-	{
-		//Vincular a escena: modelo y esqueletos
-		rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
-	}
-	//else
-	{
-		// Vincular y preprocesar manteniendo la estructura actual
-
-	}
+	//Vincular a escena: modelo y esqueletos
+	rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
 
 	// Build deformers structure for computations.
-	rig->preprocessModelForComputations();
+	//rig->preprocessModelForComputations();
+	BuildGroupTree(rig->defRig);
 
 	clock_t fin = clock();
 	printf("Preprocess: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
@@ -3410,7 +3528,12 @@ void GLWidget::drawWithDistances()
 
 	if(rig) 
 	{
-		if(rig->enableDeformation && !rig->rigginMode)
+		for(int j = 0; j < rig->defRig.roots.size(); j++) 
+		{
+			rig->defRig.roots[j]->computeWorldPos(rig->defRig.roots[j]);
+		}
+
+		if(rig->enableDeformation)
 		{
 			if(!rig->enableTwist)
 				rig->airSkin->computeDeformations(rig);
@@ -3481,6 +3604,9 @@ void GLWidget::drawWithNames()
 
 void GLWidget::finishRiggingTool()
 {
+	// disable deormation until the weights are computed
+	((AirRig*)escena->rig)->enableDeformation = false;
+
 	//printf("Finalizando operacion\n");
 	sktCr->finishRig();
 
@@ -3492,11 +3618,44 @@ void GLWidget::finishRiggingTool()
 
 	selMgr.selection.clear();
 	sktCr->state = SKT_CR_IDDLE;
+	
+	emit setRiggingToolUI();
+	sktCr->mode = SKT_RIGG;
 
-	// Enables the computation saving the data on the rigg
-	sktCr->usrCreatedRigg = true;
+	// Construimos los nuevos grupos.
+	DefGraph& defRig = ((AirRig*) escena->rig)->defRig;
+	for(int i = 0; i < defRig.defGroups.size(); i++)
+	{
+		if(defRig.defGroups[i]->dirtyCreation)
+		{
+			((AirRig*) escena->rig)->BuildGroup(defRig.defGroups[i]);
+			defRig.defGroups[i]->dirtyCreation = false;
+			defRig.defGroups[i]->dirtyTransformation = true;
+			defRig.defGroups[i]->dirtyFlag = true;
+		}
+	}
 
+	preferredNormalType = SHD_VERTEX_COLORS;
 	emit updateSceneView();
+}
+
+void GLWidget::keyReleaseEvent(QKeyEvent* e)
+{
+	bool handled = false;
+	
+	if(e->key() == Qt::Key_X)
+	{
+		X_ALT_modifier = false;
+		handled = true;
+	}
+	else if(e->key() == Qt::Key_Alt)
+	{
+		X_ALT_modifier = false;
+		handled = true;
+	}
+
+	if (!handled)
+		QGLViewer::keyReleaseEvent(e);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* e)
@@ -3517,8 +3676,30 @@ void GLWidget::keyPressEvent(QKeyEvent* e)
 		assert(false);
 		handled = true;
 	}
+	else if(e->key() == Qt::Key_X)
+	{
+		// Como si fuera el alt
+		X_ALT_modifier = true;
+		handled = true;
+	}
+	else if(e->key() == Qt::Key_C)
+	{
+		// Activate create skt tool
+		handled = true;
+	}
+	else if(e->key() == Qt::Key_V)
+	{
+		// Activate anim skt tool
+		handled = true;
+	}
+	else if(e->key() == Qt::Key_B)
+	{
+		// Activate test skt tool
+		handled = true;
+	}
 	else if(e->key() == Qt::Key_Alt)
 	{
+		X_ALT_modifier = true;
 		handled = true;
 	}	
 
@@ -3551,7 +3732,9 @@ int GLWidget::getSelection()
 
 void GLWidget::mousePressEvent(QMouseEvent* e)
 {
-	if(e->button() == Qt::LeftButton)
+	dragged = false;
+
+	if(e->button() == Qt::LeftButton && !X_ALT_modifier)
 	{
 		//printf("pressed Left Button\n");
 		pressMouse = Vector2f(e->pos().x(), e->pos().y());
@@ -3592,233 +3775,278 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 	AdriViewer::mousePressEvent(e);
 }
 
-void GLWidget::moveEvent(QHoverEvent* e)
-{
-	int pruebas = 0;
-}
-
 void GLWidget::mouseMoveEvent(QMouseEvent* e)
 {
-
-if(pressed && ToolManip.bModifierMode)
+	if(!X_ALT_modifier)
 	{
-		Vector2i currentMouse(e->pos().x(), e->pos().y());
-
-		qglviewer::Vec orig, dir, selectedPoint;
-		camera()->convertClickToLine(QPoint(e->pos().x(), e->pos().y()), orig, dir);
-
-		if(e->pos().x() == ToolManip.pressMouse.x() && e->pos().y() == ToolManip.pressMouse.y() )
-			return;
-
-		// Transform manipulator
-		Vector3d rayOrigin(orig.x, orig.y, orig.z);
-		Vector3d rayDir(dir.x, dir.y, dir.z);
-		ToolManip.moveManipulator(rayOrigin, rayDir);
-
-		// Transform the object
-		ToolManip.applyTransformation(selMgr.selection[0]);
-
-		return;
-	}
-	else if(!pressed && selMgr.currentTool == CTX_CREATE_SKT && 
-			((sktCr->state == SKT_CR_IDDLE && sktCr->mode == SKT_RIGG) || 
-			(!sktCr->mode == SKT_RIGG) ))
-	{
-		// Highlight el nodo que salga en el trazado de rayos
-		beginSelection(e->pos());
-		drawWithNames();
-		int node = getSelection();
-
-		AirRig* rig = (AirRig*)escena->rig;
-		rig->highlight(node, true);
-
-	}
-	
-
-	Vector2f desplMouse(e->pos().x(), e->pos().y());
-
-	if((desplMouse-pressMouse).norm()>5.0)
-		dragged = true;
-	
-	AdriViewer::mouseMoveEvent(e);
-}
-
-void GLWidget::mouseReleaseEvent(QMouseEvent* e)
-{
-	if(e->button() == Qt::LeftButton)
-	{
-		//printf("released Left Button\n");
-		Vector2i releaseMouse(e->pos().x(), e->pos().y());
-		pressed = false;
-
-		if(ToolManip.bModifierMode)//node >= 0 && node <10)
+		if(pressed && ToolManip.bModifierMode)
 		{
-			// Estabamos modificando y hemos acabado...
-			ToolManip.bModifierMode = false;
+			Vector2i currentMouse(e->pos().x(), e->pos().y());
+
+			qglviewer::Vec orig, dir, selectedPoint;
+			camera()->convertClickToLine(QPoint(e->pos().x(), e->pos().y()), orig, dir);
+
+			if(e->pos().x() == ToolManip.pressMouse.x() && e->pos().y() == ToolManip.pressMouse.y() )
+				return;
+
+			// Transform manipulator
+			Vector3d rayOrigin(orig.x, orig.y, orig.z);
+			Vector3d rayDir(dir.x, dir.y, dir.z);
+			ToolManip.moveManipulator(rayOrigin, rayDir);
+
+			// Transform the object
+			ToolManip.applyTransformation(selMgr.selection[0]);
+
 			return;
 		}
-
-		if(selMgr.currentTool == CTX_TRANSFORMATION && !dragged)
+		else if(!pressed && selMgr.currentTool == CTX_CREATE_SKT && 
+				((sktCr->state == SKT_CR_IDDLE && sktCr->mode == SKT_CREATE) || 
+				(!sktCr->mode == SKT_CREATE) ))
 		{
+			// Highlight el nodo que salga en el trazado de rayos
 			beginSelection(e->pos());
 			drawWithNames();
 			int node = getSelection();
 
-			if(selMgr.selection.size() == 0) // No hay nada seleccionado
+			AirRig* rig = (AirRig*)escena->rig;
+			rig->highlight(node, true);
+
+		}
+	
+
+		//Vector2f desplMouse(e->pos().x(), e->pos().y());
+
+		// Si el raton se ha movido mas de 15 pixels consideramos que
+		// quiere rotar el modelo
+		//if((desplMouse-pressMouse).norm()>100.0)
+		//	dragged = true;
+	}
+	else
+		AdriViewer::mouseMoveEvent(e);
+}
+
+void GLWidget::mouseReleaseEvent(QMouseEvent* e)
+{
+	if(!X_ALT_modifier)
+	{
+		if(e->button() == Qt::LeftButton)
+		{
+			//printf("released Left Button\n");
+			Vector2i releaseMouse(e->pos().x(), e->pos().y());
+			pressed = false;
+
+			if(ToolManip.bModifierMode)//node >= 0 && node <10)
 			{
-				int nodeIdx = -1;
-				// Ver si es un objeto de la escena
-				for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+				// Estabamos modificando y hemos acabado...
+				ToolManip.bModifierMode = false;
+				return;
+			}
+
+			if(selMgr.currentTool == CTX_TRANSFORMATION && !dragged)
+			{
+				beginSelection(e->pos());
+				drawWithNames();
+				int node = getSelection();
+
+				if(selMgr.selection.size() == 0) // No hay nada seleccionado
 				{
-					if(node == escena->models[tempIdx]->nodeId)
+					int nodeIdx = -1;
+					// Ver si es un objeto de la escena
+					for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
 					{
-						// Hemos encontrado un objeto
-						nodeIdx = tempIdx;
-						break;
+						if(node == escena->models[tempIdx]->nodeId)
+						{
+							// Hemos encontrado un objeto
+							nodeIdx = tempIdx;
+							break;
+						}
+					}
+
+					if(nodeIdx >= 0 && nodeIdx < escena->models.size()) // The model exists
+					{
+						// Trigger selection
+						selMgr.selection.push_back(escena->models[nodeIdx]);
+						escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+
+						object* m = escena->models[nodeIdx];
+
+						ToolManip.bModifierMode = false;
+						ToolManip.bEnable = true;
+						ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
+				
+						printf("Model %d selected\n", node);
 					}
 				}
-
-				if(nodeIdx >= 0 && nodeIdx < escena->models.size()) // The model exists
+				else
 				{
-					// Trigger selection
-					selMgr.selection.push_back(escena->models[nodeIdx]);
-					escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
-
-					object* m = escena->models[nodeIdx];
-
-					ToolManip.bModifierMode = false;
-					ToolManip.bEnable = true;
-					ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
-				
-					printf("Model %d selected\n", node);
-				}
-			}
-			else
-			{
-				if(node > 0)
-				{
-					// Si es diferente del que había seleccionado-> cambiar
-					if(selMgr.selection[0]->nodeId == node)
+					if(node > 0)
 					{
-						// es el mismo y no hacemos nada
+						// Si es diferente del que había seleccionado-> cambiar
+						if(selMgr.selection[0]->nodeId == node)
+						{
+							// es el mismo y no hacemos nada
+						}
+						else
+						{
+							// deseleccion
+							int oldId = selMgr.selection[0]->nodeId;
+							selMgr.selection[0]->select(false, oldId);
+							selMgr.selection.clear();
+
+							//seleccionar el nuevo
+							int nodeIdx = -1;
+							for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+							{
+								if(node == escena->models[tempIdx]->nodeId)
+								{
+									nodeIdx = tempIdx;
+									break;
+								}
+							}
+
+							if(nodeIdx >= 0 && nodeIdx < escena->models.size())
+							{
+								// Selection
+								selMgr.selection.push_back(escena->models[nodeIdx]);
+								escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+
+								object* m = escena->models[nodeIdx];
+
+								ToolManip.bModifierMode = false;
+								ToolManip.bEnable = true;
+								ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
+				
+								printf("Cambio de modelo: new model %d selected\n", node);
+							}
+						}
 					}
 					else
 					{
-						// deseleccion
-						int oldId = selMgr.selection[0]->nodeId;
-						selMgr.selection[0]->select(false, oldId);
-						selMgr.selection.clear();
-
-						//seleccionar el nuevo
-						int nodeIdx = -1;
-						for(int tempIdx = 0; tempIdx < escena->models.size(); tempIdx++)
+						if(!dragged && selMgr.selection.size() > 0)
 						{
-							if(node == escena->models[tempIdx]->nodeId)
-							{
-								nodeIdx = tempIdx;
-								break;
-							}
+							// Si no es nada-> y no es rotar... -> deseleccionar
+							// deseleccion
+							int oldId = selMgr.selection[0]->nodeId;
+
+							selMgr.selection[0]->select(false, oldId);
+							selMgr.selection.clear();
+
+							ToolManip.bModifierMode = false;
+							ToolManip.bEnable = false;
 						}
+					}
+				}
+			}
+			else if(selMgr.currentTool == CTX_CREATE_SKT && !dragged)
+			{
+				//Sino ver si es un modelo.
+				beginSelection(e->pos());
+				drawWithNames();
+				int node = getSelection();
 
-						if(nodeIdx >= 0 && nodeIdx < escena->models.size())
+				// Si no hay seleccion previa 
+				if(sktCr->state == SKT_CR_IDDLE)
+				{
+					// Buscamos si ha seleccionado algo
+					AirRig* rig = (AirRig*)escena->rig;
+					DefGroup* dg = NULL;
+					for(int i = 0; i < rig->defRig.defGroups.size(); i++)
+					{
+						if(node == rig->defRig.defGroups[i]->nodeId)
 						{
-							// Selection
-							selMgr.selection.push_back(escena->models[nodeIdx]);
-							escena->models[nodeIdx]->select(true, escena->models[nodeIdx]->nodeId);
+							dg = rig->defRig.defGroups[i];
+						}
+					}
 
-							object* m = escena->models[nodeIdx];
+					if(dg != NULL) // Hay seleccion
+					{
+						// Si estamos en modo creacion -> creamos
+						if(sktCr->mode == SKT_CREATE)
+						{
+							// Seleccionamos un nodo del rigg que ya existe
+							sktCr->parentNode = dg;
+							sktCr->parentRig = (AirRig*)escena->rig;
+							sktCr->parentNode->select(true, sktCr->parentNode->nodeId);
+							sktCr->state = SKT_CR_SELECTED;
+
+							// Add the the existing joint to the temporal dynamic skeleton
+							sktCr->addNewNode(dg->getTranslation(false));
+
+							for(int i = 0; i< selMgr.selection.size(); i++)
+							{
+								if(selMgr.selection[i])
+									selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
+							}
+					
+							selMgr.selection.clear();
+							selMgr.selection.push_back(sktCr->parentNode);
+
+							return;
+						}
+						else // Modo animacion o test -> seleccion y cargar manipulador
+						{
+							// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
+							selMgr.selection.push_back(dg);
+							dg->select(true, dg->nodeId);
+							sktCr->state = SKT_CR_SELECTED;
+
+							object* m = dg;
 
 							ToolManip.bModifierMode = false;
 							ToolManip.bEnable = true;
-							ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
+							ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
 				
-							printf("Cambio de modelo: new model %d selected\n", node);
+							printf("DefGroup %d selected\n", node);
+						}
+					}
+					else // no se ha seleccionado nada
+					{
+						if(sktCr->mode == SKT_CREATE)
+						{
+							Vector2i screenPt(e->pos().x(), e->pos().y());
+							Geometry* geom = (Geometry*)(escena->models[0]);
+
+							vector<Vector3d> intersecPoints;
+							Vector3d rayDir;
+							vector<int> triangleIdx;
+
+							Vector3d jointPoint;
+
+							// Get intersections
+							traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
+
+							if(intersecPoints.size() > 0)
+							{
+								// Select the right point
+								getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+
+								// Add the new joint to the temporal dynamic skeleton
+								sktCr->addNewNode(jointPoint);
+
+								// Pasamos a modo en que ya hemos seleccionado un elem.
+								sktCr->state = SKT_CR_SELECTED;
+
+								AirRig* rig = (AirRig*)escena->rig;
+								if(!rig)
+								{
+									// He tenido que crearlo de nuevo
+									escena->rig = new AirRig(scene::getNewId());
+								}
+								else
+								{
+									// Simplemente guardarme la referencia para continuar
+									sktCr->parentRig = rig;
+								}
+							}
 						}
 					}
 				}
 				else
 				{
-					if(!dragged && selMgr.selection.size() > 0)
+					// Ya había algo seleccionado, por lo que tenemos que actuar en consecuencia
+					if(sktCr->mode == SKT_CREATE)
 					{
-						// Si no es nada-> y no es rotar... -> deseleccionar
-						// deseleccion
-						int oldId = selMgr.selection[0]->nodeId;
-
-						selMgr.selection[0]->select(false, oldId);
-						selMgr.selection.clear();
-
-						ToolManip.bModifierMode = false;
-						ToolManip.bEnable = false;
-					}
-				}
-			}
-		}
-		else if(selMgr.currentTool == CTX_CREATE_SKT && !dragged)
-		{
-			//Sino ver si es un modelo.
-			beginSelection(e->pos());
-			drawWithNames();
-			int node = getSelection();
-
-			// Si no hay seleccion previa 
-			if(sktCr->state == SKT_CR_IDDLE)
-			{
-				// Buscamos si ha seleccionado algo
-				AirRig* rig = (AirRig*)escena->rig;
-				DefGroup* dg = NULL;
-				for(int i = 0; i < rig->defRig.defGroups.size(); i++)
-				{
-					if(node == rig->defRig.defGroups[i]->nodeId)
-					{
-						dg = rig->defRig.defGroups[i];
-					}
-				}
-
-				if(dg != NULL) // Hay seleccion
-				{
-					// Si estamos en modo creacion -> creamos
-					if(sktCr->mode == SKT_RIGG)
-					{
-						// Seleccionamos un nodo del rigg que ya existe
-						sktCr->parentNode = dg;
-						sktCr->parentRig = (AirRig*)escena->rig;
-						sktCr->parentNode->select(true, sktCr->parentNode->nodeId);
-						sktCr->state = SKT_CR_SELECTED;
-
-						// Add the the existing joint to the temporal dynamic skeleton
-						sktCr->addNewNode(dg->getTranslation(false));
-
-						for(int i = 0; i< selMgr.selection.size(); i++)
-						{
-							if(selMgr.selection[i])
-								selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
-						}
-					
-						selMgr.selection.clear();
-						selMgr.selection.push_back(sktCr->parentNode);
-
-						return;
-					}
-					else // Modo animacion o test -> seleccion y cargar manipulador
-					{
-						// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
-						selMgr.selection.push_back(dg);
-						dg->select(true, dg->nodeId);
-						sktCr->state = SKT_CR_SELECTED;
-
-						object* m = dg;
-
-						ToolManip.bModifierMode = false;
-						ToolManip.bEnable = true;
-						ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
-				
-						printf("DefGroup %d selected\n", node);
-					}
-				}
-				else // no se ha seleccionado nada
-				{
-					if(sktCr->mode == SKT_RIGG)
-					{
+						// Creo un nuevo elemento... talcu
 						Vector2i screenPt(e->pos().x(), e->pos().y());
 						Geometry* geom = (Geometry*)(escena->models[0]);
 
@@ -3855,243 +4083,61 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 							}
 						}
 					}
-				}
-			}
-			else
-			{
-				// Ya había algo seleccionado, por lo que tenemos que actuar en consecuencia
-				if(sktCr->mode == SKT_RIGG)
-				{
-					// Creo un nuevo elemento... talcu
-					Vector2i screenPt(e->pos().x(), e->pos().y());
-					Geometry* geom = (Geometry*)(escena->models[0]);
-
-					vector<Vector3d> intersecPoints;
-					Vector3d rayDir;
-					vector<int> triangleIdx;
-
-					Vector3d jointPoint;
-
-					// Get intersections
-					traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
-
-					if(intersecPoints.size() > 0)
+					else
 					{
-						// Select the right point
-						getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
-
-						// Add the new joint to the temporal dynamic skeleton
-						sktCr->addNewNode(jointPoint);
-
-						// Pasamos a modo en que ya hemos seleccionado un elem.
-						sktCr->state = SKT_CR_SELECTED;
-
+						// Buscamos si ha seleccionado algo
 						AirRig* rig = (AirRig*)escena->rig;
-						if(!rig)
+						DefGroup* dg = NULL;
+						for(int i = 0; i < rig->defRig.defGroups.size(); i++)
 						{
-							// He tenido que crearlo de nuevo
-							escena->rig = new AirRig(scene::getNewId());
+							if(node == rig->defRig.defGroups[i]->nodeId)
+							{
+								dg = rig->defRig.defGroups[i];
+							}
 						}
-						else
-						{
-							// Simplemente guardarme la referencia para continuar
-							sktCr->parentRig = rig;
-						}
-					}
-				}
-				else
-				{
-					// Buscamos si ha seleccionado algo
-					AirRig* rig = (AirRig*)escena->rig;
-					DefGroup* dg = NULL;
-					for(int i = 0; i < rig->defRig.defGroups.size(); i++)
-					{
-						if(node == rig->defRig.defGroups[i]->nodeId)
-						{
-							dg = rig->defRig.defGroups[i];
-						}
-					}
 
-					// Deseleccion
-					if(selMgr.selection.size() > 0)
-					{
-						selMgr.selection[0]->select(false, selMgr.selection[0]->nodeId);
-						selMgr.selection.clear();
-					}
+						// Deseleccion
+						if(selMgr.selection.size() > 0)
+						{
+							selMgr.selection[0]->select(false, selMgr.selection[0]->nodeId);
+							selMgr.selection.clear();
+						}
 				
-					ToolManip.bModifierMode = false;
-					ToolManip.bEnable = false;
-
-					sktCr->state == SKT_CR_IDDLE;
-
-					printf("DefGroup deselected\n");
-
-					// Cambio la seleccion
-					if(dg != NULL)
-					{
-						selMgr.selection.push_back(dg);
-						dg->select(true, dg->nodeId);
-
-						ToolManip.bModifierMode = false;
-						ToolManip.bEnable = true;
-						ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
-
-						sktCr->state == SKT_CR_SELECTED;
-
-						printf("Nueva Seleccion: %d\n", dg->nodeId);
-					}
-
-				}
-			}
-
-			/*
-			// En este caso estamos en modo seleccion
-			if(!(sktCr->mode == SKT_RIGG && sktCr->state == SKT_CR_SELECTED)) 
-			{
-				// PROTOCOLO:
-				// Si estamos en modo iddle y rigg -> seleccion o creacion
-				// Si estamos en modo animacion o test -> seleccion
-
-				AirRig* rig = (AirRig*)escena->rig;
-				DefGroup* dg = NULL;
-				for(int i = 0; i < rig->defRig.defGroups.size(); i++)
-				{
-					if(node == rig->defRig.defGroups[i]->nodeId)
-					{
-						dg = rig->defRig.defGroups[i];
-					}
-				}
-
-				if(sktCr->mode != SKT_RIGG && dg != NULL) // Si hemos seleccionado algo.
-				{
-					if(selMgr.selection.size() == 0)
-					{
-						// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
-						selMgr.selection.push_back(dg);
-						dg->select(true, dg->nodeId);
-
-						object* m = dg;
-
-						ToolManip.bModifierMode = false;
-						ToolManip.bEnable = true;
-						ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
-				
-						printf("DefGroup %d selected\n", node);
-					}
-					else if(dg->nodeId != selMgr.selection[0]->nodeId)
-					{
-						// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
-						selMgr.selection[0]->select(false, selMgr.selection[0]->nodeId);
-						selMgr.selection.clear();
-
 						ToolManip.bModifierMode = false;
 						ToolManip.bEnable = false;
-					}
-				}
-				else if(sktCr->mode == SKT_RIGG && dg != NULL)
-				{
 
-					// Seleccionamos un nodo del rigg que ya existe
-					sktCr->parentNode = dg;
-					sktCr->parentRig = (AirRig*)escena->rig;
-					sktCr->parentNode->select(true, sktCr->parentNode->nodeId);
-					sktCr->state = SKT_CR_SELECTED;
+						sktCr->state == SKT_CR_IDDLE;
 
-					// Add the the existing joint to the temporal dynamic skeleton
-					sktCr->addNewNode(dg->getTranslation(false));
+						printf("DefGroup deselected\n");
 
-					for(int i = 0; i< selMgr.selection.size(); i++)
-					{
-						if(selMgr.selection[i])
-							selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
-					}
-					
-					selMgr.selection.clear();
-					selMgr.selection.push_back(sktCr->parentNode);
-
-					return;
-				}
-				else if(sktCr->mode == SKT_RIGG && dg == NULL)
-				{
-					Vector2i screenPt(e->pos().x(), e->pos().y());
-					Geometry* geom = (Geometry*)(escena->models[0]);
-
-					vector<Vector3d> intersecPoints;
-					Vector3d rayDir;
-					vector<int> triangleIdx;
-
-					Vector3d jointPoint;
-
-					// Get intersections
-					traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
-
-					if(intersecPoints.size() > 0)
-					{
-						// Select the right point
-						getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
-
-						// Add the new joint to the temporal dynamic skeleton
-						sktCr->addNewNode(jointPoint);
-
-						// Pasamos a modo en que ya hemos seleccionado un elem.
-						sktCr->state = SKT_CR_SELECTED;
-
-						AirRig* rig = (AirRig*)escena->rig;
-						if(!rig)
+						// Cambio la seleccion
+						if(dg != NULL)
 						{
-							// He tenido que crearlo de nuevo
-							escena->rig = new AirRig(scene::getNewId());
-						}
-						else
-						{
-							// Simplemente guardarme la referencia para continuar
-							sktCr->parentRig = rig;
-						}
-					}
-				}
-				else // deseleccion
-				{
-					int oldId = selMgr.selection[0]->nodeId;
-					selMgr.selection[0]->select(false, oldId);
-					selMgr.selection.clear();
+							selMgr.selection.push_back(dg);
+							dg->select(true, dg->nodeId);
 
-					ToolManip.bModifierMode = false;
-					ToolManip.bEnable = false;
+							ToolManip.bModifierMode = false;
+							ToolManip.bEnable = true;
+							ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
+
+							sktCr->state == SKT_CR_SELECTED;
+
+							printf("Nueva Seleccion: %d\n", dg->nodeId);
+						}
+
+					}
 				}
 			}
-			else
-			{
-				// Vamos anadiendo mas nodos
-				int node = getSelection();
-
-				Vector2i screenPt(e->pos().x(), e->pos().y());
-				Geometry* geom = (Geometry*)(escena->models[0]);
-
-				vector<Vector3d> intersecPoints;
-				Vector3d rayDir;
-				vector<int> triangleIdx;
-
-				Vector3d jointPoint;
-
-				// Get intersections
-				traceRayToObject(geom, screenPt, rayDir, intersecPoints, triangleIdx);
-
-				if(intersecPoints.size() > 0)
-				{
-					// Select the right point
-					getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
-
-					// Add the new joint to the temporal dynamic skeleton
-					sktCr->addNewNode(jointPoint);
-				}
-			}*/
 		}
+
 	}
 
+
+	AdriViewer::mouseReleaseEvent(e);
+	
 	pressed = false;
 	dragged = false;
 
-	AdriViewer::mouseReleaseEvent(e);
 }
 
 void GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point)

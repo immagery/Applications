@@ -11,6 +11,8 @@
 #include <DataStructures/Modelo.h>
 #include <DataStructures/grid3D.h>
 
+#include <Computation/ComputationMgr.h>
+
 #include <QtGui\qopenglshaderprogram.h>
 #include <QtGui\qopenglbuffer.h>
 #include <QtGui\qopenglvertexarrayobject.h>
@@ -79,41 +81,39 @@ public:
     void drawWithCages();
 
     void ChangeViewingMode(int);
-    //void updateGridRender();
-
-	void paintPlaneWithData(bool compute = false);
-
 	virtual void changeVisualizationMode(int);
+
 	virtual void paintModelWithData();
+	void paintPlaneWithData(bool compute = false);
 
 	virtual void readScene(string fileName, string name, string path);
 	virtual void saveScene(string fileName, string name, string path, bool compactMode = false);
 
 	// Skeleton creator tool
 	sktCreator* sktCr;
+	void finishRiggingTool();
 
 	// Interface management
 	Vector2f pressMouse;
 	bool pressed;
 	bool dragged;
 
-	shaderIdx preferredType;
-
 	virtual void mouseReleaseEvent(QMouseEvent* e);
 	virtual void mousePressEvent(QMouseEvent* e);
 	virtual void mouseMoveEvent(QMouseEvent* e);
-
-	virtual void moveEvent(QHoverEvent* e);
-
 	virtual void keyPressEvent(QKeyEvent *e);
+	virtual void keyReleaseEvent(QKeyEvent* e);
+
+	bool X_ALT_modifier;
 
 	int getSelection();
 
-	void finishRiggingTool();
-
+	// Manipulation
 	manipulator ToolManip;
 
 	// Shaders
+	shaderIdx preferredType;
+	shaderIdx preferredNormalType;
 	QOpenGLShaderProgram* m_currentShader;
 	vector<QOpenGLShaderProgram*> m_shaders;
 
@@ -123,6 +123,10 @@ public:
 
 	virtual void traceRayToObject(Geometry* geom, Vector2i& pt , Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx);
 	virtual void getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point);
+
+	//Computation Management
+	ComputationMgr worker;
+
 
 protected:
     //virtual void postSelection(const QPoint& point);
@@ -152,6 +156,9 @@ public slots:
 	//Metodos especificos
     virtual void doTests(string fileName, string name, string path);
     void computeProcess();
+	void computeWeights();
+
+	void updateComputations();
 
 	void initBulges(AirRig* rig);
 
