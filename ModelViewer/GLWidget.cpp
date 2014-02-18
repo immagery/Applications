@@ -61,6 +61,8 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	X_ALT_modifier = false;
 
+	setAutoFillBackground(false);
+
 }
 
 void GLWidget::updateColorBufferObject()
@@ -255,6 +257,107 @@ void GLWidget::init()
 
 	AdriViewer::init();
 }
+
+/*
+ void GLWidget::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event)
+    QPainter painter;
+    painter.begin(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // Save current OpenGL state
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    // Reset OpenGL parameters
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_MULTISAMPLE);
+    static GLfloat lightPosition[4] = { 1.0, 5.0, 5.0, 1.0 };
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+    
+	qglClearColor(QColor(Qt::black));
+	
+    // Classical 3D drawing, usually performed by paintGL().
+    preDraw();
+    draw();
+    postDraw();
+    
+	// Restore OpenGL state
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glPopAttrib();
+	
+	drawOverpaint(&painter, event);
+
+    painter.end();
+}
+
+ void GLWidget::drawOverpaint(QPainter *painter,  QPaintEvent *event) 
+ {
+	QLinearGradient gradient(QPointF(50, -20), QPointF(80, 20));
+    gradient.setColorAt(0.0, Qt::white);
+    gradient.setColorAt(1.0, QColor(0xa6, 0xce, 0x39));
+
+    QBrush circleBrush = QBrush(gradient);
+    QPen circlePen = QPen(Qt::blue); circlePen.setWidth(1);
+    QPen textPen = QPen(Qt::white);
+    QFont textFont; textFont.setPixelSize(50);
+
+	QBrush background = QBrush(QColor(64, 32, 64));
+	painter->fillRect(event->rect(), background);
+    painter->translate(100, 100);
+
+	int elapsed = 0;
+
+	painter->setBrush(circleBrush);
+    painter->setPen(circlePen);
+    painter->rotate(elapsed * 0.030);
+
+    qreal r = elapsed / 1000.0;
+    int n = 30;
+    for (int i = 0; i < n; ++i) {
+        painter->rotate(30);
+        qreal factor = (i + r) / n;
+        qreal radius = 0 + 120.0 * factor;
+        qreal circleRadius = 1 + factor * 20;
+        painter->drawEllipse(QRectF(radius, -circleRadius,
+                                    circleRadius * 2, circleRadius * 2));
+    }
+    
+	painter->restore();
+	painter->setPen(textPen);
+    painter->setFont(textFont);
+    painter->drawText(QRect(-50, -50, 100, 100), Qt::AlignCenter, QStringLiteral("Qt"));
+	return;
+
+
+	painter->save();
+	int CX = width()/2;
+	int CY = height()/2;
+    painter->translate(CX, CY);
+
+	QRadialGradient radialGrad(QPointF(-40, -40), 100);
+	radialGrad.setColorAt(0, QColor(255, 255, 255, 100));
+	radialGrad.setColorAt(1, QColor(200, 200, 0, 100)); 
+    
+	//painter->setBrush(QBrush(radialGrad));
+
+	painter->setBrush(QBrush(QColor(Qt::blue)));
+	painter->drawRoundRect(-100, -100, 200, 200);
+    painter->restore();
+}
+
+*/
 
 void GLWidget::setTool(ToolType ctx)
 {
@@ -1454,14 +1557,21 @@ void GLWidget::initBulges(AirRig* rig)
 	AirSkinning* skin = rig->airSkin;
 
 	//   Bulge effect inicialization
-	skin->bulge.groups.clear();
+	skin->bulge.clear();
 	map<int, int> assignedToBulgeGroup;
+
+	int count= 0;
 
 	for(int defIdx = 0; defIdx < rig->defRig.defGroups.size(); defIdx++)
 	{
-		if( rig->defRig.defGroups[defIdx]-> bulgeEffect )
-		{
-			skin->bulge.groups.push_back(new BulgeGroup());
+		DefGroup* dg = rig->defRig.defGroups[defIdx];
+
+		if( dg->bulgeEffect )
+		{	
+			count++;
+
+			// No se hace copia... espero que se inicie bien.
+			skin->bulge.push_back(BulgeDeformer());
 
 			// Get indexes of playing joints
 			int currentJoint = rig->defRig.defGroups[defIdx]->nodeId;
@@ -1469,28 +1579,73 @@ void GLWidget::initBulges(AirRig* rig)
 			if(rig->defRig.defGroups[defIdx]->dependentGroups.size() > 0)
 				fatherJoint = rig->defRig.defGroups[defIdx]->dependentGroups[0]->nodeId;
 
-			skin->bulge.groups.back()->deformerIds.push_back(currentJoint);
-
+			// Ponemos un grupo por el padre
+			int fatherGroup = -1;
 			if(fatherJoint > 0)
-				skin->bulge.groups.back()->deformerIds.push_back(fatherJoint);
-			else
-				printf("Hay hay un joint marcado sin padre... no tiene sentido!\n");
+			{
+				fatherGroup = skin->bulge.back().groups.size();
+				skin->bulge.back().groups.push_back(new BulgeGroup());
+
+				skin->bulge.back().groups[fatherGroup]->deformerId = currentJoint;
+				skin->bulge.back().groups[fatherGroup]->childDeformerId = fatherJoint;
 			
-			for (int k = 0; k < skin->bind->pointData.size(); k++) 
-			{ 
-				bool founded = false;
-				PointData& data = skin->bind->pointData[k];
-				for (int kk = 0; kk < data.influences.size() && !founded; ++kk) // and check all joints associated to them
-				{
-					founded |= (data.influences[kk].label == currentJoint);
-					founded |= (data.influences[kk].label == fatherJoint);
+				for (int k = 0; k < skin->bind->pointData.size(); k++) 
+				{ 
+					bool founded1 = false;
+					PointData& data = skin->bind->pointData[k];
+					for (int kk = 0; kk < data.influences.size(); ++kk) // and check all joints associated to them
+					{ 
+						if(data.influences[kk].label == fatherJoint)
+						{
+							skin->bulge.back().groups[fatherGroup]->vertexGroup.push_back(k);
+							break;
+						}
+					}	
 				}
 
-				if(founded)
-					skin->bulge.groups.back()->vertexGroup.push_back(k);
+				skin->bulge.back().groups[fatherGroup]->defCurve = new wireDeformer();
+				skin->bulge.back().groups[fatherGroup]->u.resize(skin->bulge.back().groups[fatherGroup]->vertexGroup.size(),0.0);
+				skin->bulge.back().groups[fatherGroup]->w.resize(skin->bulge.back().groups[fatherGroup]->vertexGroup.size(),0.0);
+
+				// parent direction
+				skin->bulge.back().groups[fatherGroup]->direction = true;
+
+			}
+			else printf("Hay hay un joint marcado sin padre... no tiene sentido!\n");
+
+			for(int bulgeChild = 0; bulgeChild < dg->relatedGroups.size(); bulgeChild++)
+			{
+				// revisar esta inicializacion
+				int currentGroup = skin->bulge.back().groups.size();
+				skin->bulge.back().groups.push_back(new BulgeGroup());
+				
+				skin->bulge.back().groups[currentGroup]->deformerId = currentJoint;
+				skin->bulge.back().groups[currentGroup]->childDeformerId = rig->defRig.defGroups[defIdx]->relatedGroups[bulgeChild]->nodeId;
+
+				for (int k = 0; k < skin->bind->pointData.size(); k++) 
+				{ 
+					PointData& data = skin->bind->pointData[k];
+					for (int kk = 0; kk < data.influences.size(); ++kk) // and check all joints associated to them
+					{
+						if(data.influences[kk].label == currentJoint && data.influences[kk].weightValue > 0 /*|| data.influences[kk].label == fatherJoint*/)
+						{
+							skin->bulge.back().groups[currentGroup]->vertexGroup.push_back(k);
+							break;
+						}
+					}	
+				}
+
+				// Now, just two deformers... but maybe we will share the deformation between more.
+				skin->bulge.back().groups[currentGroup]->defCurve = new wireDeformer();
+
+				// resize all the coords for computation
+				skin->bulge.back().groups[currentGroup]->u.resize(skin->bulge.back().groups[currentGroup]->vertexGroup.size(), 0.0);
+				skin->bulge.back().groups[currentGroup]->w.resize(skin->bulge.back().groups[currentGroup]->vertexGroup.size(), 1.0);
 			}
 		}
 	}
+
+	printf("Loaded %d bulges\n", count);
 }
 
 void GLWidget::computeWeights()
@@ -1513,6 +1668,9 @@ void GLWidget::computeWeights()
 	worker.updateAllComputations(rig);
 
 	// 3.1. Set-up default deformations -> TODELETE 
+	for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
+		rig->defRig.defGroups[i]-> bulgeEffect = true;
+	
 	// Bulge initialization over skinning computation
 	initBulges(rig);
 
@@ -2794,7 +2952,8 @@ void GLWidget::setBulgeParams(bool enable)
 	AirRig* rig = (AirRig*)escena->rig;
 	if(rig && rig->airSkin)
 	{
-		rig->airSkin->bulge.enabled = enable;
+		for(int bulgeIdx = 0; bulgeIdx < rig->airSkin->bulge.size(); bulgeIdx++)
+			rig->airSkin->bulge[bulgeIdx].enabled = enable;
 	}
 }
 
@@ -3508,6 +3667,394 @@ void GLWidget::drawWithDistances()
             */
 }
 
+void GLWidget::drawBulgeCurve(int idDeformer, int idGroup, Vector2i _Origin,Vector2i rectSize)
+{
+
+	// Backgound
+	glColor4f(0.35f, 0.35f, 0.35f, 0.2);
+	glBegin(GL_QUADS);
+		glVertex2f(_Origin.x(), 0.0);
+		glVertex2f(_Origin.x()+ rectSize.x(), 0.0);
+		glVertex2f(_Origin.x()+ rectSize.x(), rectSize.y());
+		glVertex2f(_Origin.x(), rectSize.y());
+	glEnd();
+
+	// Border
+	glLineWidth(3);
+	glColor3f(0.85f, 0.85f, 0.85f);
+	glBegin(GL_LINE_LOOP);
+		glVertex2f(_Origin.x(), _Origin.y() + 0.0);
+		glVertex2f(_Origin.x()+ rectSize.x(), _Origin.y() + 0.0);
+		glVertex2f(_Origin.x()+ rectSize.x(), _Origin.y() + rectSize.y());
+		glVertex2f(_Origin.x()+ 0.0, _Origin.y() + rectSize.y());
+	glEnd();
+
+	int margen = 15;
+	Vector2i origin(_Origin.x()+margen,_Origin.y()+margen);
+	Vector2i size = rectSize - Vector2i(margen,margen)*2;
+
+	float miniLine = 5;
+
+	// Axis
+	glLineWidth(2);
+	glColor3f(0.85f, 0.85f, 0.85f);
+	glBegin(GL_LINES);
+		// BASE
+		glVertex2f(origin.x()-miniLine, origin.y());
+		glVertex2f(origin.x()+ size.x(), origin.y());
+		glVertex2f(origin.x(), origin.y()-miniLine);
+		glVertex2f(origin.x(), origin.y()+ size.y());
+
+		//TICS
+		glVertex2f(origin.x() - miniLine, origin.y()+ size.y());
+		glVertex2f(origin.x() + miniLine, origin.y()+ size.y());
+		glVertex2f(origin.x()+ size.x(), origin.y() - miniLine);
+		glVertex2f(origin.x()+ size.x(), origin.y() + miniLine);
+
+		glVertex2f(origin.x()+size.x()/2, origin.y()-miniLine);
+		glVertex2f(origin.x()+size.x()/2, origin.y()+miniLine);
+		glVertex2f(origin.x()-miniLine , origin.y() + size.y()/2);
+		glVertex2f(origin.x()+miniLine, origin.y() + size.y()/2);
+
+	glEnd();
+
+	double maxX = 1.0;
+	double maxY = 1.0;
+
+	vector<Vector2f> cpoints;
+	//cpoints.push_back(Vector2f(0.0,0.0));
+	//cpoints.push_back(Vector2f(40.0,0.0));
+	//cpoints.push_back(Vector2f(60.0,0.2));
+	//cpoints.push_back(Vector2f(63.0,0.05));
+	//cpoints.push_back(Vector2f(80.0,0.0));
+	//cpoints.push_back(Vector2f(82.0,0.25));
+	//cpoints.push_back(Vector2f(90,0.0));
+
+	/*
+	cpoints.push_back(Vector2f(0.0,0.0));
+	cpoints.push_back(Vector2f(0.2,0.5));
+	cpoints.push_back(Vector2f(0.9,0.5));
+	cpoints.push_back(Vector2f(0.95,0.5));
+	cpoints.push_back(Vector2f(1.0,0.5));
+	*/
+
+	// wrinkle controled
+	cpoints.push_back(Vector2f(0.0,0.0));
+	//cpoints.push_back(Vector2f(0.01,0.01));
+	cpoints.push_back(Vector2f(0.5,0.5));
+	//cpoints.push_back(Vector2f(0.99,0.01));
+	cpoints.push_back(Vector2f(1.0,0.0));
+	
+	// Creamos una curva
+	AirSkinning* skin = ((AirRig*)escena->rig)->airSkin;
+
+	if(skin->bulge.size() <= idDeformer) return;
+
+	//   Bulge effect inicialization
+	if(skin->bulge[idDeformer].groups.size() > idGroup)
+	{
+		// Cogemos una de las curvas para hacer pruebas
+		Spline& spline = skin->bulge[idDeformer].groups[idGroup]->defCurve->W;
+
+		bool noData = false;
+		if(spline.size() == 0)
+		{
+			spline.addPoint(0.0, 0.0);
+			spline.addPoint(0.5, 0.0);
+			spline.addPoint(1.0, 0.0);
+			noData = true;
+		}
+		//Using the specified points
+		//for(int i = 0; i< cpoints.size(); i++)
+		//{
+		//	spline.addPoint(cpoints[i].x()/maxX, cpoints[i].y()/maxY);
+		//}
+
+		spline.setLowBC(Spline::FIXED_2ND_DERIV_BC, 0);
+		spline.setHighBC(Spline::FIXED_2ND_DERIV_BC, 0);
+
+		glPointSize(6);
+		glColor3f(0.9f, 0.1f, 0.1f);
+
+		glBegin(GL_POINTS);
+		Spline::const_iterator it = spline.begin();
+		for(; it != spline.end(); it++)
+		{
+			double x =  it->first;
+			double y = it->second;
+			glVertex2f(origin.x()+x/maxX*size.x(), origin.y()+ y/maxY*size.y());
+		}
+		glEnd();
+
+		glLineWidth(1);
+		if(noData)
+			glColor3f(0.9f, 0.1f, 0.1f);
+		else
+			glColor3f(0.9f, 0.9f, 0.9f);
+		glBegin(GL_LINES);
+
+		double preX = 0.0;
+		double preY = spline(preX);
+		for (double x = 0.005 ; x <= 1.0; x += 0.005)
+		{
+			glVertex2f(preX*size.x()+ origin.x(), preY*size.y()+ origin.y());
+			glVertex2f(x*size.x()+ origin.x(), spline(x)*size.y()+ origin.y());
+			preX = x; preY = spline(x);
+		}
+
+		if(noData)
+			spline.clear();
+
+		glEnd();
+	}
+}
+
+void GLWidget::drawBulgePressurePlane(int idDeformer, int idGroup, Vector2i _Origin,Vector2i rectSize)
+{
+	// Backgound
+	glColor4f(0.35f, 0.35f, 0.35f, 0.2);
+	glBegin(GL_QUADS);
+		glVertex2f(_Origin.x(), _Origin.y());
+		glVertex2f(_Origin.x()+ rectSize.x(), _Origin.y());
+		glVertex2f(_Origin.x()+ rectSize.x(), _Origin.y()+rectSize.y());
+		glVertex2f(_Origin.x(), _Origin.y()+rectSize.y());
+	glEnd();
+
+	// Border
+	glLineWidth(3);
+	glColor3f(0.85f, 0.85f, 0.85f);
+	glBegin(GL_LINE_LOOP);
+		glVertex2f(_Origin.x(), _Origin.y() + 0.0);
+		glVertex2f(_Origin.x()+ rectSize.x(), _Origin.y() + 0.0);
+		glVertex2f(_Origin.x()+ rectSize.x(), _Origin.y() + rectSize.y());
+		glVertex2f(_Origin.x()+ 0.0, _Origin.y() + rectSize.y());
+	glEnd();
+
+	int margen = 15;
+	Vector2i origin(_Origin.x()+margen,_Origin.y()+margen);
+	Vector2i size = rectSize - Vector2i(margen,margen)*2;
+
+	float miniLine = 5;
+
+	// Axis
+	glLineWidth(2);
+	glColor3f(0.85f, 0.85f, 0.85f);
+	glBegin(GL_LINES);
+		// BASE
+		glVertex2f(origin.x()-miniLine, origin.y());
+		glVertex2f(origin.x()+ size.x(), origin.y());
+		glVertex2f(origin.x(), origin.y()-miniLine);
+		glVertex2f(origin.x(), origin.y()+ size.y());
+		glVertex2f(origin.x()+ size.x(), origin.y()-miniLine);
+		glVertex2f(origin.x()+ size.x(), origin.y()+ size.y());
+
+		//TICS
+		glVertex2f(origin.x() - miniLine, origin.y()+ size.y());
+		glVertex2f(origin.x() + miniLine, origin.y()+ size.y());
+		glVertex2f(origin.x()+ size.x(), origin.y() - miniLine);
+		glVertex2f(origin.x()+ size.x(), origin.y() + miniLine);
+
+		glVertex2f(origin.x()+size.x()/2, origin.y()-miniLine);
+		glVertex2f(origin.x()+size.x()/2, origin.y()+miniLine);
+		glVertex2f(origin.x()-miniLine , origin.y() + size.y()/2);
+		glVertex2f(origin.x()+miniLine, origin.y() + size.y()/2);
+
+	glEnd();
+	
+	// Creamos una curva
+	AirSkinning* skin = ((AirRig*)escena->rig)->airSkin;
+
+	if(skin->bulge.size() <= idDeformer) return;
+
+	//   Bulge effect inicialization
+	if(skin->bulge[idDeformer].groups.size() > idGroup)
+	{
+
+		float maxX = skin->bulge[idDeformer].groups[idGroup]->maxI[0]-skin->bulge[idDeformer].groups[idGroup]->minI[0];
+		float maxY = skin->bulge[idDeformer].groups[idGroup]->maxI[1]-skin->bulge[idDeformer].groups[idGroup]->minI[1];
+
+		float minX = skin->bulge[idDeformer].groups[idGroup]->minI[0];
+		float minY = skin->bulge[idDeformer].groups[idGroup]->minI[1];
+
+		for(int pptIdx = 0; pptIdx < skin->bulge[idDeformer].groups[idGroup]->pressurePoints.size(); pptIdx++)
+		{
+			Vector2f& ppt = skin->bulge[idDeformer].groups[idGroup]->pressurePoints[pptIdx];
+			float press = skin->bulge[idDeformer].groups[idGroup]->pressure[pptIdx];
+
+			glPointSize(8*press);
+
+			float r,g,b;
+			GetColour(press/5, 0, 1, r,g,b);
+
+			glColor3f(r, g, b);
+			glBegin(GL_POINTS);
+			glVertex2f(origin.x() + size.x()/2 +ppt.x()*20, origin.y() + ppt.y()*20);
+			glEnd();
+		}
+	}
+}
+
+void GLWidget::draw2DGraphics()
+{
+
+	if(selMgr.selection.size() == 1)
+	{
+		if(selMgr.selection[0]->iam == DEFGROUP_NODE)
+		{
+			int foundIdx = -1;
+			AirSkinning* skin = ((AirRig*)escena->rig)->airSkin;
+			for(int bulgeIdx = 0; bulgeIdx< skin->bulge.size(); bulgeIdx++)
+			{
+				if(skin->bulge[bulgeIdx].groups[0]->deformerId == selMgr.selection[0]->nodeId)
+				{
+					foundIdx = bulgeIdx;
+					break;
+				}
+			}
+
+			if(foundIdx >= 0)
+			{
+				wireDeformer* curve = skin->bulge[foundIdx].groups[1]->defCurve;
+				glPointSize(10);
+				glColor3f(1.0,0,0);
+				glBegin(GL_POINTS);
+				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
+				glColor3f(0.0,1.0,1.0);
+				glVertex3f(curve->origin.x(), curve->origin.y(), curve->origin.z());
+				glColor3f(1.0,0,1.0);
+				glVertex3f(curve->D.x(), curve->D.y(), curve->D.z());
+				glEnd();
+
+				glPointSize(7);
+				glBegin(GL_POINTS);
+				for(int ptIdx = 0; ptIdx < skin->bulge[foundIdx].groups[1]->refPoints.size(); ptIdx++)
+				{
+					glColor3f(1.0,(float)ptIdx/(float)skin->bulge[foundIdx].groups[1]->refPoints.size(),1.0);
+					Vector3d pt = skin->bulge[foundIdx].groups[1]->refPoints[ptIdx];
+					glVertex3f(pt.x(), pt.y(), pt.z());
+				}
+				glEnd();
+
+				float length = curve->lenght;
+				float height = curve->high;
+
+				Vector3d rad = curve->mDir.cross(curve->mN)*curve->r;
+
+				glLineWidth(2);
+				glColor3f(1.0,0,0);
+				glBegin(GL_LINES);
+				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
+				glVertex3f(curve->pos.x()+curve->mDir.x()*length, curve->pos.y()+curve->mDir.y()*length, curve->pos.z()+curve->mDir.z()*length);
+				glColor3f(1.0,1.0,0);
+				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
+				glVertex3f(curve->pos.x()+curve->mN.x()*height, curve->pos.y()+curve->mN.y()*height, curve->pos.z()+curve->mN.z()*height);
+				glColor3f(0.0,1.0,1.0);
+				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
+				glVertex3f(curve->pos.x()+rad.x(), curve->pos.y()+rad.y(), curve->pos.z()+rad.z());
+				glEnd();
+
+				// Pintamos la curva
+				glLineWidth(2);
+				glColor3f(1.0,1.0,1.0);
+				glBegin(GL_LINES);
+				
+				Vector3d orig = curve->pos;
+				Vector3d dirX = curve->mDir;
+				Vector3d dirY = curve->mN;
+				for(int cuIdx = 1; cuIdx < 1000; cuIdx++)
+				{
+					float posX = (cuIdx-1)/1000.0;
+					float posX2 = cuIdx/1000.0;
+					if(curve->W.size() == 0) continue;
+					
+					Vector3d pt1 = orig+posX*length*dirX+curve->W(posX)*height*dirY;
+					Vector3d pt2 = orig+posX2*length*dirX+curve->W(posX2)*height*dirY;
+					
+					glVertex3f(pt1.x(), pt1.y(), pt1.z());
+					glVertex3f(pt2.x(), pt2.y(), pt2.z());
+
+				}
+				glEnd();
+
+				glColor3f(0.8,0.2,0.2);
+				glBegin(GL_LINES);
+				
+				for(int cuIdx = 1; cuIdx < 1000; cuIdx++)
+				{
+					float posX = (cuIdx-1)/1000.0;
+					float posX2 = cuIdx/1000.0;
+					if(curve->R.size() == 0) continue;
+					
+					Vector3d pt1 = orig+posX*length*dirX+curve->R(posX)*height*dirY;
+					Vector3d pt2 = orig+posX2*length*dirX+curve->R(posX2)*height*dirY;
+					
+					glVertex3f(pt1.x(), pt1.y(), pt1.z());
+					glVertex3f(pt2.x(), pt2.y(), pt2.z());
+
+				}
+				glEnd();
+
+				glPointSize(10);
+				glBegin(GL_POINTS);
+				for(int gvIdx = 0; gvIdx < skin->bulge[foundIdx].groups[1]->vertexGroup.size(); gvIdx++)
+				{
+					int nodeIdx = skin->bulge[foundIdx].groups[1]->vertexGroup[gvIdx];
+					Vector3d pointForPaint = skin->deformedModel->nodes[nodeIdx]->position;
+
+					float r,g,b;
+					GetColour(skin->bulge[foundIdx].groups[1]->w[gvIdx], 0, 1, r, g, b);
+
+					glColor3f(r,g,b);
+					glVertex3f(pointForPaint.x(), pointForPaint.y(), pointForPaint.z());
+				}
+				glEnd();
+			}
+		}
+	}
+
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+	glOrtho(0, width(), 0, height(), 0, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+	int rectWidth = 250;
+	int rectheight = 180;
+
+	Vector2i rectSize(rectWidth, rectheight);
+	Vector2i squareSize(rectheight, rectheight);
+
+	if(selMgr.selection.size() == 1)
+	{
+		if(selMgr.selection[0]->iam == DEFGROUP_NODE)
+		{
+			int foundIdx = -1;
+			AirSkinning* skin = ((AirRig*)escena->rig)->airSkin;
+			for(int bulgeIdx = 0; bulgeIdx< skin->bulge.size(); bulgeIdx++)
+			{
+				if(skin->bulge[bulgeIdx].groups[0]->deformerId == selMgr.selection[0]->nodeId)
+				{
+					foundIdx = bulgeIdx;
+					break;
+				}
+			}
+
+			if(foundIdx >= 0)
+			{
+				drawBulgeCurve(foundIdx, 1, Vector2i(0,0), rectSize);
+				drawBulgePressurePlane(foundIdx, 1, Vector2i(rectWidth + 20,0), squareSize);
+			}
+		}
+	}
+
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+
+}
+
  void GLWidget::draw()
  {
 	// Clear the color buffer
@@ -3580,6 +4127,8 @@ void GLWidget::drawWithDistances()
 	// draw the buffers
 	//glDrawArrays( GL_TRIANGLES, 0, 3);
 
+	draw2DGraphics();
+
  }
 
 void GLWidget::drawWithNames()
@@ -3628,10 +4177,21 @@ void GLWidget::finishRiggingTool()
 	{
 		if(defRig.defGroups[i]->dirtyCreation)
 		{
+			defRig.defGroups[i]->subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 			((AirRig*) escena->rig)->BuildGroup(defRig.defGroups[i]);
 			defRig.defGroups[i]->dirtyCreation = false;
 			defRig.defGroups[i]->dirtyTransformation = true;
 			defRig.defGroups[i]->dirtyFlag = true;
+		}
+	}
+
+	// Reload NodeReferences.
+	defRig.defNodesRef.clear();
+	for(int i = 0; i < defRig.defGroups.size(); i++)
+	{
+		for(int j = 0; j < defRig.defGroups[i]->deformers.size(); j++)
+		{
+			defRig.defNodesRef[defRig.defGroups[i]->deformers[j].nodeId] = &(defRig.defGroups[i]->deformers[j]);
 		}
 	}
 

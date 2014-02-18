@@ -133,9 +133,16 @@ protected:
 	virtual void draw();
 	virtual void drawWithNames();
 
+	virtual void draw2DGraphics();
+	virtual void drawBulgeCurve(int idDeformer, int idGroup, Vector2i Origin, Vector2i rectSize);
+	virtual void drawBulgePressurePlane(int idDeformer, int idGroup, Vector2i Origin,Vector2i rectSize);
+
 	virtual void setShaderConfiguration(shaderIdx type);
 	virtual void prepareShaderProgram();
 	virtual void init();
+
+	//virtual void paintEvent(QPaintEvent *event);
+	//void drawOverpaint(QPainter *painter, QPaintEvent *event);
 
 	virtual void prepareVertexBufferObject();
 	virtual void updateColorBufferObject();
