@@ -2,6 +2,8 @@
 
 #include <ui_mainwindow.h>
 
+#include <cuda/cudaMVC.cuh>
+
 #include <Computation\BiharmonicDistances.h>
 #include <Computation\mvc_interiorDistances.h>
 #include <DataStructures\InteriorDistancesData.h>
@@ -18,6 +20,8 @@
 #include <render/defGorupRender.h>
 
 #include <Computation\AirSegmentation.h>
+
+#include <Computation/mvc_interiorDistances.h>
 
 
 #define ratioExpansion_DEF 0.7
@@ -1586,8 +1590,8 @@ void GLWidget::initBulges(AirRig* rig)
 				fatherGroup = skin->bulge.back().groups.size();
 				skin->bulge.back().groups.push_back(new BulgeGroup());
 
-				skin->bulge.back().groups[fatherGroup]->deformerId = currentJoint;
-				skin->bulge.back().groups[fatherGroup]->childDeformerId = fatherJoint;
+				skin->bulge.back().groups[fatherGroup]->deformerId = fatherJoint;
+				skin->bulge.back().groups[fatherGroup]->childDeformerId = currentJoint;
 			
 				for (int k = 0; k < skin->bind->pointData.size(); k++) 
 				{ 
@@ -1691,7 +1695,99 @@ void GLWidget::updateComputations()
 //////////////////////////////////////////////
 //			ALL COMPUTATIONS          ////////
 //////////////////////////////////////////////
-void GLWidget::computeProcess() {
+void GLWidget::computeProcess() 
+{
+	Modelo* m =(Modelo*)escena->models[0]; 
+	cudaModel modelo;
+	
+	vector<double3> points(m->nodes.size());
+	modelo.nodes = points.data();
+
+	vector<int3> tri(m->triangles.size());
+	modelo.triangles = tri.data();
+
+	//modelo.nodes = (float3*)malloc(m->nodes.size()*sizeof(float3));
+	//modelo.triangles = (int3*)malloc(m->nodes.size()*sizeof(int3));
+
+	modelo.nv = m->nodes.size();
+	modelo.nt = m->triangles.size();
+
+	
+	// Copiamos los vertices
+	for(int i = 0; i< m->nodes.size(); i++)
+	{
+		modelo.nodes[i].x = m->nodes[i]->position.x();
+		modelo.nodes[i].y = m->nodes[i]->position.y();
+		modelo.nodes[i].z = m->nodes[i]->position.z();
+	}
+
+	// Copiamos los triangulos
+	for(int i = 0; i< m->triangles.size(); i++)
+	{
+		modelo.triangles[i].x = m->triangles[i]->verts[0]->id;
+		modelo.triangles[i].y = m->triangles[i]->verts[1]->id;
+		modelo.triangles[i].z = m->triangles[i]->verts[2]->id;
+	}
+	
+	
+	double3 point;
+	point.x = 0;
+	point.y = 0;
+	point.z = 0;
+	vector<double> weights(m->nodes.size());
+	clock_t ini, fin;
+
+	ini = clock();   
+	cudaManager cudaMgr;
+	cudaMgr.loadModel(modelo);
+	fin = clock();
+
+	printf("allocate memory in cuda: %f s\n", timelapse(ini,fin)); fflush(0);
+
+	ini = clock();   
+	cudaMgr.cudaMVC(point, weights.data(), modelo);
+	fin = clock();
+
+	printf("compute mvc: %f s\n", timelapse(ini,fin)); fflush(0);
+
+	ini = clock();  
+	cudaMgr.freeModel();
+	fin = clock();
+    
+	printf("free memory: %f s\n", timelapse(ini,fin)); fflush(0);
+
+	FILE* fout;
+	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCuda.txt", "w");
+	fprintf(fout, "Coordenadas:\n");
+	for(int i = 0; i < m->nodes.size(); i++)
+		fprintf(fout, "%f ", weights[i]);
+	fprintf(fout, "----------------\n");
+
+	weights.clear();
+
+
+	Vector3d point2(0,0,0);
+	vector<double> weights2(m->nodes.size());
+
+	ini = clock();   
+	mvcAllBindings(point2, weights2, *m);
+	fin = clock();
+	printf("mean value coordinates en cpu: %f s\n", timelapse(ini,fin)); fflush(0);
+
+	fclose(fout);
+	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCPU.txt", "w");
+	fprintf(fout, "Coordenadas:\n");
+	for(int i = 0; i < m->nodes.size(); i++)
+		fprintf(fout, "%f ", weights2[i]);
+	fprintf(fout, "----------------\n");
+	fclose(fout);
+
+	weights.clear();
+
+	//vector<double> embeddedPoint;
+	//mvcAllBindings(Vector3d(0,0,0), embeddedPoint, *((Modelo*)escena->models[0]));
+
+	return;
 
 	//Testing new optimized processing
 	// AirRig creation
@@ -1699,7 +1795,7 @@ void GLWidget::computeProcess() {
 	if(escena->rig)
 		delete escena->rig;
 
-	clock_t ini = clock();
+	ini = clock();
 
 	// Crear rig nuevo en el caso de que no exista
 	if(!escena->rig)
@@ -1717,7 +1813,7 @@ void GLWidget::computeProcess() {
 	//rig->preprocessModelForComputations();
 	BuildGroupTree(rig->defRig);
 
-	clock_t fin = clock();
+	fin = clock();
 	printf("Preprocess: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
 
 	// Skinning computations
@@ -3896,7 +3992,7 @@ void GLWidget::drawBulgePressurePlane(int idDeformer, int idGroup, Vector2i _Ori
 
 void GLWidget::draw2DGraphics()
 {
-
+	int groupIdx = 1;
 	if(selMgr.selection.size() == 1)
 	{
 		if(selMgr.selection[0]->iam == DEFGROUP_NODE)
@@ -3905,7 +4001,7 @@ void GLWidget::draw2DGraphics()
 			AirSkinning* skin = ((AirRig*)escena->rig)->airSkin;
 			for(int bulgeIdx = 0; bulgeIdx< skin->bulge.size(); bulgeIdx++)
 			{
-				if(skin->bulge[bulgeIdx].groups[0]->deformerId == selMgr.selection[0]->nodeId)
+				if(skin->bulge[bulgeIdx].groups[0]->childDeformerId == selMgr.selection[0]->nodeId)
 				{
 					foundIdx = bulgeIdx;
 					break;
@@ -3914,7 +4010,7 @@ void GLWidget::draw2DGraphics()
 
 			if(foundIdx >= 0)
 			{
-				wireDeformer* curve = skin->bulge[foundIdx].groups[1]->defCurve;
+				wireDeformer* curve = skin->bulge[foundIdx].groups[groupIdx]->defCurve;
 				glPointSize(10);
 				glColor3f(1.0,0,0);
 				glBegin(GL_POINTS);
@@ -3927,10 +4023,10 @@ void GLWidget::draw2DGraphics()
 
 				glPointSize(7);
 				glBegin(GL_POINTS);
-				for(int ptIdx = 0; ptIdx < skin->bulge[foundIdx].groups[1]->refPoints.size(); ptIdx++)
+				for(int ptIdx = 0; ptIdx < skin->bulge[foundIdx].groups[groupIdx]->refPoints.size(); ptIdx++)
 				{
-					glColor3f(1.0,(float)ptIdx/(float)skin->bulge[foundIdx].groups[1]->refPoints.size(),1.0);
-					Vector3d pt = skin->bulge[foundIdx].groups[1]->refPoints[ptIdx];
+					glColor3f(1.0,(float)ptIdx/(float)skin->bulge[foundIdx].groups[groupIdx]->refPoints.size(),1.0);
+					Vector3d pt = skin->bulge[foundIdx].groups[groupIdx]->refPoints[ptIdx];
 					glVertex3f(pt.x(), pt.y(), pt.z());
 				}
 				glEnd();
@@ -3996,13 +4092,13 @@ void GLWidget::draw2DGraphics()
 
 				glPointSize(10);
 				glBegin(GL_POINTS);
-				for(int gvIdx = 0; gvIdx < skin->bulge[foundIdx].groups[1]->vertexGroup.size(); gvIdx++)
+				for(int gvIdx = 0; gvIdx < skin->bulge[foundIdx].groups[groupIdx]->vertexGroup.size(); gvIdx++)
 				{
-					int nodeIdx = skin->bulge[foundIdx].groups[1]->vertexGroup[gvIdx];
+					int nodeIdx = skin->bulge[foundIdx].groups[groupIdx]->vertexGroup[gvIdx];
 					Vector3d pointForPaint = skin->deformedModel->nodes[nodeIdx]->position;
 
 					float r,g,b;
-					GetColour(skin->bulge[foundIdx].groups[1]->w[gvIdx], 0, 1, r, g, b);
+					GetColour(skin->bulge[foundIdx].groups[groupIdx]->w[gvIdx], 0, 1, r, g, b);
 
 					glColor3f(r,g,b);
 					glVertex3f(pointForPaint.x(), pointForPaint.y(), pointForPaint.z());
@@ -4035,7 +4131,7 @@ void GLWidget::draw2DGraphics()
 			AirSkinning* skin = ((AirRig*)escena->rig)->airSkin;
 			for(int bulgeIdx = 0; bulgeIdx< skin->bulge.size(); bulgeIdx++)
 			{
-				if(skin->bulge[bulgeIdx].groups[0]->deformerId == selMgr.selection[0]->nodeId)
+				if(skin->bulge[bulgeIdx].groups[0]->childDeformerId == selMgr.selection[0]->nodeId)
 				{
 					foundIdx = bulgeIdx;
 					break;
