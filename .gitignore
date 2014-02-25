@@ -39,3 +39,15 @@ StatisticsPro/ejecutable/statistisPro/seqFile.dwg
 StatisticsPro/ejecutable/statistisPro/statisticsPro.exe
 StatisticsPro/statisticsProWin32.v11.suo
 StatisticsPro/statisticsPro_v4.1.rar
+tests_qglviewer/
+ModelViewer/ModelViewer.psess
+ModelViewer/ModelViewer.vcxproj.chus.nvuser
+ModelViewer/ModelViewer140219.vspx
+ModelViewer/Performance1.psess
+ModelViewer/air/AirLib/cuda/cudaMVC.cu.deps
+ModelViewer/air/AirLib/cuda/matrixMul/matrixMul.cu.deps
+ModelViewer/vc110.pdb
+air/AirLib/cuda/cppIntegration/cppIntegration.cu.deps
+air/AirLib/cuda/cudaMVC.cu.deps
+air/AirLib/cuda/matrixMul/matrixMul.cu.deps
+air/AirLib/cuda/mvc.cu.deps
