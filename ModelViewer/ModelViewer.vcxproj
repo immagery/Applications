@@ -22,6 +22,7 @@
     <ProjectGuid>{FD7847ED-37B6-322E-9433-2187B1D0D086}</ProjectGuid>
     <RootNamespace>ModelViewer</RootNamespace>
     <Keyword>Qt4VSv1.0</Keyword>
+    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5</CudaToolkitCustomDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -150,7 +151,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc;C:\Users\chus\Documents\dev\include;C:\Users\chus\Documents\dev\include\vcglib;C:\Users\chus\Documents\dev\include\SuperLU_4.3;C:\Users\chus\Documents\dev\include\unsupported;C:\Users\chus\Documents\dev\include\Eigen\src;C:\Users\chus\Documents\dev\air\AirLib;C:\Users\chus\Documents\dev\adri;.\GeneratedFiles;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;$(CudaToolkitIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\chus\Documents\dev\include\cuda\common\inc;C:\Users\chus\Documents\dev\include\cuda;C:\Users\chus\Documents\dev\include;C:\Users\chus\Documents\dev\include\vcglib;C:\Users\chus\Documents\dev\include\SuperLU_4.3;C:\Users\chus\Documents\dev\include\unsupported;C:\Users\chus\Documents\dev\include\Eigen\src;C:\Users\chus\Documents\dev\air\AirLib;C:\Users\chus\Documents\dev\adri;.\GeneratedFiles;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;$(CudaToolkitIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm200 -w34100 -w34189 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>release\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -192,9 +193,17 @@
       <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_NO_DEBUG;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_XML_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <CudaCompile>
-      <Include>C:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include;C:\Users\chus\Documents\dev\air\AirLib;%(Include)</Include>
-      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+      <Include>C:\Users\chus\Documents\dev\include\cuda\common\inc;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include;C:\Users\chus\Documents\dev\air\AirLib;%(Include)</Include>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <AdditionalOptions>-arch sm_30 %(AdditionalOptions)</AdditionalOptions>
+      <CInterleavedPTX>false</CInterleavedPTX>
+      <PtxAsOptionV>false</PtxAsOptionV>
+      <GenerateLineInfo>true</GenerateLineInfo>
     </CudaCompile>
+    <CudaLink>
+      <AdditionalOptions>-arch sm_35 %(AdditionalOptions)</AdditionalOptions>
+    </CudaLink>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -238,7 +247,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\chus\Documents\dev\include;C:\Users\chus\Documents\dev\include\vcglib;C:\Users\chus\Documents\dev\include\SuperLU_4.3;C:\Users\chus\Documents\dev\include\unsupported;C:\Users\chus\Documents\dev\include\Eigen\src;C:\Users\chus\Documents\dev\air\AirLib;C:\Users\chus\Documents\dev\adri;.\GeneratedFiles;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;C:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\chus\Documents\dev\include;C:\Users\chus\Documents\dev\include\vcglib;C:\Users\chus\Documents\dev\include\SuperLU_4.3;C:\Users\chus\Documents\dev\include\unsupported;C:\Users\chus\Documents\dev\include\Eigen\src;C:\Users\chus\Documents\dev\air\AirLib;C:\Users\chus\Documents\dev\adri;.\GeneratedFiles;C:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include;C:\Users\chus\Documents\dev\include\cuda\common\inc;C:\Users\chus\Documents\dev\include\cuda;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-Zm200 -w34100 -w34189 %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>debug\</AssemblerListingLocation>
       <BrowseInformation>false</BrowseInformation>
@@ -277,10 +286,18 @@
       <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_XML_LIB;QT_GUI_LIB;QT_CORE_LIB;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <CudaCompile>
-      <Include>C:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc</Include>
+      <Include>C:\Users\chus\Documents\dev\include\cuda;C:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc</Include>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <GenerateLineInfo>true</GenerateLineInfo>
+      <AdditionalOptions>-arch sm_30 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>InheritFromHost</Optimization>
+      <NvccCompilation>compile</NvccCompilation>
+      <UseHostInclude>true</UseHostInclude>
     </CudaCompile>
+    <CudaLink>
+      <Optimization>InheritFromProject</Optimization>
+    </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Image Include="..\..\adri\gui\icons\3floppy_unmount.png" />
@@ -546,6 +563,7 @@
     <ClInclude Include="..\..\air\AirLib\Computation\spline.hpp" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
+    <ClInclude Include="..\..\air\AirLib\DataStructures\symMatrix.h" />
     <ClInclude Include="..\..\air\AirLib\gui\AirOutliner.h" />
     <ClInclude Include="..\..\air\AirLib\gui\manipulator.h" />
     <ClInclude Include="Header.h" />
@@ -557,7 +575,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing KeyframeBar.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing KeyframeBar.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
@@ -565,7 +583,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing KeyframeBar.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
     </CustomBuild>
     <ClInclude Include="GeneratedFiles\ui_mainwindow.h" />
     <CustomBuild Include="..\..\adri\gui\adrimainwindow.h">
@@ -576,7 +594,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing adrimainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing adrimainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
@@ -584,7 +602,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing adrimainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
     </CustomBuild>
     <ClInclude Include="..\..\adri\render\graphRender.h" />
     <CustomBuild Include="mainwindow.h">
@@ -593,13 +611,13 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_DLL "-I.\..\include\GL" "-I.\..\include\QGLViewer" "-I.\..\include\vcglib" "-I.\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\debug" "-I." "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DNDEBUG -DQT_DLL "-I.\..\..\include\GL" "-I.\..\..\include\QGLViewer" "-I.\..\..\include\vcglib" "-I.\..\..\include" "-I.\..\Testers\Cages" "-I.\..\AirLib" "-I.\..\Airlib\render" "-I.\..\Airlib\Computation" "-I.\..\Airlib\DataStructures" "-I.\..\Airlib\utils" "-I.\..\Airlib\ui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtOpenGL" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtWidgets" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtXml" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtGui" "-I.\..\..\..\..\Qt\Qt5.1.0\5.1.0\msvc2012_64_opengl\include\QtCore" "-I.\release" "-I." "-I$(QTDIR)\mkspecs\win32-msvc2012" "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtGui" "-I$(QTDIR)\include\QtOpenGL" "-I.\GeneratedFiles"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing mainwindow.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
@@ -613,7 +631,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
@@ -621,7 +639,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing GLWidget.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
     </CustomBuild>
     <CustomBuild Include="..\..\adri\gui\AdriViewer.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
@@ -631,7 +649,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing AdriViewer.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing AdriViewer.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
@@ -639,7 +657,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing AdriViewer.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
     </CustomBuild>
     <ClInclude Include="..\..\adri\gui\bar.h" />
     <ClInclude Include="..\..\adri\gui\DrawObject.h" />
@@ -671,7 +689,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DQT_CORE_LIB -DQT_GUI_LIB -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
@@ -679,7 +697,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing treemodel.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\air\AirLib\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\moc_%(Filename).cpp"  -D_WINDOWS -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -DQT_DLL  "-IC:\Users\chus\Documents\dev\include\cuda\common\inc" "-IC:\Users\chus\Documents\dev\include\cuda" "-IC:\Users\chus\Documents\dev\include" "-IC:\Users\chus\Documents\dev\include\vcglib" "-IC:\Users\chus\Documents\dev\include\SuperLU_4.3" "-IC:\Users\chus\Documents\dev\include\unsupported" "-IC:\Users\chus\Documents\dev\include\Eigen\src" "-IC:\Users\chus\Documents\dev\air\AirLib" "-IC:\Users\chus\Documents\dev\adri" "-I.\GeneratedFiles" "-IC:\Qt\Qt5.1.1\5.1.1\msvc2012_64_opengl\include" "-I$(CudaToolkitIncludeDir)\."</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -720,10 +738,18 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\qrc_%(Filename).cpp;%(Outputs)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\rcc.exe" -name "%(Filename)" -no-compress "%(FullPath)" -o .\GeneratedFiles\qrc_%(Filename).cpp</Command>
     </CustomBuild>
+    <None Include="..\..\air\AirLib\cuda\cudaBH.cuh" />
+    <None Include="..\..\air\AirLib\cuda\cudaBubbleSort.cuh" />
+    <None Include="..\..\air\AirLib\cuda\cudaDefinitions.cuh" />
+    <None Include="..\..\air\AirLib\cuda\cudaMgr.cuh" />
     <None Include="..\..\air\AirLib\cuda\cudaMVC.cuh" />
+    <None Include="..\..\air\AirLib\cuda\lock.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\air\AirLib\cuda\cudaBubbleSort.cu" />
+    <CudaCompile Include="..\..\air\AirLib\cuda\cudaMgr.cu" />
     <CudaCompile Include="..\..\air\AirLib\cuda\cudaMVC.cu" />
+    <CudaCompile Include="..\..\air\AirLib\cuda\lock.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

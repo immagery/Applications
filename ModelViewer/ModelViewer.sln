@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QGLViewer", "..\..\thirdpar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2FE70B5-DCE2-4E8D-A3F8-C3A5446EFAAA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cudaMVC", "..\..\air\AirLib\cuda\cudaMVC\cudaMVC.vcxproj", "{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -33,14 +31,6 @@ Global
 		{6AEBD25E-04FB-3BAE-B624-E1674DB1AF47}.Release|Win32.Build.0 = Release|Win32
 		{6AEBD25E-04FB-3BAE-B624-E1674DB1AF47}.Release|x64.ActiveCfg = Release|x64
 		{6AEBD25E-04FB-3BAE-B624-E1674DB1AF47}.Release|x64.Build.0 = Release|x64
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Debug|Win32.Build.0 = Debug|Win32
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Debug|x64.ActiveCfg = Debug|x64
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Debug|x64.Build.0 = Debug|x64
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Release|Win32.ActiveCfg = Release|Win32
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Release|Win32.Build.0 = Release|Win32
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Release|x64.ActiveCfg = Release|x64
-		{83616E3C-7FD1-4FCF-AC80-8957C86CAF6E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

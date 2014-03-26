@@ -2,7 +2,8 @@
 
 #include <ui_mainwindow.h>
 
-#include <cuda/cudaMVC.cuh>
+#include <cuda/cudaMgr.cuh>
+#include <cuda/cudaBubbleSort.cuh>
 
 #include <Computation\BiharmonicDistances.h>
 #include <Computation\mvc_interiorDistances.h>
@@ -25,6 +26,7 @@
 
 
 #define ratioExpansion_DEF 0.7
+#define CUDA_TESTS true
 
 
 GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
@@ -1692,102 +1694,158 @@ void GLWidget::updateComputations()
 
 }
 
+
+void getCompactRepresentation(cudaModel& model, Modelo& m)
+{
+	// Load constants
+	model.npts = m.nodes.size();
+	model.ntri = m.triangles.size();
+
+	model.hostPositions = (PRECISION*) malloc(model.npts*sizeof(PRECISION)*3);
+	model.hostTriangles = (int*) malloc(model.ntri*sizeof(int)*3);
+
+	// Copiamos los vertices
+	for(int i = 0; i< m.nodes.size(); i++)
+	{
+		model.hostPositions[i*3]   = m.nodes[i]->position.x();
+		model.hostPositions[i*3+1] = m.nodes[i]->position.y();
+		model.hostPositions[i*3+2] = m.nodes[i]->position.z();
+	}
+
+	// Copiamos los triangulos
+	for(int i = 0; i< m.triangles.size(); i++)
+	{
+		model.hostTriangles[i*3+0] = (int)m.triangles[i]->verts[0]->id;
+		model.hostTriangles[i*3+1] = (int)m.triangles[i]->verts[1]->id;
+		model.hostTriangles[i*3+2] = (int)m.triangles[i]->verts[2]->id;
+	}
+
+	// Copiamos la matriz de distancias.
+	model.hostBHDistances = (float*) malloc((model.npts*model.npts+model.npts)/2*sizeof(float));
+	int count = 0; 
+	for(int i = 0; i< m.bind->BihDistances[0].size; i++)
+	{
+		for(int j = 0; j<= i; j++)
+		{
+			model.hostBHDistances[count] = m.bind->BihDistances[0].get(i,j);
+			count++;
+		}
+	}
+
+}
+
 //////////////////////////////////////////////
 //			ALL COMPUTATIONS          ////////
 //////////////////////////////////////////////
 void GLWidget::computeProcess() 
 {
-	Modelo* m =(Modelo*)escena->models[0]; 
-	cudaModel modelo;
-	
-	vector<double3> points(m->nodes.size());
-	modelo.nodes = points.data();
-
-	vector<int3> tri(m->triangles.size());
-	modelo.triangles = tri.data();
-
-	//modelo.nodes = (float3*)malloc(m->nodes.size()*sizeof(float3));
-	//modelo.triangles = (int3*)malloc(m->nodes.size()*sizeof(int3));
-
-	modelo.nv = m->nodes.size();
-	modelo.nt = m->triangles.size();
-
-	
-	// Copiamos los vertices
-	for(int i = 0; i< m->nodes.size(); i++)
-	{
-		modelo.nodes[i].x = m->nodes[i]->position.x();
-		modelo.nodes[i].y = m->nodes[i]->position.y();
-		modelo.nodes[i].z = m->nodes[i]->position.z();
-	}
-
-	// Copiamos los triangulos
-	for(int i = 0; i< m->triangles.size(); i++)
-	{
-		modelo.triangles[i].x = m->triangles[i]->verts[0]->id;
-		modelo.triangles[i].y = m->triangles[i]->verts[1]->id;
-		modelo.triangles[i].z = m->triangles[i]->verts[2]->id;
-	}
-	
-	
-	double3 point;
-	point.x = 0;
-	point.y = 0;
-	point.z = 0;
-	vector<double> weights(m->nodes.size());
 	clock_t ini, fin;
+	if(CUDA_TESTS)
+	{
+		doSorting();
+		return;
 
-	ini = clock();   
-	cudaManager cudaMgr;
-	cudaMgr.loadModel(modelo);
-	fin = clock();
+		Modelo* m =(Modelo*)escena->models[0]; 
+		vector<cudaModel> models(1);
 
-	printf("allocate memory in cuda: %f s\n", timelapse(ini,fin)); fflush(0);
+		getCompactRepresentation(models[0], *m);
 
-	ini = clock();   
-	cudaMgr.cudaMVC(point, weights.data(), modelo);
-	fin = clock();
+		/*
+		models[0].hostPositions = m->nodes.data();
+	
+		vector<PRECISION3> points(m->nodes.size());
+		modelo.nodes = points.data();
 
-	printf("compute mvc: %f s\n", timelapse(ini,fin)); fflush(0);
+		vector<int3> tri(m->triangles.size());
+		modelo.triangles = tri.data();
 
-	ini = clock();  
-	cudaMgr.freeModel();
-	fin = clock();
+		//modelo.nodes = (float3*)malloc(m->nodes.size()*sizeof(float3));
+		//modelo.triangles = (int3*)malloc(m->nodes.size()*sizeof(int3));
+
+		modelo.nv = m->nodes.size();
+		modelo.nt = m->triangles.size();
+
+	
+		// Copiamos los vertices
+		for(int i = 0; i< m->nodes.size(); i++)
+		{
+			modelo.nodes[i].x = m->nodes[i]->position.x();
+			modelo.nodes[i].y = m->nodes[i]->position.y();
+			modelo.nodes[i].z = m->nodes[i]->position.z();
+		}
+
+		// Copiamos los triangulos
+		for(int i = 0; i< m->triangles.size(); i++)
+		{
+			modelo.triangles[i].x = m->triangles[i]->verts[0]->id;
+			modelo.triangles[i].y = m->triangles[i]->verts[1]->id;
+			modelo.triangles[i].z = m->triangles[i]->verts[2]->id;
+		}
+		*/
+
+		PRECISION3 point;
+		point.x = 0;
+		point.y = 0;
+		point.z = 0;
+
+		vector<PRECISION> weights(m->nodes.size());
+		ini = clock();   
+		cudaManager cudaMgr;
+		cudaMgr.loadModels(models.data(), models.size(), false);
+		fin = clock();
+
+		printf("allocate memory in cuda: %4.8f s\n", timelapse(ini,fin)); fflush(0);
+
+		ini = clock();   
+		for(int i = 0; i< 1000; i++)
+		{
+			cudaMgr.cudaMVC(point, weights.data(), 0, i, false);
+		}
+		fin = clock();
+
+		printf("compute mvc: %4.8f s\n", timelapse(ini,fin)); fflush(0);
+
+		ini = clock();
+		cudaMgr.freeModels();
+		fin = clock();
     
-	printf("free memory: %f s\n", timelapse(ini,fin)); fflush(0);
+		printf("free memory: %4.8f s\n", timelapse(ini,fin)); fflush(0);
 
-	FILE* fout;
-	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCuda.txt", "w");
-	fprintf(fout, "Coordenadas:\n");
-	for(int i = 0; i < m->nodes.size(); i++)
-		fprintf(fout, "%f ", weights[i]);
-	fprintf(fout, "----------------\n");
+		FILE* fout;
+		fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCuda.txt", "w");
+		fprintf(fout, "Coordenadas:\n");
+		for(int i = 0; i < m->nodes.size(); i++)
+			fprintf(fout, "%4.10f ", weights[i]);
+		fprintf(fout, "----------------\n");
 
-	weights.clear();
+		weights.clear();
 
 
-	Vector3d point2(0,0,0);
-	vector<double> weights2(m->nodes.size());
+		Vector3d point2(0,0,0);
+		vector<double> weights2(m->nodes.size());
 
-	ini = clock();   
-	mvcAllBindings(point2, weights2, *m);
-	fin = clock();
-	printf("mean value coordinates en cpu: %f s\n", timelapse(ini,fin)); fflush(0);
+		ini = clock();
+		for(int i = 0; i< 1000; i++)
+			mvcAllBindings(point2, weights2, *m);
+		fin = clock();
+		printf("mean value coordinates en cpu: %4.8f s\n", timelapse(ini,fin)); fflush(0);
 
-	fclose(fout);
-	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCPU.txt", "w");
-	fprintf(fout, "Coordenadas:\n");
-	for(int i = 0; i < m->nodes.size(); i++)
-		fprintf(fout, "%f ", weights2[i]);
-	fprintf(fout, "----------------\n");
-	fclose(fout);
+		fclose(fout);
+		fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCPU.txt", "w");
+		fprintf(fout, "Coordenadas:\n");
+		for(int i = 0; i < m->nodes.size(); i++)
+			fprintf(fout, "%4.10f ", weights2[i]);
+		fprintf(fout, "----------------\n");
+		fclose(fout);
 
-	weights.clear();
+		weights.clear();
 
-	//vector<double> embeddedPoint;
-	//mvcAllBindings(Vector3d(0,0,0), embeddedPoint, *((Modelo*)escena->models[0]));
+		//vector<double> embeddedPoint;
+		//mvcAllBindings(Vector3d(0,0,0), embeddedPoint, *((Modelo*)escena->models[0]));
 
-	return;
+		return;
+
+	}
 
 	//Testing new optimized processing
 	// AirRig creation
@@ -5413,7 +5471,128 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 
  void GLWidget::readScene(string fileName, string name, string path)
  {
-     QFile modelDefFile(fileName.c_str());
+	 // temporal para construir la serpiente
+	 if(QString(fileName.c_str()).right(3) == "snk")
+	 {
+		QString newPath( path.c_str());
+		newPath = newPath +"/";
+
+		 QFile modelDefFile((fileName).c_str());
+		 if(modelDefFile.exists())
+		 {
+			modelDefFile.open(QFile::ReadOnly);
+			QTextStream in(&modelDefFile);
+
+			QString sModelFile = in.readLine();
+			QString sSceneName = in.readLine();
+
+			// Leer modelo
+			readModel( (newPath+sModelFile).toStdString(), sSceneName.toStdString(), newPath.toStdString());
+
+			int count = in.readLine().toInt();
+
+			QStringList flags = in.readLine().split(" ");
+			
+			vector<QString> names(count*3+1);
+			vector<Vector3d> points(count*3+1);
+
+			names[0] = flags[0];
+			points[0] = Vector3d(flags[1].toDouble(), flags[2].toDouble(), flags[3].toDouble());
+
+			for(int idx = 0 ; idx < count*3 ; idx++)
+			{
+				QStringList flags2 = in.readLine().split(" ");
+				names[idx+1] = flags2[0];
+				points[idx+1] = Vector3d(flags2[1].toDouble(), flags2[2].toDouble(), flags2[3].toDouble());
+			}
+
+			escena->skeletons.resize(1);
+			escena->skeletons[0] = new skeleton(scene::getNewId());
+			skeleton* skt = escena->skeletons[0];
+
+			skt->root = new joint(scene::getNewId());
+			skt->root->sName = names[0].toStdString();
+			skt->root->worldPosition = points[0];
+			skt->joints.push_back(skt->root);
+			skt->jointRef[skt->root->nodeId] = skt->root;
+
+			skt->root->pos = skt->root->worldPosition;
+
+			for(int i = 0; i< count; i++)
+			{
+				QString baseName = names[i*3+1];
+				QString morroName = names[i*3+2];
+				QString mandibulaName = names[i*3+3];
+
+				Vector3d basePoint = points[i*3+1];
+				Vector3d morroPoint = points[i*3+2];
+				Vector3d mandibulaPoint = points[i*3+3];
+
+				joint* jt = new joint(skt->root, scene::getNewId());
+				jt->sName = baseName.toStdString();
+				jt->worldPosition = basePoint;
+				jt->dirtyFlag = true;
+				skt->root->childs.push_back(jt);
+				skt->joints.push_back(jt);
+				skt->jointRef[jt->nodeId] = jt;
+
+				jt->pos = jt->worldPosition - skt->root->worldPosition;
+
+				joint* lastJt = jt;
+
+				int numOfDivisions = 22;
+
+				Vector3d dir = morroPoint - basePoint;
+				Vector3d incr = dir/(numOfDivisions+2);
+
+				for(int j = 0; j< numOfDivisions; j++)
+				{
+					joint* jt2 = new joint(lastJt, scene::getNewId());
+					jt2->sName = (baseName + QString("_00%1").arg(j)).toStdString();
+					jt2->worldPosition = basePoint + incr*(j+1);			
+					jt2->dirtyFlag = true;
+					lastJt->childs.push_back(jt2);
+					jt2->pos = jt2->worldPosition - lastJt->worldPosition;
+					lastJt = jt2;
+
+					skt->joints.push_back(jt2);
+					skt->jointRef[jt2->nodeId] = jt2;
+				}
+
+				joint* jt2 = new joint(lastJt, scene::getNewId());
+				jt2->sName = morroName.toStdString();
+				jt2->worldPosition = morroPoint;
+				jt2->pos = jt2->worldPosition - lastJt->worldPosition;
+				jt2->dirtyFlag = true;
+				lastJt->childs.push_back(jt2);
+				skt->joints.push_back(jt2);
+				skt->jointRef[jt2->nodeId] = jt2;
+
+				joint* jt3 = new joint(lastJt, scene::getNewId());
+				jt3->sName = mandibulaName.toStdString();
+				jt3->worldPosition = mandibulaPoint;
+				jt3->pos = jt3->worldPosition - lastJt->worldPosition;
+				jt3->dirtyFlag = true;
+				lastJt->childs.push_back(jt3);
+				skt->joints.push_back(jt3);
+				skt->jointRef[jt3->nodeId] = jt3;
+			}
+
+			skt->dirtyFlag = true;
+			skt->propagateDirtyness();
+
+			skt->root->computeRestPos();
+			skt->root->computeWorldPos();
+			//ComputeWithWorldOrientedRotations(skt->root);
+
+		 }
+		
+		updateSceneView(); 
+		
+		return;
+	 }
+	 
+	 QFile modelDefFile(fileName.c_str());
      if(modelDefFile.exists())
      {
         modelDefFile.open(QFile::ReadOnly);
