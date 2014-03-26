@@ -51,3 +51,4 @@ air/AirLib/cuda/cppIntegration/cppIntegration.cu.deps
 air/AirLib/cuda/cudaMVC.cu.deps
 air/AirLib/cuda/matrixMul/matrixMul.cu.deps
 air/AirLib/cuda/mvc.cu.deps
+*.deps
