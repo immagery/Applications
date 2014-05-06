@@ -37,8 +37,6 @@ class joint;
 class Modelo;
 class grid3d;*/
 
-enum shaderIdx {SHD_BASIC = 0, SHD_XRAY, SHD_VERTEX_COLORS, SHD_NO_SHADE, SHD_LENGTH};
-
 class GLWidget : public AdriViewer
 {
 	Q_OBJECT
@@ -163,7 +161,11 @@ public slots:
 	//Metodos especificos
     virtual void doTests(string fileName, string name, string path);
     void computeProcess();
+	void eigenMultiplication(int elements);
 	void computeWeights();
+
+	void computeNodeOptimized(DefGraph& graph, Modelo& model, int defId);
+	void computeNodeMasiveOptimized(DefGraph& graph, Modelo& model, int defId2);
 
 	void updateComputations();
 

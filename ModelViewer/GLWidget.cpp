@@ -4,6 +4,10 @@
 
 #include <cuda/cudaMgr.cuh>
 #include <cuda/cudaBubbleSort.cuh>
+//#include <cuda/matrixMul.cuh>
+#include <cuda/sgemmN.cuh>
+
+#include <chrono>
 
 #include <Computation\BiharmonicDistances.h>
 #include <Computation\mvc_interiorDistances.h>
@@ -24,10 +28,11 @@
 
 #include <Computation/mvc_interiorDistances.h>
 
+#include <omp.h>
+#include <Eigen/Core>
 
 #define ratioExpansion_DEF 0.7
 #define CUDA_TESTS true
-
 
 GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
                    Qt::WindowFlags flags ) : AdriViewer(parent, shareWidget, flags) {
@@ -62,7 +67,7 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 	sktCr = new sktCreator();
 
 	m_currentShader = NULL;
-	preferredType = SHD_BASIC;
+	preferredType = SHD_VERTEX_COLORS;
 	preferredNormalType = SHD_BASIC;
 
 	X_ALT_modifier = false;
@@ -1734,130 +1739,618 @@ void getCompactRepresentation(cudaModel& model, Modelo& m)
 
 }
 
+using namespace std::chrono;
+
+int64 GetTimeMs()
+{
+	 /* Windows */
+	 FILETIME ft;
+	 LARGE_INTEGER li;
+
+	 /* Get the amount of 100 nano seconds intervals elapsed 
+	  * since January 1, 1601 (UTC) and copy it
+	  * to a LARGE_INTEGER structure. */
+	 GetSystemTimeAsFileTime(&ft);
+	 li.LowPart = ft.dwLowDateTime;
+	 li.HighPart = ft.dwHighDateTime;
+
+	 uint64 ret = li.QuadPart;
+	 ret -= 116444736000000000LL; 
+	 /* Convert from file time to UNIX epoch time. */
+	 ret /= 10000; /* From 100 nano seconds (10^-7) 
+				   to 1 millisecond (10^-3) intervals */
+
+	 return ret;
+}
+
+void GLWidget::eigenMultiplication(int elements)
+{
+	clock_t Initini, Initfin;
+	Initini = clock();
+	Eigen::VectorXf weights(elements);
+	for(int i = 0; i < weights.size(); i++)
+	{
+		weights(i) = (float)rand()/RAND_MAX;	
+	}
+
+	Eigen::MatrixXf A(elements, elements);
+	for(int i = 0; i <  A.rows(); i++)
+	{
+		for(int j = 0; j <  A.cols(); j++)
+		{
+			 A(i,j) = (float)rand()/RAND_MAX;	
+		}
+	}
+
+	vector<float> wieghtsOld(elements);
+	vector<double> wieghtsOldDouble(elements);
+	vector< vector<float> > AOld(elements);
+	
+	symMatrixLight BihDistances;
+	BihDistances.resize(elements);
+
+	for(int i = 0; i< elements; i++)
+	{
+		AOld[i].resize(elements);
+		for(int j = 0; j< elements; j++)
+		{
+			AOld[i][j] = A(i,j);
+			BihDistances.set(i,j,A(i,j));
+		} 	
+
+		wieghtsOld[i] = weights(i);
+		wieghtsOldDouble[i] = weights(i);
+	} 
+	
+	Initfin = clock();
+
+
+
+
+	// Regular computation
+	float sumCPU = 0;
+	int64 stlSortStart1 = GetTimeMs();
+	for(int temp = 0; temp< 10; temp++)
+	{
+		sumCPU = 0;
+		for(int iElem = 0; iElem< elements; iElem++)
+		{
+			float sumCPUTemp = 0;
+
+			for(int jElem = 0; jElem< elements; jElem++)
+			{
+				sumCPUTemp += BihDistances.get(iElem,jElem)*wieghtsOldDouble[jElem];
+			}
+
+			sumCPU+= sumCPUTemp*wieghtsOldDouble[iElem];
+		}
+	}
+	int64 stlSortEnd1 = GetTimeMs();
+
+	// Regular computation
+	float sumCPU2 = 0;
+	int64 stlSortStart2 = GetTimeMs();
+	for(int temp = 0; temp< 10; temp++)
+	{
+		sumCPU = 0;
+		for(int iElem = 0; iElem< elements; iElem++)
+		{
+			float sumCPUTemp = 0;
+
+			for(int jElem = 0; jElem< elements; jElem++)
+			{
+				sumCPUTemp += AOld[iElem][jElem]*wieghtsOld[jElem];
+			}
+
+			sumCPU2+= sumCPUTemp*wieghtsOld[iElem];
+		}
+	}
+	int64 stlSortEnd2 = GetTimeMs();
+
+	//Eigen Computation
+	float result = 0;
+	int64 stlSortStart3 = GetTimeMs();
+	for(int temp = 0; temp< 10; temp++)
+	{
+		result = weights.transpose()*A*weights;
+	}
+	int64 stlSortEnd3 = GetTimeMs();
+
+	if(result > sumCPU || result > sumCPU2)
+	{
+		printf("Eigen mas lento\n");
+	}
+
+	map<float, int> vector_a_ordenar;
+
+	//printf("Eigen computation: %f -> result: %f\n", ((double)(fin2-ini2))/CLOCKS_PER_SEC * 100, result);
+	//fflush(0);
+	
+	//printf("Regular computation: %f -> sumCPU: %f\n", ((double)(fin-ini))/CLOCKS_PER_SEC * 100, sumCPU);
+
+	double value0 = (((double)(Initfin-Initini))/CLOCKS_PER_SEC) * 100;
+	double value1 = ((double)(stlSortEnd1-stlSortStart1))/10;
+	double value2 = ((double)(stlSortEnd2-stlSortStart2))/10;
+	double value3 = ((double)(stlSortEnd3-stlSortStart3))/10;
+	printf("[%d](%f) -    %f      %f     %f     %f\n", elements, value0, value1 , value2, value3, value1/value3);
+
+}
+
+ #include <complex>
+ #include <cstdio>
+ 
+ typedef std::complex<double> complexStd;
+ 
+ int MandelbrotCalculate(complexStd c, int maxiter)
+ {
+     // iterates z = z + c until |z| >= 2 or maxiter is reached,
+     // returns the number of iterations.
+     complexStd z = c;
+     int n=0;
+     for(; n<maxiter; ++n)
+     {
+         if( std::abs(z) >= 2.0) break;
+         z = z*z + c;
+     }
+     return n;
+ }
+
+// Engloba el calculo para un nodo, paralelizable... aunque mejor empaquetar trabajos.
+void GLWidget::computeNodeOptimized(DefGraph& graph, Modelo& model, int defId2)
+{
+	int numThreadsAvaiable = omp_get_max_threads();
+	printf("Number of threads: %d\n", numThreadsAvaiable);
+
+	clock_t ini1, ini2, ini3, ini4, ini5; 
+	clock_t fin1, fin2, fin3, fin4, fin5;
+
+	long long mvc_mean = 0;
+	long long arrange_mean = 0;
+	long long precomputation_mean = 0;
+	long long full_precomputation_mean = 0;
+	long long buildMatrix_mean = 0;
+
+	int defNodesSize = graph.deformers.size();
+
+	MatrixXf A(model.vn(), model.vn());
+	MatrixXf MatrixWeights(model.vn(), defNodesSize);
+	MatrixXf MatrixWeights2(model.vn(), defNodesSize);
+
+	// Remove data from weights
+	MatrixWeights.fill(0);
+	MatrixWeights2.fill(0);
+
+	// Init subDistances
+	MatrixXf distancesTemp(model.vn(), defNodesSize);
+
+	FILE* fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\processOptimized.txt", "w");
+	//A.transposeInPlace();
+	for(int i = 0; i< model.vn(); i++)
+	{
+		for(int j = 0; j< model.vn(); j++)
+		{
+			A(i,j) = model.bind->BihDistances[0].get(i,j);
+		}
+	}
+
+	float res1total, res2total;
+	
+	/*
+	clock_t ini0 = clock();
+
+	// SINGLE THREADED
+	for(int defId = 0; defId < defNodesSize; defId++ )
+	{
+		mvcOpt(graph.deformers[defId]->pos, MatrixWeights, defId, model);
+	}
+	
+	clock_t fin0 = clock();
+	*/
+
+	ini1 = clock();
+	// MULTI-THREAD
+	int numThreads = numThreadsAvaiable;
+	int range = (defNodesSize/numThreads)+1;
+	int defId = 0;
+
+	//#pragma omp parallel shared(MatrixWeights, graph, model, range) private(defId)
+	{
+		// calcular MVC
+		#pragma omp parallel for
+		for(defId = 0; defId < defNodesSize; defId++ )
+		{
+			mvcOpt(graph.deformers[defId]->pos, MatrixWeights2, defId, model);
+		}
+	}
+	fin1 = clock();
+		
+	////distancesTemp =  MatrixWeights.transpose()*A; (normal)
+	clock_t ini22 = clock();
+	distancesTemp =  A*MatrixWeights; // At*Bt = (B*A)t
+	clock_t fin22 = clock();
+	////distancesTemp.transposeInPlace(); 
+
+
+	ini3 = clock();
+	for(defId = 0; defId < defNodesSize; defId++ )
+	{
+		graph.deformers[defId]->precomputedDistances = distancesTemp.col(defId).transpose()*MatrixWeights.col(defId);
+	}
+	fin3 = clock();
+
+	// calculo de distancias
+	//double temp0 = ((double)(fin0-ini0))/CLOCKS_PER_SEC/defNodesSize;
+	double temp1 = ((double)(fin1-ini1))/CLOCKS_PER_SEC/defNodesSize;
+	double temp2 = ((double)(fin2-ini2))/CLOCKS_PER_SEC/defNodesSize;
+	double temp20 = ((double)(fin22-ini22))/CLOCKS_PER_SEC/defNodesSize;
+	double temp3 = ((double)(fin3-ini3))/CLOCKS_PER_SEC/defNodesSize;
+
+	double temp4 = ((double)(fin2-ini2))/CLOCKS_PER_SEC;
+	double temp5 = ((double)(fin3-ini3))/CLOCKS_PER_SEC;
+	double temp22 = ((double)(fin22-ini22))/CLOCKS_PER_SEC;
+
+	// Tiempos
+	//for(int i = 0; i< defNodesSize; i++)
+	//	fprintf(fout, "[%d] -> %f \n", i, allPrecomputedDistances[i]); 
+
+	fclose(fout);
+
+	//for(int i = 0; i< graph.deformers.size(); i++)
+	//	graph.deformers[i]->segmentationDirtyFlag = true;
+
+	clock_t ini7 = clock();
+	//segmentModelFromDeformersOpt(model, model.bind, graph, distancesTemp);
+	clock_t fin7 = clock();
+
+	// Update Smooth propagation
+	clock_t ini8 = clock();
+	//propagateHierarchicalSkinningOpt(model, model.bind, graph);
+	clock_t fin8 = clock();
+
+	clock_t ini9 = clock();
+	// Compute Secondary weights ... by now compute all the sec. weights
+	//computeSecondaryWeights(model, model.bind, graph);
+	clock_t fin9 = clock();
+
+	double temp6 = ((double)(fin7-ini7))/CLOCKS_PER_SEC;
+
+	//printf("1.Tiempo de mvc single thread: %f\n", temp0);
+	printf("2.Tiempo de mvc multi-thread: %f\n", temp1);
+	printf("3.Tiempo obtener subdistancias por nodo: %f, total:%f\n", temp20, temp22);
+	printf("4.Tiempo obtener subdistancias por nodo con openmp: %f, total:%f\n", temp2, temp4);
+	printf("5.Tiempo obtener precomputed distances por nodo: %f, total:%f\n", temp3, temp5);
+	printf("7.Segmentacion, solo elementos seleccionados: %f\n", temp6);
+
+
+}
+
+// Engloba el calculo para un nodo, paralelizable... aunque mejor empaquetar trabajos.
+void GLWidget::computeNodeMasiveOptimized(DefGraph& graph, Modelo& model, int defId2)
+{
+
+	clock_t ini1, ini2, ini3, ini4, ini5; 
+	clock_t fin1, fin2, fin3, fin4, fin5;
+
+	long long mvc_mean = 0;
+	long long arrange_mean = 0;
+	long long precomputation_mean = 0;
+	long long full_precomputation_mean = 0;
+	long long buildMatrix_mean = 0;
+
+	MatrixXf bigMatrix(model.vn(), model.vn());
+	VectorXf bigVector(model.vn());
+
+	bigMatrix.transposeInPlace();
+
+	for(int i = 0; i< model.vn(); i++)
+	{
+		for(int j = i; j< model.vn(); j++)
+		{
+			float value = model.bind->BihDistances[0].get(i,j);
+			bigMatrix(i,j) = value;
+			bigMatrix(j,i) = value;
+		}
+	}
+
+
+	float res1total, res2total;
+	for(int defId = 0; defId < graph.deformers.size(); defId++ )
+	{
+
+		// calcular MVC
+		ini1 = clock();
+		mvcAllBindings(graph.deformers[defId]->pos, 
+					   graph.deformers[defId]->MVCWeights, model);
+		fin1 = clock();
+
+		mvc_mean += (fin1-ini1);
+
+		// Ordernar/cortar/Reordenar
+		ini2 = clock();
+		vector<ordWeight> weights(graph.deformers[defId]->MVCWeights.size());
+		for(int i = 0; i< weights.size(); i++)
+		{
+			weights[i].idx = i;
+			weights[i].weight = graph.deformers[defId]->MVCWeights[i];
+		}
+
+		VectorXf MVCWeights;
+		VectorXi weightsSort;
+		int simplifiedSize = getSignificantWeights(weights,
+												   MVCWeights,
+												   weightsSort);
+		fin2 = clock();
+
+		arrange_mean += (fin2-ini2);
+
+		ini3 = clock();
+		MatrixXf littleMatrix(weights.size(), simplifiedSize);
+		for(int i = 0; i< simplifiedSize; i++)
+		{
+			int indI = weightsSort[i];
+			littleMatrix.col(i) = bigMatrix.col(indI);
+			/*
+			for(int j = i+1; j< simplifiedSize; j++)
+			{
+				int indJ = weightsSort[j];
+				float value = model.bind->BihDistances[0].get(indI,indJ);
+				littleMatrix(j,i) = value;
+				littleMatrix(i,j) = value;
+			}
+
+			littleMatrix(i,i) = model.bind->BihDistances[0].get(indI,indI);
+			*/
+		}
+		fin3 = clock();
+
+		buildMatrix_mean += (fin3-ini3);
+
+		bigVector.fill(0);
+
+		for(int i = 0; i<  simplifiedSize; i++)
+		{
+			bigVector[weightsSort[i]] = MVCWeights[i];
+		}
+
+		//VectorXf preubas(weights.size());
+		// precalculo
+		ini4 = clock();
+		//preubas = MVCWeights*littleMatrix;
+		
+		/*for(int g = 0; g < weights.size(); g++)
+		{
+			//int indG = weightsSort[g];
+			//preubas[g] = bigVector.transpose()*bigMatrix.col(g);//indG);
+			preubas[g] = MVCWeights.dot(littleMatrix.col(g));//indG);
+		}
+		*/
+
+		VectorXf preubas2(simplifiedSize);
+		for(int c = 0; c < simplifiedSize; c++)
+		{
+			float tempValue = MVCWeights[c];
+			for(int g = 0; g < simplifiedSize /*weights.size()*/; g++)
+			{
+				int indG = weightsSort[g];
+				preubas2[g] += tempValue*littleMatrix(indG, c);
+			}
+		}
+		
+		
+		//littleMatrix.transposeInPlace();
+		
+		//for(int g = 0; g < weights.size(); g++)
+		//{
+		//	preubas = MVCWeights*littleMatrix;
+		//}
+		
+
+		//float res1 = preubas.dot(bigVector);
+		float res1 = preubas2.dot(MVCWeights);
+		fin4 = clock();
+
+		//float res3 = MVCWeights.transpose()*littleMatrix*MVCWeights;
+
+		precomputation_mean += (fin4-ini4);
+
+		ini5 = clock();
+		float res2 = bigVector.transpose()*bigMatrix*bigVector;
+		fin5 = clock();
+
+		if(defId == 0)
+		{
+			res1total = res1; 
+			//res2total = res3;
+		}
+
+		full_precomputation_mean += (fin5-ini5);
+	}
+
+	// calculo de distancias
+
+	int defNodesSize = graph.deformers.size();
+
+	double temp1 = ((double)(mvc_mean))/CLOCKS_PER_SEC/defNodesSize;
+	double temp2 = ((double)(arrange_mean))/CLOCKS_PER_SEC/defNodesSize;
+	double temp3 = ((double)(precomputation_mean))/CLOCKS_PER_SEC/defNodesSize;
+	double temp4 = ((double)(full_precomputation_mean))/CLOCKS_PER_SEC/defNodesSize;
+	double temp5 = ((double)(buildMatrix_mean))/CLOCKS_PER_SEC/defNodesSize;
+
+	// Tiempos
+	printf("Dos valores de muestra %f %f... \n", res1total, res2total); 
+	printf("\n\nValores de %d nodos en optimizado:\n ", defNodesSize);
+	printf("Tiempo de mvc: %f\n", temp1);
+	printf("Tiempo de ordenar: %f\n", temp2);
+	printf("Tiempo de construccion matrix: %f\n", temp5);
+	printf("Tiempo de precomputo: %f\n", temp3);
+	printf("Tiempo de precomputo a full: %f\n\n\n",temp4);
+
+}
+
+
 //////////////////////////////////////////////
 //			ALL COMPUTATIONS          ////////
 //////////////////////////////////////////////
 void GLWidget::computeProcess() 
 {
+	
 	clock_t ini, fin;
-	if(CUDA_TESTS)
+	/*if(CUDA_TESTS)
 	{
-		doSorting();
+
+		ejecutar_sgemmNN(12992);
 		return;
+
+		// Matrix mul tests
+		//int node = 0;
+		//int vert = 0;
+
+		//getPrecomputedDistance(node);
+		//getDistances(node, vert);
+		//return;
+
+		// Sorting tests
+		
+		//for(int i = 0; i< 25; i++)
+		//	doSorting(i*i*113);
+
+		//return;
 
 		Modelo* m =(Modelo*)escena->models[0]; 
 		vector<cudaModel> models(1);
 
 		getCompactRepresentation(models[0], *m);
+	}*/
 
-		/*
-		models[0].hostPositions = m->nodes.data();
+	/*
+	models[0].hostPositions = m->nodes.data();
 	
-		vector<PRECISION3> points(m->nodes.size());
-		modelo.nodes = points.data();
+	vector<PRECISION3> points(m->nodes.size());
+	modelo.nodes = points.data();
 
-		vector<int3> tri(m->triangles.size());
-		modelo.triangles = tri.data();
+	vector<int3> tri(m->triangles.size());
+	modelo.triangles = tri.data();
 
-		//modelo.nodes = (float3*)malloc(m->nodes.size()*sizeof(float3));
-		//modelo.triangles = (int3*)malloc(m->nodes.size()*sizeof(int3));
+	//modelo.nodes = (float3*)malloc(m->nodes.size()*sizeof(float3));
+	//modelo.triangles = (int3*)malloc(m->nodes.size()*sizeof(int3));
 
-		modelo.nv = m->nodes.size();
-		modelo.nt = m->triangles.size();
+	modelo.nv = m->nodes.size();
+	modelo.nt = m->triangles.size();
 
 	
-		// Copiamos los vertices
-		for(int i = 0; i< m->nodes.size(); i++)
-		{
-			modelo.nodes[i].x = m->nodes[i]->position.x();
-			modelo.nodes[i].y = m->nodes[i]->position.y();
-			modelo.nodes[i].z = m->nodes[i]->position.z();
-		}
-
-		// Copiamos los triangulos
-		for(int i = 0; i< m->triangles.size(); i++)
-		{
-			modelo.triangles[i].x = m->triangles[i]->verts[0]->id;
-			modelo.triangles[i].y = m->triangles[i]->verts[1]->id;
-			modelo.triangles[i].z = m->triangles[i]->verts[2]->id;
-		}
-		*/
-
-		PRECISION3 point;
-		point.x = 0;
-		point.y = 0;
-		point.z = 0;
-
-		vector<PRECISION> weights(m->nodes.size());
-		ini = clock();   
-		cudaManager cudaMgr;
-		cudaMgr.loadModels(models.data(), models.size(), false);
-		fin = clock();
-
-		printf("allocate memory in cuda: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-		ini = clock();   
-		for(int i = 0; i< 1000; i++)
-		{
-			cudaMgr.cudaMVC(point, weights.data(), 0, i, false);
-		}
-		fin = clock();
-
-		printf("compute mvc: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-		ini = clock();
-		cudaMgr.freeModels();
-		fin = clock();
-    
-		printf("free memory: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-		FILE* fout;
-		fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCuda.txt", "w");
-		fprintf(fout, "Coordenadas:\n");
-		for(int i = 0; i < m->nodes.size(); i++)
-			fprintf(fout, "%4.10f ", weights[i]);
-		fprintf(fout, "----------------\n");
-
-		weights.clear();
-
-
-		Vector3d point2(0,0,0);
-		vector<double> weights2(m->nodes.size());
-
-		ini = clock();
-		for(int i = 0; i< 1000; i++)
-			mvcAllBindings(point2, weights2, *m);
-		fin = clock();
-		printf("mean value coordinates en cpu: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-		fclose(fout);
-		fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCPU.txt", "w");
-		fprintf(fout, "Coordenadas:\n");
-		for(int i = 0; i < m->nodes.size(); i++)
-			fprintf(fout, "%4.10f ", weights2[i]);
-		fprintf(fout, "----------------\n");
-		fclose(fout);
-
-		weights.clear();
-
-		//vector<double> embeddedPoint;
-		//mvcAllBindings(Vector3d(0,0,0), embeddedPoint, *((Modelo*)escena->models[0]));
-
-		return;
-
+	// Copiamos los vertices
+	for(int i = 0; i< m->nodes.size(); i++)
+	{
+		modelo.nodes[i].x = m->nodes[i]->position.x();
+		modelo.nodes[i].y = m->nodes[i]->position.y();
+		modelo.nodes[i].z = m->nodes[i]->position.z();
 	}
+
+	// Copiamos los triangulos
+	for(int i = 0; i< m->triangles.size(); i++)
+	{
+		modelo.triangles[i].x = m->triangles[i]->verts[0]->id;
+		modelo.triangles[i].y = m->triangles[i]->verts[1]->id;
+		modelo.triangles[i].z = m->triangles[i]->verts[2]->id;
+	}
+	*/
+	/*
+	PRECISION3 point;
+	point.x = 0;
+	point.y = 0;
+	point.z = 0;
+
+	vector<PRECISION> weights(m->nodes.size());
+	ini = clock();   
+	cudaManager cudaMgr;
+	cudaMgr.loadModels(models.data(), models.size(), false);
+	fin = clock();
+
+	printf("allocate memory in cuda: %4.8f s\n", timelapse(ini,fin)); fflush(0);
+
+	ini = clock();   
+	for(int i = 0; i< 1000; i++)
+	{
+		cudaMgr.cudaMVC(point, weights.data(), 0, i, false);
+	}
+	fin = clock();
+
+	printf("compute mvc: %4.8f s\n", timelapse(ini,fin)); fflush(0);
+
+	ini = clock();
+	cudaMgr.freeModels();
+	fin = clock();
+    
+	printf("free memory: %4.8f s\n", timelapse(ini,fin)); fflush(0);
+
+	FILE* fout;
+	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCuda.txt", "w");
+	fprintf(fout, "Coordenadas:\n");
+	for(int i = 0; i < m->nodes.size(); i++)
+		fprintf(fout, "%4.10f ", weights[i]);
+	fprintf(fout, "----------------\n");
+
+	weights.clear();
+
+	Vector3d point2(0,0,0);
+	vector<double> weights2(m->nodes.size());
+
+	ini = clock();
+	for(int i = 0; i< 1000; i++)
+		mvcAllBindings(point2, weights2, *m);
+	fin = clock();
+	printf("mean value coordinates en cpu: %4.8f s\n", timelapse(ini,fin)); fflush(0);
+
+	fclose(fout);
+	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCPU.txt", "w");
+	fprintf(fout, "Coordenadas:\n");
+	for(int i = 0; i < m->nodes.size(); i++)
+		fprintf(fout, "%4.10f ", weights2[i]);
+	fprintf(fout, "----------------\n");
+	fclose(fout);
+
+	weights.clear();
+
+	//vector<double> embeddedPoint;
+	//mvcAllBindings(Vector3d(0,0,0), embeddedPoint, *((Modelo*)escena->models[0]));
+
+	return;
+
+}
+*/
 
 	//Testing new optimized processing
 	// AirRig creation
 
+	//lanzarProceso();
+	/*
+	if(cublas_example() == EXIT_FAILURE)
+		printf("Ha habido problemas\n.");
+	else
+		printf("Bien de momento\n.");
+	*/
+	//ejecutar_matrixVector(64*64);	
+	//ejecutar_sgemmNN(12992);
+
+	/*
+	printf("PRUEBAS DE CALCULO EN CPU\n");
+	printf("Multiplicacion vector.matrix.vector\n\n");
+	printf("Elements        Regular1        Regular2        Eigen        Ratio\n\n");
+	for(int i = 0; i< 15; i++)
+	{
+		eigenMultiplication((int)floor((512*32)/(15-i)));
+	}
+
+	return;
+	*/
+
 	if(escena->rig)
 		delete escena->rig;
 
-	ini = clock();
+	escena->rig = NULL;
 
 	// Crear rig nuevo en el caso de que no exista
-	if(!escena->rig)
-		escena->rig = new AirRig(scene::getNewId());
+	if(!escena->rig) escena->rig = new AirRig(scene::getNewId());
 
 	AirRig* rig = (AirRig*) escena->rig;
 
@@ -1865,17 +2358,41 @@ void GLWidget::computeProcess()
 	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
 	//Vincular a escena: modelo y esqueletos
+	 ini = clock();
+	//auto beginSktBinding = high_resolution_clock::now();
 	rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
 
 	// Build deformers structure for computations.
 	//rig->preprocessModelForComputations();
 	BuildGroupTree(rig->defRig);
 
-	fin = clock();
-	printf("Preprocess: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
+	//auto endSktBinding = high_resolution_clock::now();
+	//auto ticks = duration_cast<microseconds>(endSktBinding-beginSktBinding) ;
+
+	 fin = clock();
+	//printf("Preprocess: %d microseconds\n", ticks.count()); fflush(0);
+	printf("Preprocess: %f miliseconds\n", ((double)fin-ini)/CLOCKS_PER_SEC*1000); fflush(0);
+
+	int defNodesCount = 0;
+	for(int i = 0; i < rig->defRig.defGroups.size(); i++)
+	{
+		defNodesCount += rig->defRig.defGroups[i]->deformers.size();
+	}
+
+	printf("# de vertices: %d\n", rig->model->nodes.size());
+	printf("# de huesos: %d\n", rig->defRig.defGroups.size());
+	printf("Tenemos %d nodos (o %d)\n", defNodesCount, rig->defRig.deformers.size()); fflush(0);
+
+	ini = clock();
 
 	// Skinning computations
 	updateAirSkinning(rig->defRig, *rig->model);
+
+	// Optimized Computation (just the first one)
+	computeNodeOptimized(rig->defRig, *rig->model, 0);
+
+	fin = clock();
+	printf("Process: %f ms\n", timelapse(ini,fin)*1000); fflush(0);
 
 	// TO REMOVE: This patch enables bulging just between the first and the second joint
 	rig->defRig.defGroups[1]->bulgeEffect = true;
@@ -5510,7 +6027,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 			escena->skeletons[0] = new skeleton(scene::getNewId());
 			skeleton* skt = escena->skeletons[0];
 
-			skt->root = new joint(scene::getNewId());
+			skt->root = new joint(scene::getNewId(T_BONE));
 			skt->root->sName = names[0].toStdString();
 			skt->root->worldPosition = points[0];
 			skt->joints.push_back(skt->root);
@@ -5528,7 +6045,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 				Vector3d morroPoint = points[i*3+2];
 				Vector3d mandibulaPoint = points[i*3+3];
 
-				joint* jt = new joint(skt->root, scene::getNewId());
+				joint* jt = new joint(skt->root, scene::getNewId(T_BONE));
 				jt->sName = baseName.toStdString();
 				jt->worldPosition = basePoint;
 				jt->dirtyFlag = true;
@@ -5547,7 +6064,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 
 				for(int j = 0; j< numOfDivisions; j++)
 				{
-					joint* jt2 = new joint(lastJt, scene::getNewId());
+					joint* jt2 = new joint(lastJt, scene::getNewId(T_BONE));
 					jt2->sName = (baseName + QString("_00%1").arg(j)).toStdString();
 					jt2->worldPosition = basePoint + incr*(j+1);			
 					jt2->dirtyFlag = true;
@@ -5559,7 +6076,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 					skt->jointRef[jt2->nodeId] = jt2;
 				}
 
-				joint* jt2 = new joint(lastJt, scene::getNewId());
+				joint* jt2 = new joint(lastJt, scene::getNewId(T_BONE));
 				jt2->sName = morroName.toStdString();
 				jt2->worldPosition = morroPoint;
 				jt2->pos = jt2->worldPosition - lastJt->worldPosition;
@@ -5568,7 +6085,7 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 				skt->joints.push_back(jt2);
 				skt->jointRef[jt2->nodeId] = jt2;
 
-				joint* jt3 = new joint(lastJt, scene::getNewId());
+				joint* jt3 = new joint(lastJt, scene::getNewId(T_BONE));
 				jt3->sName = mandibulaName.toStdString();
 				jt3->worldPosition = mandibulaPoint;
 				jt3->pos = jt3->worldPosition - lastJt->worldPosition;

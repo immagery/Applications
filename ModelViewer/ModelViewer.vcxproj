@@ -166,9 +166,11 @@
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <WarningLevel>Level3</WarningLevel>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmain.lib;QGLViewer2.lib;BLAS_nowrap.lib;clapack_nowrap.lib;libf2c.lib;superLU_4.3.lib;Qt5OpenGL.lib;Qt5Widgets.lib;Qt5Core.lib;Qt5Gui.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cublas.lib;cudart.lib;glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmain.lib;QGLViewer2.lib;BLAS_nowrap.lib;clapack_nowrap.lib;libf2c.lib;superLU_4.3.lib;Qt5OpenGL.lib;Qt5Widgets.lib;Qt5Core.lib;Qt5Gui.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;..\..\lib%(AdditionalLibraryDirectories);C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\lib\x64</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type=%27win32%27 name=%27Microsoft.Windows.Common-Controls%27 version=%276.0.0.0%27 publicKeyToken=%276595b64144ccf1df%27 language=%27*%27 processorArchitecture=%27*%27"  /SUBSYSTEM:WINDOWS %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -265,7 +267,7 @@
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>cudart.lib;glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmaind.lib;QGLViewerd2.lib;BLASd_nowrap.lib;clapackd_nowrap.lib;libf2cd.lib;superLU_4.3d.lib;Qt5OpenGLd.lib;Qt5Widgetsd.lib;Qt5Cored.lib;Qt5Guid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cublas.lib;cudart.lib;glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmaind.lib;QGLViewerd2.lib;BLASd_nowrap.lib;clapackd_nowrap.lib;libf2cd.lib;superLU_4.3d.lib;Qt5OpenGLd.lib;Qt5Widgetsd.lib;Qt5Cored.lib;Qt5Guid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(QTDIR)\lib;..\..\lib%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>"/MANIFESTDEPENDENCY:type=%27win32%27 name=%27Microsoft.Windows.Common-Controls%27 version=%276.0.0.0%27 publicKeyToken=%276595b64144ccf1df%27 language=%27*%27 processorArchitecture=%27*%27"  /SUBSYSTEM:WINDOWS %(AdditionalOptions)</AdditionalOptions>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -744,12 +746,14 @@
     <None Include="..\..\air\AirLib\cuda\cudaMgr.cuh" />
     <None Include="..\..\air\AirLib\cuda\cudaMVC.cuh" />
     <None Include="..\..\air\AirLib\cuda\lock.cuh" />
+    <None Include="..\..\air\AirLib\cuda\sgemmN.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\air\AirLib\cuda\cudaBubbleSort.cu" />
     <CudaCompile Include="..\..\air\AirLib\cuda\cudaMgr.cu" />
     <CudaCompile Include="..\..\air\AirLib\cuda\cudaMVC.cu" />
     <CudaCompile Include="..\..\air\AirLib\cuda\lock.cu" />
+    <CudaCompile Include="..\..\air\AirLib\cuda\sgemmN.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
