@@ -265,6 +265,7 @@
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <WarningLevel>Level3</WarningLevel>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <AdditionalDependencies>cublas.lib;cudart.lib;glu32.lib;opengl32.lib;gdi32.lib;user32.lib;qtmaind.lib;QGLViewerd2.lib;BLASd_nowrap.lib;clapackd_nowrap.lib;libf2cd.lib;superLU_4.3d.lib;Qt5OpenGLd.lib;Qt5Widgetsd.lib;Qt5Cored.lib;Qt5Guid.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -7,8 +7,6 @@
 //#include <cuda/matrixMul.cuh>
 #include <cuda/sgemmN.cuh>
 
-#include <chrono>
-
 #include <Computation\BiharmonicDistances.h>
 #include <Computation\mvc_interiorDistances.h>
 #include <DataStructures\InteriorDistancesData.h>
@@ -1739,6 +1737,7 @@ void getCompactRepresentation(cudaModel& model, Modelo& m)
 
 }
 
+#include <chrono>
 using namespace std::chrono;
 
 int64 GetTimeMs()
@@ -1898,32 +1897,30 @@ void GLWidget::eigenMultiplication(int elements)
 // Engloba el calculo para un nodo, paralelizable... aunque mejor empaquetar trabajos.
 void GLWidget::computeNodeOptimized(DefGraph& graph, Modelo& model, int defId2)
 {
-	int numThreadsAvaiable = omp_get_max_threads();
-	printf("Number of threads: %d\n", numThreadsAvaiable);
 
-	clock_t ini1, ini2, ini3, ini4, ini5; 
-	clock_t fin1, fin2, fin3, fin4, fin5;
+	auto ini0 = high_resolution_clock::now();
+	//int numThreadsAvaiable = omp_get_max_threads();
+	//printf("Number of threads: %d\n", numThreadsAvaiable);
 
-	long long mvc_mean = 0;
-	long long arrange_mean = 0;
-	long long precomputation_mean = 0;
-	long long full_precomputation_mean = 0;
-	long long buildMatrix_mean = 0;
+	//long long mvc_mean = 0;
+	//long long arrange_mean = 0;
+	//long long precomputation_mean = 0;
+	//long long full_precomputation_mean = 0;
+	//long long buildMatrix_mean = 0;
 
 	int defNodesSize = graph.deformers.size();
-
-	MatrixXf A(model.vn(), model.vn());
+	MatrixXf& A = model.bind->A[0];
+	
+	
+	//(model.vn(), model.vn());
 	MatrixXf MatrixWeights(model.vn(), defNodesSize);
-	MatrixXf MatrixWeights2(model.vn(), defNodesSize);
 
 	// Remove data from weights
 	MatrixWeights.fill(0);
-	MatrixWeights2.fill(0);
 
 	// Init subDistances
 	MatrixXf distancesTemp(model.vn(), defNodesSize);
-
-	FILE* fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\processOptimized.txt", "w");
+	/*
 	//A.transposeInPlace();
 	for(int i = 0; i< model.vn(); i++)
 	{
@@ -1932,8 +1929,11 @@ void GLWidget::computeNodeOptimized(DefGraph& graph, Modelo& model, int defId2)
 			A(i,j) = model.bind->BihDistances[0].get(i,j);
 		}
 	}
+	*/
 
 	float res1total, res2total;
+
+	auto fin0 = high_resolution_clock::now();
 	
 	/*
 	clock_t ini0 = clock();
@@ -1947,80 +1947,60 @@ void GLWidget::computeNodeOptimized(DefGraph& graph, Modelo& model, int defId2)
 	clock_t fin0 = clock();
 	*/
 
-	ini1 = clock();
-	// MULTI-THREAD
-	int numThreads = numThreadsAvaiable;
-	int range = (defNodesSize/numThreads)+1;
-	int defId = 0;
-
-	//#pragma omp parallel shared(MatrixWeights, graph, model, range) private(defId)
+	auto ini1 = high_resolution_clock::now();
+	// MVC - MULTI-THREAD
+	#pragma omp parallel for
+	for(int defId = 0; defId < defNodesSize; defId++ )
 	{
-		// calcular MVC
-		#pragma omp parallel for
-		for(defId = 0; defId < defNodesSize; defId++ )
-		{
-			mvcOpt(graph.deformers[defId]->pos, MatrixWeights2, defId, model);
-		}
+		mvcOpt(graph.deformers[defId]->pos, MatrixWeights, defId, model);
 	}
-	fin1 = clock();
+	auto fin1 = high_resolution_clock::now();
 		
 	////distancesTemp =  MatrixWeights.transpose()*A; (normal)
-	clock_t ini22 = clock();
+	auto ini2 = high_resolution_clock::now();
 	distancesTemp =  A*MatrixWeights; // At*Bt = (B*A)t
-	clock_t fin22 = clock();
+	auto fin2 = high_resolution_clock::now();
 	////distancesTemp.transposeInPlace(); 
 
-
-	ini3 = clock();
-	for(defId = 0; defId < defNodesSize; defId++ )
+	auto ini3 = high_resolution_clock::now();
+	#pragma omp parallel for
+	for(int defId = 0; defId < defNodesSize; defId++ )
 	{
 		graph.deformers[defId]->precomputedDistances = distancesTemp.col(defId).transpose()*MatrixWeights.col(defId);
 	}
-	fin3 = clock();
+	auto fin3 = high_resolution_clock::now();
 
-	// calculo de distancias
-	//double temp0 = ((double)(fin0-ini0))/CLOCKS_PER_SEC/defNodesSize;
-	double temp1 = ((double)(fin1-ini1))/CLOCKS_PER_SEC/defNodesSize;
-	double temp2 = ((double)(fin2-ini2))/CLOCKS_PER_SEC/defNodesSize;
-	double temp20 = ((double)(fin22-ini22))/CLOCKS_PER_SEC/defNodesSize;
-	double temp3 = ((double)(fin3-ini3))/CLOCKS_PER_SEC/defNodesSize;
-
-	double temp4 = ((double)(fin2-ini2))/CLOCKS_PER_SEC;
-	double temp5 = ((double)(fin3-ini3))/CLOCKS_PER_SEC;
-	double temp22 = ((double)(fin22-ini22))/CLOCKS_PER_SEC;
-
-	// Tiempos
-	//for(int i = 0; i< defNodesSize; i++)
-	//	fprintf(fout, "[%d] -> %f \n", i, allPrecomputedDistances[i]); 
-
-	fclose(fout);
-
-	//for(int i = 0; i< graph.deformers.size(); i++)
-	//	graph.deformers[i]->segmentationDirtyFlag = true;
-
-	clock_t ini7 = clock();
-	//segmentModelFromDeformersOpt(model, model.bind, graph, distancesTemp);
-	clock_t fin7 = clock();
+	auto ini4 = high_resolution_clock::now();
+	segmentModelFromDeformersOpt(model, model.bind, graph, distancesTemp);
+	auto fin4 = high_resolution_clock::now();
 
 	// Update Smooth propagation
-	clock_t ini8 = clock();
-	//propagateHierarchicalSkinningOpt(model, model.bind, graph);
-	clock_t fin8 = clock();
+	auto ini5 = high_resolution_clock::now();
+	propagateHierarchicalSkinningOpt(model, model.bind, graph);
+	auto fin5 = high_resolution_clock::now();
 
-	clock_t ini9 = clock();
+	auto ini6 = high_resolution_clock::now();
 	// Compute Secondary weights ... by now compute all the sec. weights
-	//computeSecondaryWeights(model, model.bind, graph);
-	clock_t fin9 = clock();
+	computeSecondaryWeights(model, model.bind, graph);
+	auto fin6 = high_resolution_clock::now();
 
-	double temp6 = ((double)(fin7-ini7))/CLOCKS_PER_SEC;
+	// Calculo de tiempos-> microsegundos
 
-	//printf("1.Tiempo de mvc single thread: %f\n", temp0);
-	printf("2.Tiempo de mvc multi-thread: %f\n", temp1);
-	printf("3.Tiempo obtener subdistancias por nodo: %f, total:%f\n", temp20, temp22);
-	printf("4.Tiempo obtener subdistancias por nodo con openmp: %f, total:%f\n", temp2, temp4);
-	printf("5.Tiempo obtener precomputed distances por nodo: %f, total:%f\n", temp3, temp5);
-	printf("7.Segmentacion, solo elementos seleccionados: %f\n", temp6);
+	auto ticks00 = duration_cast<microseconds>(fin0-ini0) ;
+	auto ticks01 = duration_cast<microseconds>(fin1-ini1) ;
+	auto ticks02 = duration_cast<microseconds>(fin2-ini2) ;
+	auto ticks03 = duration_cast<microseconds>(fin3-ini3) ;
+	auto ticks04 = duration_cast<microseconds>(fin4-ini4) ;
+	auto ticks05 = duration_cast<microseconds>(fin5-ini5) ;
+	auto ticks06 = duration_cast<microseconds>(fin6-ini6) ;
 
+	printf("0. Inicializacion: %fms\n", (double)ticks00.count()/1000.0);
+	printf("1. MVC: %fus -> media: %fms\n", (double)ticks01.count()/1000.0, (double)ticks01.count()/1000.0/defNodesSize);
+	printf("2. Matrix mult: %fms -> media: %fms\n", (double)ticks02.count()/1000.0, (double)ticks02.count()/1000.0/defNodesSize);
+	printf("3. Precomputed distances: %fms -> media: %fms\n", (double)ticks03.count()/1000.0, (double)ticks03.count()/1000.0/defNodesSize);
+	printf("4. Segmentation: %fms\n", (double)ticks04.count()/1000.0);
+	printf("5. Weights propagation: %fms\n", (double)ticks05.count()/1000.0);
+	printf("6. Secondary weights: %fms\n", (double)ticks06.count()/1000.0);
 
 }
 
@@ -2386,7 +2366,7 @@ void GLWidget::computeProcess()
 	ini = clock();
 
 	// Skinning computations
-	updateAirSkinning(rig->defRig, *rig->model);
+	//updateAirSkinning(rig->defRig, *rig->model);
 
 	// Optimized Computation (just the first one)
 	computeNodeOptimized(rig->defRig, *rig->model, 0);
