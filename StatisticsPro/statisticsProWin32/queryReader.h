@@ -1,7 +1,7 @@
 #ifndef QUERYREADER_H
 #define QUERYREADER_H
 
-#define FLAG_DEBUG 0
+#define FLAG_DEBUG 1
 
 #include <QString>
 #include <QStringList>

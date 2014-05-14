@@ -7,7 +7,7 @@
 #include <QVector>
 #include <QString>
 
-#define FLAG_DEBUG 0
+#define FLAG_DEBUG 1
 
 #define LOGIN_URL "http://www.immagery.com/statisticsPro/ldConstantinopolis.html"
 
