@@ -1,65 +1,55 @@
 #include "GLWidget.h"
+#include "AppMgr.h"
 
 #include <ui_mainwindow.h>
-
-#include <cuda/cudaMgr.cuh>
-#include <cuda/cudaBubbleSort.cuh>
-//#include <cuda/matrixMul.cuh>
-#include <cuda/sgemmN.cuh>
-
-#include <Computation\BiharmonicDistances.h>
-#include <Computation\mvc_interiorDistances.h>
-#include <DataStructures\InteriorDistancesData.h>
-#include <utils/util.h>
-
 #include <QtCore/QTextStream>
 #include <QtCore/qdir.h>
 
-#include <tetgen/tetgen.h>
-
 #include <render/graphRender.h>
-#include <computation/HarmonicCoords.h>
-
 #include <render/defGorupRender.h>
 
-#include <Computation\AirSegmentation.h>
+#include <utils/util.h>
 
-#include <Computation/mvc_interiorDistances.h>
+#include <Computation\BiharmonicDistances.h>
+#include <Computation\mvc_interiorDistances.h>
+#include <Computation\AirSegmentation.h>
+#include <Computation\mvc_interiorDistances.h>
+#include <computation\HarmonicCoords.h>
+
+#include <DataStructures\InteriorDistancesData.h>
+#include <DataStructures\DataStructures.h>
 
 #include <omp.h>
 #include <Eigen/Core>
+#include <tetgen/tetgen.h>
+#include <chrono>
+
+using namespace std::chrono;
 
 #define ratioExpansion_DEF 0.7
-#define CUDA_TESTS true
 
 GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
                    Qt::WindowFlags flags ) : AdriViewer(parent, shareWidget, flags) {
-    drawCage = true;
+    
+	// TOREMOVE
+	drawCage = true;
     shadeCoordInfluence = true;
-    bGCcomputed = false;
-    bHComputed = false;
-
-    //m_bHCGrid = false;
-
-    bGCcomputed = false;
-    bHComputed = false;
-    bMVCComputed = false;
 
     influenceDrawingIdx = 0;
-
-    //activeCoords = HARMONIC_COORDS;
-    //m.sModelPath = "";
 
     stillCageAbled = false;
     stillCageSelected = -1;
 
 	valueAux = 0;
 
+	// Init rigg variables
 	if(escena->rig)
 		delete escena->rig;
 
 	escena->rig = new AirRig(scene::getNewId());
 
+
+	// Verbose flags
 	bDrawStatistics = false;
 
 	sktCr = new sktCreator();
@@ -73,6 +63,7 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 	setAutoFillBackground(false);
 
 }
+
 
 void GLWidget::updateColorBufferObject()
 {
@@ -1667,14 +1658,15 @@ void GLWidget::computeWeights()
 	rig->initRigWithModel((Modelo*)escena->models[0]);
 
 	// 1. Revisar el rigg y marcar el trabajo a hacer.
-	rig->getWorkToDo(worker.preprocessNodes, worker.segmentationNodes);
+	//rig->getWorkToDo(worker.preprocessNodes, worker.segmentationNodes);
+	assert(false); // He quitado el material
 
 	// TOREMOVE: binds the model for computations-> this needs to be done just
 	// one time at the beginning to load all the data in GPU.
 	worker.setModelForComputations((Modelo*)escena->models[0]);
 	
 	// Updates all the necessary nodes depending on the dirty flags
-	worker.updateAllComputations(rig);
+	worker.updateAllComputations();
 
 	// 3.1. Set-up default deformations -> TODELETE 
 	for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
@@ -1697,73 +1689,9 @@ void GLWidget::updateComputations()
 
 }
 
-
-void getCompactRepresentation(cudaModel& model, Modelo& m)
-{
-	// Load constants
-	model.npts = m.nodes.size();
-	model.ntri = m.triangles.size();
-
-	model.hostPositions = (PRECISION*) malloc(model.npts*sizeof(PRECISION)*3);
-	model.hostTriangles = (int*) malloc(model.ntri*sizeof(int)*3);
-
-	// Copiamos los vertices
-	for(int i = 0; i< m.nodes.size(); i++)
-	{
-		model.hostPositions[i*3]   = m.nodes[i]->position.x();
-		model.hostPositions[i*3+1] = m.nodes[i]->position.y();
-		model.hostPositions[i*3+2] = m.nodes[i]->position.z();
-	}
-
-	// Copiamos los triangulos
-	for(int i = 0; i< m.triangles.size(); i++)
-	{
-		model.hostTriangles[i*3+0] = (int)m.triangles[i]->verts[0]->id;
-		model.hostTriangles[i*3+1] = (int)m.triangles[i]->verts[1]->id;
-		model.hostTriangles[i*3+2] = (int)m.triangles[i]->verts[2]->id;
-	}
-
-	// Copiamos la matriz de distancias.
-	model.hostBHDistances = (float*) malloc((model.npts*model.npts+model.npts)/2*sizeof(float));
-	int count = 0; 
-	for(int i = 0; i< m.bind->BihDistances[0].size; i++)
-	{
-		for(int j = 0; j<= i; j++)
-		{
-			model.hostBHDistances[count] = m.bind->BihDistances[0].get(i,j);
-			count++;
-		}
-	}
-
-}
-
-#include <chrono>
-using namespace std::chrono;
-
-int64 GetTimeMs()
-{
-	 /* Windows */
-	 FILETIME ft;
-	 LARGE_INTEGER li;
-
-	 /* Get the amount of 100 nano seconds intervals elapsed 
-	  * since January 1, 1601 (UTC) and copy it
-	  * to a LARGE_INTEGER structure. */
-	 GetSystemTimeAsFileTime(&ft);
-	 li.LowPart = ft.dwLowDateTime;
-	 li.HighPart = ft.dwHighDateTime;
-
-	 uint64 ret = li.QuadPart;
-	 ret -= 116444736000000000LL; 
-	 /* Convert from file time to UNIX epoch time. */
-	 ret /= 10000; /* From 100 nano seconds (10^-7) 
-				   to 1 millisecond (10^-3) intervals */
-
-	 return ret;
-}
-
 void GLWidget::eigenMultiplication(int elements)
 {
+	/*
 	clock_t Initini, Initfin;
 	Initini = clock();
 	Eigen::VectorXf weights(elements);
@@ -1873,134 +1801,7 @@ void GLWidget::eigenMultiplication(int elements)
 	double value3 = ((double)(stlSortEnd3-stlSortStart3))/10;
 	printf("[%d](%f) -    %f      %f     %f     %f\n", elements, value0, value1 , value2, value3, value1/value3);
 
-}
-
- #include <complex>
- #include <cstdio>
- 
- typedef std::complex<double> complexStd;
- 
- int MandelbrotCalculate(complexStd c, int maxiter)
- {
-     // iterates z = z + c until |z| >= 2 or maxiter is reached,
-     // returns the number of iterations.
-     complexStd z = c;
-     int n=0;
-     for(; n<maxiter; ++n)
-     {
-         if( std::abs(z) >= 2.0) break;
-         z = z*z + c;
-     }
-     return n;
- }
-
-// Engloba el calculo para un nodo, paralelizable... aunque mejor empaquetar trabajos.
-void GLWidget::computeNodeOptimized(DefGraph& graph, Modelo& model, int defId2)
-{
-
-	auto ini0 = high_resolution_clock::now();
-	//int numThreadsAvaiable = omp_get_max_threads();
-	//printf("Number of threads: %d\n", numThreadsAvaiable);
-
-	//long long mvc_mean = 0;
-	//long long arrange_mean = 0;
-	//long long precomputation_mean = 0;
-	//long long full_precomputation_mean = 0;
-	//long long buildMatrix_mean = 0;
-
-	int defNodesSize = graph.deformers.size();
-	MatrixXf& A = model.bind->A[0];
-	
-	
-	//(model.vn(), model.vn());
-	MatrixXf MatrixWeights(model.vn(), defNodesSize);
-
-	// Remove data from weights
-	MatrixWeights.fill(0);
-
-	// Init subDistances
-	MatrixXf distancesTemp(model.vn(), defNodesSize);
-	/*
-	//A.transposeInPlace();
-	for(int i = 0; i< model.vn(); i++)
-	{
-		for(int j = 0; j< model.vn(); j++)
-		{
-			A(i,j) = model.bind->BihDistances[0].get(i,j);
-		}
-	}
 	*/
-
-	float res1total, res2total;
-
-	auto fin0 = high_resolution_clock::now();
-	
-	/*
-	clock_t ini0 = clock();
-
-	// SINGLE THREADED
-	for(int defId = 0; defId < defNodesSize; defId++ )
-	{
-		mvcOpt(graph.deformers[defId]->pos, MatrixWeights, defId, model);
-	}
-	
-	clock_t fin0 = clock();
-	*/
-
-	auto ini1 = high_resolution_clock::now();
-	// MVC - MULTI-THREAD
-	#pragma omp parallel for
-	for(int defId = 0; defId < defNodesSize; defId++ )
-	{
-		mvcOpt(graph.deformers[defId]->pos, MatrixWeights, defId, model);
-	}
-	auto fin1 = high_resolution_clock::now();
-		
-	////distancesTemp =  MatrixWeights.transpose()*A; (normal)
-	auto ini2 = high_resolution_clock::now();
-	distancesTemp =  A*MatrixWeights; // At*Bt = (B*A)t
-	auto fin2 = high_resolution_clock::now();
-	////distancesTemp.transposeInPlace(); 
-
-	auto ini3 = high_resolution_clock::now();
-	#pragma omp parallel for
-	for(int defId = 0; defId < defNodesSize; defId++ )
-	{
-		graph.deformers[defId]->precomputedDistances = distancesTemp.col(defId).transpose()*MatrixWeights.col(defId);
-	}
-	auto fin3 = high_resolution_clock::now();
-
-	auto ini4 = high_resolution_clock::now();
-	segmentModelFromDeformersOpt(model, model.bind, graph, distancesTemp);
-	auto fin4 = high_resolution_clock::now();
-
-	// Update Smooth propagation
-	auto ini5 = high_resolution_clock::now();
-	propagateHierarchicalSkinningOpt(model, model.bind, graph);
-	auto fin5 = high_resolution_clock::now();
-
-	auto ini6 = high_resolution_clock::now();
-	// Compute Secondary weights ... by now compute all the sec. weights
-	computeSecondaryWeights(model, model.bind, graph);
-	auto fin6 = high_resolution_clock::now();
-
-	// Calculo de tiempos-> microsegundos
-
-	auto ticks00 = duration_cast<microseconds>(fin0-ini0) ;
-	auto ticks01 = duration_cast<microseconds>(fin1-ini1) ;
-	auto ticks02 = duration_cast<microseconds>(fin2-ini2) ;
-	auto ticks03 = duration_cast<microseconds>(fin3-ini3) ;
-	auto ticks04 = duration_cast<microseconds>(fin4-ini4) ;
-	auto ticks05 = duration_cast<microseconds>(fin5-ini5) ;
-	auto ticks06 = duration_cast<microseconds>(fin6-ini6) ;
-
-	printf("0. Inicializacion: %fms\n", (double)ticks00.count()/1000.0);
-	printf("1. MVC: %fus -> media: %fms\n", (double)ticks01.count()/1000.0, (double)ticks01.count()/1000.0/defNodesSize);
-	printf("2. Matrix mult: %fms -> media: %fms\n", (double)ticks02.count()/1000.0, (double)ticks02.count()/1000.0/defNodesSize);
-	printf("3. Precomputed distances: %fms -> media: %fms\n", (double)ticks03.count()/1000.0, (double)ticks03.count()/1000.0/defNodesSize);
-	printf("4. Segmentation: %fms\n", (double)ticks04.count()/1000.0);
-	printf("5. Weights propagation: %fms\n", (double)ticks05.count()/1000.0);
-	printf("6. Secondary weights: %fms\n", (double)ticks06.count()/1000.0);
 
 }
 
@@ -2167,212 +1968,25 @@ void GLWidget::computeNodeMasiveOptimized(DefGraph& graph, Modelo& model, int de
 
 }
 
-
-//////////////////////////////////////////////
-//			ALL COMPUTATIONS          ////////
-//////////////////////////////////////////////
-void GLWidget::computeProcess() 
+void GLWidget::updateOutliner()
 {
-	
-	clock_t ini, fin;
-	/*if(CUDA_TESTS)
-	{
-
-		ejecutar_sgemmNN(12992);
-		return;
-
-		// Matrix mul tests
-		//int node = 0;
-		//int vert = 0;
-
-		//getPrecomputedDistance(node);
-		//getDistances(node, vert);
-		//return;
-
-		// Sorting tests
-		
-		//for(int i = 0; i< 25; i++)
-		//	doSorting(i*i*113);
-
-		//return;
-
-		Modelo* m =(Modelo*)escena->models[0]; 
-		vector<cudaModel> models(1);
-
-		getCompactRepresentation(models[0], *m);
-	}*/
-
-	/*
-	models[0].hostPositions = m->nodes.data();
-	
-	vector<PRECISION3> points(m->nodes.size());
-	modelo.nodes = points.data();
-
-	vector<int3> tri(m->triangles.size());
-	modelo.triangles = tri.data();
-
-	//modelo.nodes = (float3*)malloc(m->nodes.size()*sizeof(float3));
-	//modelo.triangles = (int3*)malloc(m->nodes.size()*sizeof(int3));
-
-	modelo.nv = m->nodes.size();
-	modelo.nt = m->triangles.size();
-
-	
-	// Copiamos los vertices
-	for(int i = 0; i< m->nodes.size(); i++)
-	{
-		modelo.nodes[i].x = m->nodes[i]->position.x();
-		modelo.nodes[i].y = m->nodes[i]->position.y();
-		modelo.nodes[i].z = m->nodes[i]->position.z();
-	}
-
-	// Copiamos los triangulos
-	for(int i = 0; i< m->triangles.size(); i++)
-	{
-		modelo.triangles[i].x = m->triangles[i]->verts[0]->id;
-		modelo.triangles[i].y = m->triangles[i]->verts[1]->id;
-		modelo.triangles[i].z = m->triangles[i]->verts[2]->id;
-	}
-	*/
-	/*
-	PRECISION3 point;
-	point.x = 0;
-	point.y = 0;
-	point.z = 0;
-
-	vector<PRECISION> weights(m->nodes.size());
-	ini = clock();   
-	cudaManager cudaMgr;
-	cudaMgr.loadModels(models.data(), models.size(), false);
-	fin = clock();
-
-	printf("allocate memory in cuda: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-	ini = clock();   
-	for(int i = 0; i< 1000; i++)
-	{
-		cudaMgr.cudaMVC(point, weights.data(), 0, i, false);
-	}
-	fin = clock();
-
-	printf("compute mvc: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-	ini = clock();
-	cudaMgr.freeModels();
-	fin = clock();
-    
-	printf("free memory: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-	FILE* fout;
-	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCuda.txt", "w");
-	fprintf(fout, "Coordenadas:\n");
-	for(int i = 0; i < m->nodes.size(); i++)
-		fprintf(fout, "%4.10f ", weights[i]);
-	fprintf(fout, "----------------\n");
-
-	weights.clear();
-
-	Vector3d point2(0,0,0);
-	vector<double> weights2(m->nodes.size());
-
-	ini = clock();
-	for(int i = 0; i< 1000; i++)
-		mvcAllBindings(point2, weights2, *m);
-	fin = clock();
-	printf("mean value coordinates en cpu: %4.8f s\n", timelapse(ini,fin)); fflush(0);
-
-	fclose(fout);
-	fout = fopen("C:\\Users\\chus\\Documents\\dev\\Data\\models\\weightsTempCPU.txt", "w");
-	fprintf(fout, "Coordenadas:\n");
-	for(int i = 0; i < m->nodes.size(); i++)
-		fprintf(fout, "%4.10f ", weights2[i]);
-	fprintf(fout, "----------------\n");
-	fclose(fout);
-
-	weights.clear();
-
-	//vector<double> embeddedPoint;
-	//mvcAllBindings(Vector3d(0,0,0), embeddedPoint, *((Modelo*)escena->models[0]));
-
-	return;
-
-}
-*/
-
-	//Testing new optimized processing
-	// AirRig creation
-
-	//lanzarProceso();
-	/*
-	if(cublas_example() == EXIT_FAILURE)
-		printf("Ha habido problemas\n.");
-	else
-		printf("Bien de momento\n.");
-	*/
-	//ejecutar_matrixVector(64*64);	
-	//ejecutar_sgemmNN(12992);
-
-	/*
-	printf("PRUEBAS DE CALCULO EN CPU\n");
-	printf("Multiplicacion vector.matrix.vector\n\n");
-	printf("Elements        Regular1        Regular2        Eigen        Ratio\n\n");
-	for(int i = 0; i< 15; i++)
-	{
-		eigenMultiplication((int)floor((512*32)/(15-i)));
-	}
-
-	return;
-	*/
-
-	if(escena->rig)
-		delete escena->rig;
-
-	escena->rig = NULL;
-
-	// Crear rig nuevo en el caso de que no exista
-	if(!escena->rig) escena->rig = new AirRig(scene::getNewId());
-
 	AirRig* rig = (AirRig*) escena->rig;
 
-	// Get values from UI
-	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
-
-	//Vincular a escena: modelo y esqueletos
-	 ini = clock();
-	//auto beginSktBinding = high_resolution_clock::now();
-	rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
-
-	// Build deformers structure for computations.
-	//rig->preprocessModelForComputations();
-	BuildGroupTree(rig->defRig);
-
-	//auto endSktBinding = high_resolution_clock::now();
-	//auto ticks = duration_cast<microseconds>(endSktBinding-beginSktBinding) ;
-
-	 fin = clock();
-	//printf("Preprocess: %d microseconds\n", ticks.count()); fflush(0);
-	printf("Preprocess: %f miliseconds\n", ((double)fin-ini)/CLOCKS_PER_SEC*1000); fflush(0);
-
-	int defNodesCount = 0;
-	for(int i = 0; i < rig->defRig.defGroups.size(); i++)
+	// Set Some parameters for better animation
+	/*for(int i = 0; i< rig->defRig.defGroups.size(); i++)
 	{
-		defNodesCount += rig->defRig.defGroups[i]->deformers.size();
-	}
+		int nodeIdAux = rig->defRig.defGroups[i]->nodeId;
+		int trandsfromIdAux = rig->defRig.defGroups[i]->transformation->nodeId;
+	}*/
+	emit updateSceneView();
+}
 
-	printf("# de vertices: %d\n", rig->model->nodes.size());
-	printf("# de huesos: %d\n", rig->defRig.defGroups.size());
-	printf("Tenemos %d nodos (o %d)\n", defNodesCount, rig->defRig.deformers.size()); fflush(0);
+void GLWidget::enableDeformationAfterComputing()
+{
 
-	ini = clock();
+	showInfo("Pesos computados...");
 
-	// Skinning computations
-	//updateAirSkinning(rig->defRig, *rig->model);
-
-	// Optimized Computation (just the first one)
-	computeNodeOptimized(rig->defRig, *rig->model, 0);
-
-	fin = clock();
-	printf("Process: %f ms\n", timelapse(ini,fin)*1000); fflush(0);
+	AirRig* rig = (AirRig*) escena->rig;
 
 	// TO REMOVE: This patch enables bulging just between the first and the second joint
 	rig->defRig.defGroups[1]->bulgeEffect = true;
@@ -2384,154 +1998,98 @@ void GLWidget::computeProcess()
 	rig->enableDeformation = true;
 	paintModelWithData();
 
-	// Set Some parameters for better animation
-	for(int i = 0; i< rig->defRig.defGroups.size(); i++)
-	{
-		int nodeIdAux = rig->defRig.defGroups[i]->nodeId;
-		int trandsfromIdAux = rig->defRig.defGroups[i]->transformation->nodeId;
-
-		//if(nodeIdAux == 178 || trandsfromIdAux == 178) rig->defRig.defGroups[i]->parentType = 1;
-		//if(nodeIdAux == 179 || trandsfromIdAux == 179) rig->defRig.defGroups[i]->parentType = 1;
-		//if(nodeIdAux == 182 || trandsfromIdAux == 182) rig->defRig.defGroups[i]->parentType = 1;
-		//if(nodeIdAux == 200 || trandsfromIdAux == 200) rig->defRig.defGroups[i]->parentType = 1;
-		//if(nodeIdAux == 110 || trandsfromIdAux == 110) rig->defRig.defGroups[i]->parentType = 1;
-	}
-
-	emit updateSceneView();
-
 	bDrawStatistics = true;
 
-	/*
+}
 
-	// Get all the parameters.
-	float subditionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
-	// Test de interpolacion
-	//testGridValuesInterpolation();
+//////////////////////////////////////////////
+//			ALL COMPUTATIONS          ////////
+//////////////////////////////////////////////
+void GLWidget::computeProcess() 
+{
+	bool localVerbose = true;
 
-	// Voxelize the model and compute HC.
-	if(!useMVC)
-	{
-		printf("Computing HC grid.\n"); fflush(0);
+	clock_t ini, fin;
 
-		// Just taking only the first model
-		Modelo* m = (Modelo*)escena->models[0];
+	// A. Volvemos a crear el rig de cero
+		if(escena->rig) delete escena->rig;
+		escena->rig = NULL;
+		if(!escena->rig) escena->rig = new AirRig(scene::getNewId());
+		AirRig* rig = (AirRig*) escena->rig;
+
+	// B. Get values from UI
+		float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
+
+	// C. Vincular a escena: modelo y esqueletos
+		if(localVerbose) ini = clock();
+		// Bind the current skeleton
+		rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
+
+		// Build deformers structure for computations.
+		BuildGroupTree(rig->defRig);
 		
-		// Gird visualizer creation
-		escena->visualizers.push_back((shadingNode*)new gridRenderer());
-		gridRenderer* grRend = (gridRenderer*)escena->visualizers.back();
-		grRend->iam = GRIDRENDERER_NODE;
-		grRend->model = m;
+		if(localVerbose) fin = clock();
 
-		// grid creation for computation
-		grRend->grid = new grid3d();
-		QString sGridFileName = (QString("%1%2_gridHC.bin").arg(m->sPath.c_str()).arg(m->sName.c_str()));
-		if(!QFile(sGridFileName).exists())
-			getHC_insideModel(*m, *grRend->grid, pow(2,6), sGridFileName.toStdString().c_str());
-		else
-			grRend->grid->LoadGridFromFile(sGridFileName.toStdString().c_str());
-	
+	if(localVerbose) 
+	{
+		printf("Preprocess: %f miliseconds\n", ((double)fin-ini)/CLOCKS_PER_SEC*1000); fflush(0);
 
-		m->HCgrid = grRend->grid;
-	}
-    
-	if(escena->models.size() <= 0) return;
-
-    printf("Preparing in data:\n"); fflush(0);
-	clock_t iniProcess = clock();
-    for(unsigned int i = 0; i< escena->models.size(); i++)
-    {
-        Modelo* m = (Modelo*)escena->models[i];
-        printf("Modelo: %s\n", m->sModelPrefix.c_str());
-
-		// Process to fusion several parts.
-        bool usePatches = false;
-        if(usePatches)
-        {
-			printf("Computing virtual triangles.\n");
-            AddVirtualTriangles(*m);
-        }
-		else
+		int defNodesCount = 0;
+		for(int i = 0; i < rig->defRig.defGroups.size(); i++)
 		{
-			printf("We consider the model as a single piece\n");
+			defNodesCount += rig->defRig.defGroups[i]->deformers.size();
 		}
 
-        // Si no se ha calculado las distancias biharmonicas lo hacemos
-        if(!m->computedBindings)
-        {
-            char bindingFileName[150];
-            char bindingFileNameComplete[150];
-            sprintf(bindingFileName, "%s/bind_%s", m->sPath.c_str(), m->sName.c_str());
-            sprintf(bindingFileNameComplete, "%s.bin", bindingFileName);
+		printf("# de vertices: %d\n", rig->model->nodes.size());
+		printf("# de huesos: %d\n", rig->defRig.defGroups.size());
+		printf("Tenemos %d nodos (o %d)\n", defNodesCount, rig->defRig.deformers.size()); fflush(0);
+	}
 
-            bool ascii = false;
+	// D. Launch the process
+		if(localVerbose) ini = clock();
 
-            // A. Intentamos cargarlo
-            ifstream myfile;
-            myfile.open (bindingFileNameComplete, ios::in |ios::binary);
-            bool loaded = false;
-            if (myfile.is_open())
-            {
-                // En el caso de existir simplemente tenemos que cargar las distancias.
-                loaded = LoadEmbeddings(*m, bindingFileNameComplete);
-            }
+		worker.bd = rig->model->bind;
+		worker.model = rig->model;
+		worker.rig = rig;
 
-            //B. En el caso de que no se haya cargado o haya incongruencias con lo real, lo recomputamos.
-            if(!loaded)
-            {
-                bool success = ComputeEmbeddingWithBD(*m);
-                if(!success)
-                {
-                    printf("[ERROR - computeProcess] No se ha conseguido computar el embedding\n");
-                    fflush(0);
-                    return;
-                }
-                else SaveEmbeddings(*m, bindingFileName, ascii);
-            }
-        }
+		// Disable deformations and updating
+		worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+		worker.rig->enableDeformation = false;
 
-		// That was a preprocess for the distances that could be recovered, 
-		// somehow there will be a reason for stabilize the data.
-        //normalizeDistances(*m);
+		showInfo("Computing weights...");	
 
-		printf("Linking skeletons with models:\n");
-        // de momento asignamos todos los esqueletos a todos los bindings... ya veremos luego.
-        for(int i = 0; i< escena->skeletons.size(); i++)
-        {
-            float minValue = GetMinSegmentLenght(getMinSkeletonSize((skeleton*)escena->skeletons[i]),0);
-            ((skeleton*)escena->skeletons[i])->minSegmentLength = subditionRatio * minValue;
+		// Do computations
+		worker.updateAllComputations();
 
-            for(int bind = 0; bind< m->bindings.size(); bind++)
-                m->bindings[bind]->bindedSkeletons.push_back((skeleton*)escena->skeletons[i]);
-        }
+		// Enable deformations and updating
+		enableDeformationAfterComputing();
+		updateOutliner();
 
-        for(int i = 0; i< m->bindings.size(); i++)
-        {
-            m->bindings[i]->weightsCutThreshold = 1;//escena->weightsThreshold;
-        }
+		showInfo("Weights computed...");	
 
-		clock_t finProcess = clock();
-        printf("Until here: %f s.\n Now computing skinning:\n", double(timelapse(iniProcess,finProcess)));
-		fflush(0);
+		//appMgr = new AppMgr();
+		//appMgr->setComputeMgr(&worker);
+		//connect(appMgr, SIGNAL(finished()), this, SLOT(enableDeformationAfterComputing()));
+		//appMgr->start();
 
-        // Realizamos el calculo para cada binding
-		clock_t ini = clock();
-        ComputeSkining(*m);
-		clock_t fin = clock();
+		if(localVerbose) fin = clock();
+		if(localVerbose) printf("Process: %f ms\n", timelapse(ini,fin)*1000); fflush(0);
 
-        //reportResults(*m, m->bindings[bind]);
+	/*
+	int defNodesSize = rig->defRig.deformers.size();
 
-        printf("Computed skinning has taken %f s.\n", double(timelapse(ini,fin)));
-        fflush(0);
+	// Matrix weights for comutations
+	MatrixXf MatrixWeights(rig->model->vn(), defNodesSize);
+	MatrixWeights.fill(0);
 
-		// save the binding computed
-		saveBinding( m->bindings[0], m->sPath+"/"+m->sName+"_binding.txt");
-    }
+	// Init subDistances
+	MatrixXf distancesTemp(rig->model->vn(), defNodesSize);
 
-    paintModelWithData();
-    //paintPlaneWithData();
-
+	// Optimized Computation (just the first one)
+	computeNodesOptimized(rig->defRig, *rig->model, MatrixWeights, distancesTemp);
 	*/
+
 }
 
 void GLWidget::paintPlaneWithData(bool compute)
@@ -3572,8 +3130,11 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 			group->smoothingPasses = localSmooth;
 			group->localSmooth = true;
 
+			/*
 			AirRig* rig = (AirRig*)escena->rig;
 			updateAirSkinning(rig->defRig, *rig->model);
+			*/
+			appMgr->start();
 		}
 	}
 
@@ -3592,7 +3153,8 @@ void GLWidget::setGlobalSmoothPasses(int value)
 				rig->defRig.defGroups[defIdx]->smoothingPasses = value;
 		}
 
-		updateAirSkinning(rig->defRig, *rig->model);
+		appMgr->start();
+		//updateAirSkinning(rig->defRig, *rig->model);
 	}
 
 	paintModelWithData();
@@ -4140,13 +3702,25 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 			group->expansion = expValue;
 
 			propagateExpansion(*group);
+			
+			// Disable deformations and updating
+			worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+			worker.rig->enableDeformation = false;
 
+			// Do computations
+			worker.updateAllComputations();
+
+			// Enable deformations and updating
+			enableDeformationAfterComputing();
+
+			/*
 			AirRig* rig = (AirRig*)escena->rig;
 			updateAirSkinning(rig->defRig, *rig->model);
+			*/
 		}
 	}
 
-	paintModelWithData();
+	//paintModelWithData();
 
 	/*
      for(unsigned int i = 0; i< selMgr.selection.size(); i++)

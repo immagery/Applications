@@ -11,6 +11,7 @@
 #include <DataStructures/Modelo.h>
 #include <DataStructures/grid3D.h>
 
+#include "AppMgr.h"
 #include <Computation/ComputationMgr.h>
 
 #include <QtGui\qopenglshaderprogram.h>
@@ -124,7 +125,7 @@ public:
 
 	//Computation Management
 	ComputationMgr worker;
-
+	AppMgr *appMgr;
 
 protected:
     //virtual void postSelection(const QPoint& point);
@@ -160,21 +161,26 @@ public slots:
 
 	//Metodos especificos
     virtual void doTests(string fileName, string name, string path);
-    void computeProcess();
 	void eigenMultiplication(int elements);
-	void computeWeights();
 
-	void computeNodeOptimized(DefGraph& graph, Modelo& model, int defId);
-	void computeNodeMasiveOptimized(DefGraph& graph, Modelo& model, int defId2);
-
-	void updateComputations();
-
+	void computeProcess(); // All air computation from scratch
+	void enableDeformationAfterComputing(); // Scene updating after computation
+	void updateOutliner();
+	
 	void initBulges(AirRig* rig);
 
+	void computeWeights();
+	void updateComputations();
+
+	// TOREMOVE
+	void computeNodeMasiveOptimized(DefGraph& graph, Modelo& model, int defId2);
+
 	virtual void selectElements(vector<unsigned int > lst);
+
 	void BuildTetrahedralization();
     void VoxelizeModel(Modelo *m, bool onlyBorders = true);
-    void exportWeightsToMaya();
+    
+	void exportWeightsToMaya();
     void UpdateVertexSource(int id);
     void importSegmentation(QString fileName);
     void updateColorLayersWithSegmentation(int maxIdx);

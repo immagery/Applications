@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     // si no hay parametros arrancamos la interfaz talcual.
     QApplication a(argc, argv);
     MainWindow w;
-    w.setWindowTitle("Coordinates test Toolbox");
+    w.setWindowTitle("AIR - Automatic and interactive rigging");
     w.show();
 
     return a.exec();
