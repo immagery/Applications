@@ -2047,7 +2047,7 @@ void GLWidget::computeProcess()
 	}
 
 	// D. Launch the process
-		if(localVerbose) ini = clock();
+		//if(localVerbose) ini = clock();
 
 		worker.bd = rig->model->bind;
 		worker.model = rig->model;
@@ -2073,8 +2073,8 @@ void GLWidget::computeProcess()
 		//connect(appMgr, SIGNAL(finished()), this, SLOT(enableDeformationAfterComputing()));
 		//appMgr->start();
 
-		if(localVerbose) fin = clock();
-		if(localVerbose) printf("Process: %f ms\n", timelapse(ini,fin)*1000); fflush(0);
+		//if(localVerbose) fin = clock();
+		//if(localVerbose) printf("Process: %f ms\n", timelapse(ini,fin)*1000); fflush(0);
 
 	/*
 	int defNodesSize = rig->defRig.deformers.size();
