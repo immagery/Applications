@@ -394,19 +394,40 @@ void GLWidget::setTool(ToolType ctx)
 void GLWidget::setToolCrtMode(int ctx)
 {
 	if(selMgr.currentTool == CTX_CREATE_SKT && sktCr->state != SKT_CR_IDDLE && sktCr->mode == SKT_CREATE)
-			finishRiggingTool();
+		finishRiggingTool();
 	
+	AirRig* currentRig = (AirRig*)escena->rig;
+	if(!sktCr->parentRig) sktCr->parentRig = currentRig;
+
+	// En el caso de que haya algo seleccionado...
+	if(selMgr.selection.size() > 0)
+	{
+		unsigned int nodeId = selMgr.selection[0]->nodeId;
+		if(selMgr.selection[0]->iam == DEFGROUP_NODE)
+		{
+			sktCr->parentNode = currentRig->defRig.defGroupsRef[nodeId];
+
+			// Crear un primer nodo del nodo seleccionado... es importante.
+			sktCr->addNewNode(sktCr->parentNode->getTranslation(false));
+		}
+	}
+	else sktCr->parentNode = NULL;
+
 	if(ctx == SKT_CREATE)
 	{
-		((AirRig*)escena->rig)->restorePoses();
+		// Restore poses over all the defGroups
+		currentRig->restorePoses();
 
-		// Restore deformation
-		if(!((AirRig*)escena->rig)->enableTwist)
-			((AirRig*)escena->rig)->airSkin->computeDeformations(((AirRig*)escena->rig));
+		/*
+		// Restore deformation to rest pose
+		if(!currentRig->enableTwist)
+			currentRig->airSkin->computeDeformations(currentRig);
 		else
-			((AirRig*)escena->rig)->airSkin->computeDeformationsWithSW(((AirRig*)escena->rig));
+			currentRig->airSkin->computeDeformationsWithSW(currentRig);
+			*/
+		currentRig->airSkin->resetDeformations();
 
-		((AirRig*)escena->rig)->enableDeformation = false;
+		currentRig->enableDeformation = false;
 
 		sktCr->state = SKT_CR_IDDLE;
 		preferredType = SHD_XRAY;
@@ -418,10 +439,13 @@ void GLWidget::setToolCrtMode(int ctx)
 		((AirRig*)escena->rig)->restorePoses();
 		
 		// Restore deformation
+		/*
 		if(!((AirRig*)escena->rig)->enableTwist)
 			((AirRig*)escena->rig)->airSkin->computeDeformations(((AirRig*)escena->rig));
 		else
 			((AirRig*)escena->rig)->airSkin->computeDeformationsWithSW(((AirRig*)escena->rig));
+		*/
+		currentRig->airSkin->resetDeformations();
 				
 		// Restore manipulator
 		if(selMgr.selection.size() > 0)
@@ -1659,12 +1683,12 @@ void GLWidget::computeWeights()
 
 	// 1. Revisar el rigg y marcar el trabajo a hacer.
 	//rig->getWorkToDo(worker.preprocessNodes, worker.segmentationNodes);
-	assert(false); // He quitado el material
 
 	// TOREMOVE: binds the model for computations-> this needs to be done just
 	// one time at the beginning to load all the data in GPU.
 	worker.setModelForComputations((Modelo*)escena->models[0]);
-	
+	worker.rig = rig;
+
 	// Updates all the necessary nodes depending on the dirty flags
 	worker.updateAllComputations();
 
@@ -3134,7 +3158,20 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 			AirRig* rig = (AirRig*)escena->rig;
 			updateAirSkinning(rig->defRig, *rig->model);
 			*/
-			appMgr->start();
+			//appMgr->start();
+
+			worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+			worker.rig->enableDeformation = false;
+
+			showInfo("Updating weights...");	
+
+			// Do computations
+			worker.updateAllComputations();
+
+			// Enable deformations and updating
+			enableDeformationAfterComputing();
+
+			showInfo("Weights updated...");	
 		}
 	}
 
@@ -3153,7 +3190,20 @@ void GLWidget::setGlobalSmoothPasses(int value)
 				rig->defRig.defGroups[defIdx]->smoothingPasses = value;
 		}
 
-		appMgr->start();
+		worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+		worker.rig->enableDeformation = false;
+
+		showInfo("Updating weights...");	
+
+		// Do computations
+		worker.updateAllComputations();
+
+		// Enable deformations and updating
+		enableDeformationAfterComputing();
+
+		showInfo("Weights updated...");	
+
+		//appMgr->start();
 		//updateAirSkinning(rig->defRig, *rig->model);
 	}
 

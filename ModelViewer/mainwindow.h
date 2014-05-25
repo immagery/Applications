@@ -36,6 +36,7 @@ public slots:
 	void toogleToShowSegmentation(bool toogle);
 
 	void changeExpansionSlider();
+	void changeExpansionSlider(int i);
 
 	void enableAdaptativeThreshold(bool toogle);
 
