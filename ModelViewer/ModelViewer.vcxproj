@@ -500,6 +500,7 @@
     <ClCompile Include="..\..\adri\render\skeletonRender.cpp" />
     <ClCompile Include="..\..\adri\utils\ioWeights.cpp" />
     <ClCompile Include="..\..\adri\utils\util.cpp" />
+    <ClCompile Include="..\..\adri\utils\utilGL.cpp" />
     <ClCompile Include="..\..\adri\utils\UtilQT.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\AirSegmentation.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\BiharmonicDistances.cpp" />
@@ -509,8 +510,11 @@
     <ClCompile Include="..\..\air\AirLib\Computation\HarmonicCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\MeanValueCoords.cpp" />
     <ClCompile Include="..\..\air\AirLib\Computation\mvc_interiorDistances.cpp" />
+    <ClCompile Include="..\..\air\AirLib\DataStructures\AirConstraint.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirRig.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\AirSkinning.cpp" />
+    <ClCompile Include="..\..\air\AirLib\DataStructures\DefGraph.cpp" />
+    <ClCompile Include="..\..\air\AirLib\DataStructures\defGroup.cpp" />
     <ClCompile Include="..\..\air\AirLib\DataStructures\spline.cpp" />
     <ClCompile Include="..\..\air\AirLib\gui\AirOutliner.cpp" />
     <ClCompile Include="..\..\air\AirLib\gui\manipulator.cpp" />
@@ -566,8 +570,11 @@
     <ClInclude Include="..\..\air\AirLib\Computation\BulgeDeformer.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\ComputationMgr.h" />
     <ClInclude Include="..\..\air\AirLib\Computation\spline.hpp" />
+    <ClInclude Include="..\..\air\AirLib\DataStructures\AirConstraint.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirRig.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\AirSkinning.h" />
+    <ClInclude Include="..\..\air\AirLib\DataStructures\DefGraph.h" />
+    <ClInclude Include="..\..\air\AirLib\DataStructures\DefGroup.h" />
     <ClInclude Include="..\..\air\AirLib\DataStructures\symMatrix.h" />
     <ClInclude Include="..\..\air\AirLib\gui\AirOutliner.h" />
     <ClInclude Include="..\..\air\AirLib\gui\manipulator.h" />

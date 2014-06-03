@@ -48,15 +48,18 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	escena->rig = new AirRig(scene::getNewId());
 
+	worker.rig = (AirRig*)escena->rig;
+
 
 	// Verbose flags
 	bDrawStatistics = false;
+	showBulgeInfo = false;
 
 	sktCr = new sktCreator();
 
 	m_currentShader = NULL;
 	preferredType = SHD_VERTEX_COLORS;
-	preferredNormalType = SHD_BASIC;
+	preferredNormalType = SHD_VERTEX_COLORS;
 
 	X_ALT_modifier = false;
 
@@ -430,7 +433,8 @@ void GLWidget::setToolCrtMode(int ctx)
 		currentRig->enableDeformation = false;
 
 		sktCr->state = SKT_CR_IDDLE;
-		preferredType = SHD_XRAY;
+		// TO_UNCOMMENT
+		//preferredType = SHD_XRAY;
 		AirRig::mode = MODE_CREATE;
 		setCursor(Qt::CrossCursor);
 	}
@@ -438,13 +442,9 @@ void GLWidget::setToolCrtMode(int ctx)
 	{
 		((AirRig*)escena->rig)->restorePoses();
 		
-		// Restore deformation
-		/*
-		if(!((AirRig*)escena->rig)->enableTwist)
-			((AirRig*)escena->rig)->airSkin->computeDeformations(((AirRig*)escena->rig));
-		else
-			((AirRig*)escena->rig)->airSkin->computeDeformationsWithSW(((AirRig*)escena->rig));
-		*/
+		// No esta inicializado todavia.
+		if(! currentRig->airSkin ) return;
+
 		currentRig->airSkin->resetDeformations();
 				
 		// Restore manipulator
@@ -460,7 +460,8 @@ void GLWidget::setToolCrtMode(int ctx)
 		((AirRig*)escena->rig)->enableDeformation = false;
 
 		sktCr->state = SKT_CR_IDDLE;
-		preferredType = SHD_XRAY;
+		// TO_UNCOMMENT
+		//preferredType = SHD_XRAY;
 		AirRig::mode = MODE_RIG;
 		setCursor(Qt::ArrowCursor);
 	}
@@ -1185,7 +1186,8 @@ void testGridValuesInterpolation()
 	*/
 }
 
-void GLWidget::paintModelWithData() {
+void GLWidget::paintModelWithData() 
+{
 
 	AirRig* rig = (AirRig*)escena->rig;
 	if(!rig) return;
@@ -1211,102 +1213,12 @@ void GLWidget::paintModelWithData() {
         vector<double> completedistances;
         double threshold = escena->weightsThreshold;//1/pow(10.0, 3);
 
-		if(escena->iVisMode == VIS_ISODISTANCES || escena->iVisMode == VIS_POINTDISTANCES || escena->iVisMode == VIS_ERROR || escena->iVisMode == VIS_WEIGHT_INFLUENCE)
-        {
-			/*
-            printf("tiempos de computacion para %d vertices: \n", m->vn()); fflush(0);
-
-            clock_t ini, fin;
-            ini = clock();
-
-            weights.resize(m->vn());
-            int currentbinding = 1;
-            pointdistances.resize(m->vn());
-            //pointdistances.resize(m->bindings[currentbinding]->pointdata.size());
-            //mvcsinglebinding(interiorpoint, weights, m->bindings[currentbinding], *m);
-            mvcAllBindings(interiorPoint, weights, m->bindings, *m);
-
-            fin = clock();
-            printf("mean value coordinates: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
-            ini = clock();
-
-            //for(int si = 0; si < weights.size(); si++)
-            //{
-            //	weightssort[si] = si;
-            //}
-            //doublearrangeelements(weights, weightssort, true, threshold);
-            vector<double> stats;
-            doubleArrangeElements_withStatistics(weights, weightssort, stats, threshold);
-
-
-            fin = clock();
-            printf("ordenacion: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
-            ini = clock();
-
-            double prevalue = 0;
-            for(int currentbinding = 0; currentbinding < m->bindings.size(); currentbinding++)
-            {
-                int iniidx = m->bindings[currentbinding]->globalIndirection.front();
-                int finidx = m->bindings[currentbinding]->globalIndirection.back();
-                prevalue += PrecomputeDistancesSingular_sorted(weights, weightssort,  m->bindings[currentbinding]->BihDistances, threshold);
-            }
-
-            fin = clock();
-            printf("precomputo: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
-            ini = clock();
-
-            for(int i = 0; i< m->modelVertexBind.size(); i++)
-            {
-                int ibind = m->modelVertexBind[i];
-                int iniidx = m->bindings[ibind]->globalIndirection.front();
-                int finidx = m->bindings[ibind]->globalIndirection.back();
-
-                int ivertexbind = m->modelVertexDataPoint[i];
-
-                pointdistances[i] = -BiharmonicDistanceP2P_sorted(weights, weightssort, ivertexbind , m->bindings[ibind], 1.0, prevalue, threshold);
-
-                maxdistances[ibind] = max(maxdistances[ibind],pointdistances[i]);
-                maxdistance = max(pointdistances[i], maxdistance);
-            }
-
-            fin = clock();
-            printf("calculo distancias: %f ms\n", timelapse(fin,ini)*1000); fflush(0);
-            ini = clock();
-
-            for(int md = 0; md< maxdistances.size(); md++)
-            {
-                printf("bind %d con maxdist: %f\n", md, maxdistances[md]);
-                fflush(0);
-            }
-			*/
-
-            if(escena->iVisMode == VIS_ERROR)
-            {
-				/*
-                completedistances.resize(m->vn());
-                double prevalue2 = 0;
-                for(int currentbinding = 0; currentbinding < m->bindings.size(); currentbinding++)
-                {
-                    int iniidx = m->bindings[currentbinding]->globalIndirection.front();
-                    int finidx = m->bindings[currentbinding]->globalIndirection.back();
-                    prevalue2 += PrecomputeDistancesSingular_sorted(weights, weightssort,  m->bindings[currentbinding]->BihDistances, -10);
-                }
-
-                for(int i = 0; i< m->modelVertexBind.size(); i++)
-                {
-                    int ibind = m->modelVertexBind[i];
-                    int iniidx = m->bindings[ibind]->globalIndirection.front();
-                    int finidx = m->bindings[ibind]->globalIndirection.back();
-
-                    int ivertexbind = m->modelVertexDataPoint[i];
-                    completedistances[i] = -BiharmonicDistanceP2P_sorted(weights, weightssort, ivertexbind , m->bindings[ibind], 1.0, prevalue2, -10);
-                }
-				*/
-            }
-        }
-
         double maxError = -9999;
         if(!m->bind) continue;
+
+		int minId = -1, maxId = -1;
+
+		//#pragma omp parallel for
         for(int count = 0; count< m->bind->pointData.size(); count++)
         {
             if(m->bind->pointData[count].isBorder)
@@ -1324,14 +1236,26 @@ void GLWidget::paintModelWithData() {
             }
             else if(escena->iVisMode == VIS_SEGMENTATION)
             {
-                newvalue = (pd.segmentId-100)*13;
-                value = ((float)(newvalue%50))/50.0;
+                newvalue = (pd.segmentId-FIRST_DEFNODE_ID);
+                value = ((float)(newvalue))/((float)rig->defRig.defNodesRef.size()-1);
+
+				if(minId < 0) minId = newvalue;
+				else minId = min(minId, newvalue);
+
+				if(maxId < 0) maxId = newvalue;
+				else maxId = max(maxId, newvalue);
             }
             else if(escena->iVisMode == VIS_BONES_SEGMENTATION)
             {
-				newvalue = (rig->defRig.defNodesRef[pd.segmentId]->boneId-100)*13;
-                //newvalue = (newvalue * 25) % 100;
-                value = ((float)(newvalue%25))/25.0;
+				if(rig->defRig.defNodesRef.find(pd.segmentId) != rig->defRig.defNodesRef.end())
+				{
+					newvalue = rig->defRig.defNodesRef[pd.segmentId]->boneId-FIRST_DEFGROUP_ID;
+					value = ((float)(newvalue))/((float)rig->defRig.defGroupsRef.size()-1);
+				}
+				else
+				{
+					value = 1.0;
+				}
             }
             else if(escena->iVisMode == VIS_WEIGHTS)
             {
@@ -1344,8 +1268,6 @@ void GLWidget::paintModelWithData() {
 						break;
 					}
 				}
-
-                //float sum = 0;
                 value = 0.0;
 
                 int searchedindex = -1;
@@ -1356,13 +1278,9 @@ void GLWidget::paintModelWithData() {
                         searchedindex = ce;
                         break;
                     }
-                    //sum += pd.influences[ce].weightvalue;
                 }
                 if(searchedindex >= 0)
                         value = pd.influences[searchedindex].weightValue;
-
-                //if (sum < 1)
-                //	printf("no se cumple la particion de unidad: %f.\n", sum);
             }
             else if(escena->iVisMode == VIS_SECW_WIDE)
             {
@@ -1386,7 +1304,6 @@ void GLWidget::paintModelWithData() {
                         searchedindex = ce;
                         break;
                     }
-                    //sum += pd.influences[ce].weightvalue;
                 }
                 if(searchedindex >= 0)
 				{
@@ -1406,16 +1323,13 @@ void GLWidget::paintModelWithData() {
             else if(escena->iVisMode == VIS_SECW_ALONG)
             {
 				value = 0.0;
-
-				int actualDesiredNumber = escena->desiredVertex;
-				
+				int actualDesiredNumber = escena->desiredVertex;		
 				for(int groupIdx = 0; groupIdx < rig->defRig.defGroups.size(); groupIdx++)
 				{
 					// parche para video
 					if(rig->defRig.defGroups[groupIdx]->relatedGroups.size() == 0) continue;
 
 					if(rig->defRig.defGroups[groupIdx]->relatedGroups[0]->nodeId == actualDesiredNumber)
-					//if(rig->defRig.defGroups[groupIdx]->transformation->nodeId == actualDesiredNumber)
 					{
 						actualDesiredNumber = rig->defRig.defGroups[groupIdx]->nodeId;
 						break;
@@ -1489,37 +1403,23 @@ void GLWidget::paintModelWithData() {
 					if(pd.secondInfluences[searchedindex].size()> 0)
 					{
 						if(valueAux < pd.secondInfluences[searchedindex].size())
-							value = pd.secondInfluences[searchedindex][valueAux].alongBone*pd.influences[searchedindex].weightValue;
+							value = pd.secondInfluences[searchedindex][valueAux].alongBone*
+									pd.influences[searchedindex].weightValue;
 						else
-							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1].alongBone*pd.influences[searchedindex].weightValue;
+							value = pd.secondInfluences[searchedindex][pd.secondInfluences[searchedindex].size()-1].alongBone*
+									pd.influences[searchedindex].weightValue;
 					}
 					else
 					{
 						value = 1.0*pd.influences[searchedindex].weightValue;
 					}
 				}
-                /*int modelvert = m->bindings[currentbinding]->pointData[count].node->id;
-
-                if(completedistances[modelvert] > 0)
-                    value = pointdistances[modelvert] - completedistances[modelvert];
-
-                maxError = max((double)maxError, (double)value);
-				*/
 
             }
             else if(escena->iVisMode == VIS_WEIGHT_INFLUENCE)
             {
-
-
                 int modelVert = m->bind->pointData[count].node->id;
                 value = weights[modelVert];
-                //if(maxDistance <= 0)
-                //	value = 0;
-                //else
-                //{
-                //	int modelVert = m->bindings[currentBinding]->pointData[count].modelVert;
-                //	value = pointDistances[modelVert] / maxDistances[currentBinding];
-                //}
             }
             else
             {
@@ -1534,6 +1434,8 @@ void GLWidget::paintModelWithData() {
             m->shading->colors[bd->mainSurface->nodes[count]->id][1] = g;
             m->shading->colors[bd->mainSurface->nodes[count]->id][2] = b;
         }
+
+		printf("Rango de valores de id: %d to %d de %d\n", minId, maxId, rig->defRig.defNodesRef.size());
     }
 }
 
@@ -1544,32 +1446,48 @@ void GLWidget::selectElements(vector<unsigned int > lst)
 
 	if( !escena || !escena->rig) return;
 
+	// For model painting
+	escena->desiredVertex = -1;
+
+	//// rig selection ////
 	AirRig* rig = (AirRig*)escena->rig;
-	// rig
+	for(int i = 0; i< rig->defRig.roots.size(); i++)
+		rig->defRig.roots[i]->select(false, rig->defRig.roots[i]->nodeId);
+
 	for(unsigned int i = 0; i< lst.size(); i++)
-    {
-		for(int group = 0; group < rig->defRig.defGroups.size(); group++)
+	{
+		if(rig->isSelectable(lst[i]))
 		{
-			if(rig->defRig.defGroups[group]->nodeId == lst[i])
-			{
-				// pos, rot, expansion, smoothing, twist
-				joint* jt = rig->defRig.defGroups[group]->transformation;
-				emit jointDataShow(rig->defRig.defGroups[group]->expansion, rig->defRig.defGroups[group]->nodeId);
+			// group selection
+			for(int ii = 0; ii< rig->defRig.defGroups.size(); ii++)
+				if(rig->defRig.defGroups[ii]->nodeId == lst[i])
+					rig->defRig.defGroups[ii]->select(true, lst[i]); 
+						// Importante porque sino deseleccionamos los defGroups hijos...
 
-				emit defGroupData(rig->defRig.defGroups[group]->iniTwist, 
-								  rig->defRig.defGroups[group]->finTwist, 
-								  rig->defRig.defGroups[group]->enableTwist,
-								  rig->defRig.defGroups[group]->smoothTwist,
-								  rig->defRig.defGroups[group]->smoothingPasses);
+			// Interface updating
+			float expansion = 0;
+			bool twistEnabled = false;
+			bool bulgeEnabled = false;
+			int localSmoothPases = 0;
+			float twistIni = 0;
+			float twistFin = 1;
 
-				double alfa,beta,gamma;
-				toEulerAngles(jt->qrot, alfa, beta, gamma);
-				emit jointTransformationValues(jt->pos[0], jt->pos[1], jt->pos[2], alfa, beta, gamma);
+			string sName;
+			rig->getDataFromDefGroup(lst[i], expansion, twistEnabled, bulgeEnabled, 
+									localSmoothPases, twistIni, twistFin);
 
-				selMgr.selection.push_back((object*)rig->defRig.defGroups[group]);
-			}
+			rig->getNodeData(lst[i], sName);
+
+			emit labelsFromSelectedUpdate(lst[i], sName);
+			emit defGroupValueUpdate(expansion, twistEnabled, 
+									 bulgeEnabled, localSmoothPases, twistIni, twistFin);
+
+			// Model color updating
+			escena->desiredVertex = lst[i];
 		}
 	}
+
+	paintModelWithData();
 }
 
 //////////////////////////////////////////////
@@ -1687,14 +1605,13 @@ void GLWidget::computeWeights()
 	// TOREMOVE: binds the model for computations-> this needs to be done just
 	// one time at the beginning to load all the data in GPU.
 	worker.setModelForComputations((Modelo*)escena->models[0]);
-	worker.rig = rig;
 
 	// Updates all the necessary nodes depending on the dirty flags
 	worker.updateAllComputations();
 
 	// 3.1. Set-up default deformations -> TODELETE 
-	for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
-		rig->defRig.defGroups[i]-> bulgeEffect = true;
+	//for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
+	rig->defRig.defGroups[0]-> bulgeEffect = true;
 	
 	// Bulge initialization over skinning computation
 	initBulges(rig);
@@ -2013,7 +1930,8 @@ void GLWidget::enableDeformationAfterComputing()
 	AirRig* rig = (AirRig*) escena->rig;
 
 	// TO REMOVE: This patch enables bulging just between the first and the second joint
-	rig->defRig.defGroups[1]->bulgeEffect = true;
+	//for(int i = 0; i< rig->defRig.defGroups.size(); i++)
+		rig->defRig.defGroups[0]->bulgeEffect = true;
 
 	// Bulge initialization over skinning computation
 	initBulges(rig);
@@ -2037,23 +1955,23 @@ void GLWidget::computeProcess()
 	clock_t ini, fin;
 
 	// A. Volvemos a crear el rig de cero
-		if(escena->rig) delete escena->rig;
-		escena->rig = NULL;
-		if(!escena->rig) escena->rig = new AirRig(scene::getNewId());
-		AirRig* rig = (AirRig*) escena->rig;
+	if(escena->rig) delete escena->rig;
+	escena->rig = NULL;
+	if(!escena->rig) escena->rig = new AirRig(scene::getNewId());
+	AirRig* rig = (AirRig*) escena->rig;
 
 	// B. Get values from UI
-		float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
+	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
 	// C. Vincular a escena: modelo y esqueletos
-		if(localVerbose) ini = clock();
-		// Bind the current skeleton
-		rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
+	if(localVerbose) ini = clock();
+	// C.1 - Bind the current skeleton
+	rig->bindRigToModelandSkeleton((Modelo*)escena->models[0], escena->skeletons, subdivisionRatio);
 
-		// Build deformers structure for computations.
-		BuildGroupTree(rig->defRig);
+	// C.2 - Build deformers structure for computations.
+	BuildGroupTree(rig->defRig);
 		
-		if(localVerbose) fin = clock();
+	if(localVerbose) fin = clock();
 
 	if(localVerbose) 
 	{
@@ -2078,13 +1996,19 @@ void GLWidget::computeProcess()
 		worker.rig = rig;
 
 		// Disable deformations and updating
-		worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+		for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
+			worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+
 		worker.rig->enableDeformation = false;
 
 		showInfo("Computing weights...");	
 
 		// Do computations
 		worker.updateAllComputations();
+
+		// Compute rest poses
+		worker.rig->saveRestPoses();
+		//worker.rig->restorePoses();
 
 		// Enable deformations and updating
 		enableDeformationAfterComputing();
@@ -3160,7 +3084,9 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 			*/
 			//appMgr->start();
 
-			worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+			for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
+				worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+
 			worker.rig->enableDeformation = false;
 
 			showInfo("Updating weights...");	
@@ -3190,7 +3116,9 @@ void GLWidget::setGlobalSmoothPasses(int value)
 				rig->defRig.defGroups[defIdx]->smoothingPasses = value;
 		}
 
-		worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+		for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
+				worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+
 		worker.rig->enableDeformation = false;
 
 		showInfo("Updating weights...");	
@@ -3753,9 +3681,17 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 
 			propagateExpansion(*group);
 			
+			if(!worker.rig)
+			{
+				printf("BUG: No esta bien inicializado el rig!");
+			}
+
 			// Disable deformations and updating
-			worker.rig->defRig.defGroups[1]->bulgeEffect = false;
+			for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
+				worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+
 			worker.rig->enableDeformation = false;
+			
 
 			// Do computations
 			worker.updateAllComputations();
@@ -4171,7 +4107,7 @@ void GLWidget::drawBulgePressurePlane(int idDeformer, int idGroup, Vector2i _Ori
 
 void GLWidget::draw2DGraphics()
 {
-	int groupIdx = 1;
+	int groupIdx = 0;
 	if(selMgr.selection.size() == 1)
 	{
 		if(selMgr.selection[0]->iam == DEFGROUP_NODE)
@@ -4189,7 +4125,8 @@ void GLWidget::draw2DGraphics()
 
 			if(foundIdx >= 0)
 			{
-				wireDeformer* curve = skin->bulge[foundIdx].groups[groupIdx]->defCurve;
+				BulgeGroup* def = skin->bulge[foundIdx].groups[groupIdx];
+				wireDeformer* curve = def->defCurve;
 				glPointSize(10);
 				glColor3f(1.0,0,0);
 				glBegin(GL_POINTS);
@@ -4219,13 +4156,21 @@ void GLWidget::draw2DGraphics()
 				glColor3f(1.0,0,0);
 				glBegin(GL_LINES);
 				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
-				glVertex3f(curve->pos.x()+curve->mDir.x()*length, curve->pos.y()+curve->mDir.y()*length, curve->pos.z()+curve->mDir.z()*length);
+				glVertex3f(curve->pos.x()+curve->mDir.x()*length, 
+						   curve->pos.y()+curve->mDir.y()*length, 
+						   curve->pos.z()+curve->mDir.z()*length);
+
 				glColor3f(1.0,1.0,0);
 				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
-				glVertex3f(curve->pos.x()+curve->mN.x()*height, curve->pos.y()+curve->mN.y()*height, curve->pos.z()+curve->mN.z()*height);
+				glVertex3f(curve->pos.x()+curve->mN.x()*height, 
+						   curve->pos.y()+curve->mN.y()*height, 
+						   curve->pos.z()+curve->mN.z()*height);
+
 				glColor3f(0.0,1.0,1.0);
 				glVertex3f(curve->pos.x(), curve->pos.y(), curve->pos.z());
-				glVertex3f(curve->pos.x()+rad.x(), curve->pos.y()+rad.y(), curve->pos.z()+rad.z());
+				glVertex3f(curve->pos.x()+rad.x(), 
+						   curve->pos.y()+rad.y(), 
+						   curve->pos.z()+rad.z());
 				glEnd();
 
 				// Pintamos la curva
@@ -4372,7 +4317,7 @@ void GLWidget::draw2DGraphics()
 	glDisable(GL_DEPTH_TEST);
 
 	// Dynamic creative rigg
-	if(sktCr && sktCr->dynRig) 
+	if(sktCr && sktCr->dynRig && AirRig::mode == MODE_CREATE) 
 	{
 		sktCr->dynRig->update();
 		for(unsigned int i = 0; i< sktCr->dynRig->defRig.defGroups.size(); i++)
@@ -4380,6 +4325,7 @@ void GLWidget::draw2DGraphics()
 			((DefGroupRender*)sktCr->dynRig->defRig.defGroups[i]->shading)->drawFunc();
 		}
 	}
+	
 
 	// AirRig de la escena
 	for(unsigned int i = 0; i< rig->defRig.defGroups.size(); i++)
@@ -4393,7 +4339,6 @@ void GLWidget::draw2DGraphics()
 		// quizás hay que quitar opciones de zbuffer para pintar siempre
 		// encima de todo
 		// Hay seleccion
-		ToolManip.size = 3;
 		ToolManip.drawFunc();
 	}
 
@@ -4402,7 +4347,8 @@ void GLWidget::draw2DGraphics()
 	// draw the buffers
 	//glDrawArrays( GL_TRIANGLES, 0, 3);
 
-	draw2DGraphics();
+	if(showBulgeInfo)
+		draw2DGraphics();
 
  }
 
@@ -4433,6 +4379,9 @@ void GLWidget::finishRiggingTool()
 
 	//printf("Finalizando operacion\n");
 	sktCr->finishRig();
+
+	//TODEBUG -> lo idel seria que se hiciera al principio al aplicar la herramienta
+	worker.model = (Modelo*)escena->models.front();
 
 	// Deseleccionar todo.
 	for(int i = 0; i< selMgr.selection.size(); i++)
@@ -4587,6 +4536,7 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 
 			if(node >= 0 && node <10)
 			{
+				//printf("AxisNode selected\n");
 				ToolManip.bModifierMode = true;
 
 				qglviewer::Vec orig, dir, selectedPoint;
@@ -4599,10 +4549,10 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 
 				Vector3d rayOrigin(orig.x, orig.y, orig.z);
 				Vector3d rayDir(dir.x, dir.y, dir.z);
-				ToolManip.setManipulator(rayOrigin, rayDir);
+				ToolManip.startManipulator(rayOrigin, rayDir);
 
 				//Ver si es un manipulador.
-				printf("Es el elemento %d del manipulador\n", node);
+				//printf("Es el elemento %d del manipulador\n", node);
 			}
 		}
 	}
@@ -4621,6 +4571,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 			qglviewer::Vec orig, dir, selectedPoint;
 			camera()->convertClickToLine(QPoint(e->pos().x(), e->pos().y()), orig, dir);
 
+			// No movement
 			if(e->pos().x() == ToolManip.pressMouse.x() && e->pos().y() == ToolManip.pressMouse.y() )
 				return;
 
@@ -4630,7 +4581,25 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 			ToolManip.moveManipulator(rayOrigin, rayDir);
 
 			// Transform the object
-			ToolManip.applyTransformation(selMgr.selection[0]);
+			ToolManip.applyTransformation(selMgr.selection[0], ToolManip.type, ToolManip.mode);
+
+			sktCr->parentRig->dirtyFlag = true;
+			sktCr->parentRig->update();
+
+			
+			AirRig* currentRig = ((AirRig*) sktCr->parentRig);
+			if(currentRig && (sktCr->mode == SKT_CREATE || sktCr->mode == SKT_RIGG))
+			{
+				//1.Process rig->anim mode
+				currentRig->saveRestPoses();
+				computeWeights();
+
+				//2.Process anim->rig mode
+				currentRig->restorePoses();
+				currentRig->airSkin->resetDeformations();
+
+				paintModelWithData();
+			}
 
 			return;
 		}
@@ -4710,9 +4679,10 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 						ToolManip.setFrame(m->pos, m->qrot, Vector3d(1,1,1));
 				
 						printf("Model %d selected\n", node);
+
 					}
 				}
-				else
+				else // CTX_CREATE
 				{
 					if(node > 0)
 					{
@@ -4807,31 +4777,39 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 							// Add the the existing joint to the temporal dynamic skeleton
 							sktCr->addNewNode(dg->getTranslation(false));
 
+							/*
 							for(int i = 0; i< selMgr.selection.size(); i++)
 							{
 								if(selMgr.selection[i])
 									selMgr.selection[i]->select(false, selMgr.selection[i]->nodeId);
-							}
+							}*/
+							vector<unsigned int > lst;
+							lst.push_back(sktCr->parentNode->nodeId);
+							selectElements(lst);
 					
-							selMgr.selection.clear();
+							//selMgr.selection.clear();
 							selMgr.selection.push_back(sktCr->parentNode);
 
 							return;
 						}
 						else // Modo animacion o test -> seleccion y cargar manipulador
 						{
+							vector<unsigned int > lst;
+							lst.push_back(dg->nodeId);
+							selectElements(lst);
+
 							// Tenemos seleccionado un defGroup, lo vinculamos al manipulador...
 							selMgr.selection.push_back(dg);
 							dg->select(true, dg->nodeId);
 							sktCr->state = SKT_CR_SELECTED;
 
-							object* m = dg;
-
 							ToolManip.bModifierMode = false;
 							ToolManip.bEnable = true;
-							ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
+							ToolManip.setFrame(dg->getTranslation(false), 
+											   dg->getRotation(false), Vector3d(1,1,1));
 				
-							printf("DefGroup %d selected\n", node);
+
+							//printf("DefGroup %d selected\n", node);
 						}
 					}
 					else // no se ha seleccionado nada
@@ -4943,23 +4921,30 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 
 						sktCr->state == SKT_CR_IDDLE;
 
-						printf("DefGroup deselected\n");
+						vector<unsigned int > lst;
+						//printf("DefGroup deselected\n");
 
 						// Cambio la seleccion
 						if(dg != NULL)
 						{
-							selMgr.selection.push_back(dg);
 							dg->select(true, dg->nodeId);
+							lst.push_back(dg->nodeId);
+							selectElements(lst);
+
+							selMgr.selection.push_back(dg);
 
 							ToolManip.bModifierMode = false;
 							ToolManip.bEnable = true;
 							ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
-
+							
 							sktCr->state == SKT_CR_SELECTED;
 
-							printf("Nueva Seleccion: %d\n", dg->nodeId);
+							//printf("Nueva Seleccion: %d\n", dg->nodeId);
 						}
-
+						else
+						{
+							selectElements(lst);
+						}
 					}
 				}
 			}

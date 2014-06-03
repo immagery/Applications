@@ -97,6 +97,8 @@ public:
 	bool pressed;
 	bool dragged;
 
+	bool showBulgeInfo;
+
 	virtual void mouseReleaseEvent(QMouseEvent* e);
 	virtual void mousePressEvent(QMouseEvent* e);
 	virtual void mouseMoveEvent(QMouseEvent* e);
@@ -120,8 +122,13 @@ public:
 	QOpenGLBuffer m_vertexColorBuffer;
 	QOpenGLVertexArrayObject m_vao;
 
-	virtual void traceRayToObject(Geometry* geom, Vector2i& pt , Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx);
-	virtual void getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point);
+	virtual void traceRayToObject(Geometry* geom, Vector2i& pt , 
+								  Vector3d& rayDir, vector<Vector3d>& intersecPoints, 
+								  vector<int>& triangleIdx);
+
+	virtual void getFirstMidPoint(Geometry* geom, Vector3d& rayDir, 
+								  vector<Vector3d>& intersecPoints, 
+								  vector<int>& triangleIdx, Vector3d& point);
 
 	//Computation Management
 	ComputationMgr worker;
@@ -133,8 +140,11 @@ protected:
 	virtual void drawWithNames();
 
 	virtual void draw2DGraphics();
-	virtual void drawBulgeCurve(int idDeformer, int idGroup, Vector2i Origin, Vector2i rectSize);
-	virtual void drawBulgePressurePlane(int idDeformer, int idGroup, Vector2i Origin,Vector2i rectSize);
+	virtual void drawBulgeCurve(int idDeformer, int idGroup, 
+								Vector2i Origin, Vector2i rectSize);
+
+	virtual void drawBulgePressurePlane(int idDeformer, int idGroup, 
+										Vector2i Origin,Vector2i rectSize);
 
 	virtual void setShaderConfiguration(shaderIdx type);
 	virtual void prepareShaderProgram();
@@ -193,6 +203,14 @@ public slots:
 
     virtual void changeSmoothPropagationDistanceRatio(float smoothRatioValue);
 	virtual void changeExpansionFromSelectedJoint(float expValue);
+
+	virtual void setSceneScale(float scale)
+	{
+		escena->sceneScale = scale;
+		ToolManip.size = scale;
+		scene::drawingNodeStdSize = scale;
+	}
+
 
 };
 

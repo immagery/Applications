@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 
 	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
 
-    connect(ui->glCustomWidget, SIGNAL(jointDataShow(float, int)), this , SLOT(jointDataUpdate(float,int)));
+    //connect(ui->glCustomWidget, SIGNAL(jointDataShow(float, int)), this , SLOT(jointDataUpdate(float,int)));
 
 	connect(ui->ip_axisX, SIGNAL(valueChanged(int)), this, SLOT(changeInteriorPointPosition()));
 	connect(ui->ip_axisY, SIGNAL(valueChanged(int)), this, SLOT(changeInteriorPointPosition()));
@@ -78,6 +78,13 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	
 	connect(ui->positionPlaneSlider, SIGNAL(sliderMoved(int)), this, SLOT(changeSelPointForPlane(int)));
 
+	connect(ui->bonesSubdivisionRatio, SIGNAL(editingFinished()), this, SLOT(UpdateSceneScale()));
+	
+
+	// Control for button radios, for transformations and rotations mode.
+	connect(ui->single_transform, SIGNAL(clicked()), this, SLOT(changeTransformationMode()));
+	connect(ui->hierarchy_transform, SIGNAL(clicked()), this, SLOT(changeTransformationMode()));
+
 	connectSignals();
 
 	ui->defNodesSize->setValue(scene::drawingNodeStdSize*1000);
@@ -86,6 +93,8 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 void MainWindow::Compute()
 {
 	widget->computeProcess();
+
+	toogleCreateSkeletonTool();
 }
 
 MainWindow::~MainWindow()
@@ -113,6 +122,24 @@ void MainWindow::updateSceneView()
     emit ui->outlinerView->dataChanged(ui->outlinerView->rootIndex(), ui->outlinerView->rootIndex());
     repaint();
     // Hay que actualizar la vista para que aparezca todo.
+}
+
+void MainWindow::UpdateSceneScale()
+{
+	float value = ui->bonesSubdivisionRatio->text().toFloat();
+	ui->glCustomWidget->setSceneScale(value);
+}
+
+void MainWindow::changeTransformationMode()
+{
+	if(ui->single_transform->isChecked())
+	{
+		((GLWidget*)ui->glCustomWidget)->ToolManip.mode = TM_SINGLE; 
+	}
+	else if(ui->hierarchy_transform->isChecked())
+	{
+		((GLWidget*)ui->glCustomWidget)->ToolManip.mode = TM_HIERARCHY; 
+	}
 }
 
 void MainWindow::UpdateScene()

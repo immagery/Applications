@@ -27,6 +27,8 @@ public slots:
 	virtual void keyPressEvent(QKeyEvent* event);
 
 	virtual void UpdateScene();
+	void UpdateSceneScale();
+	void changeTransformationMode();
 	virtual void changeAuxValueInt(int value);
 
 	void updateClipingPlaneData();
