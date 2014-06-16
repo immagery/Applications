@@ -1435,7 +1435,7 @@ void GLWidget::paintModelWithData()
             m->shading->colors[bd->mainSurface->nodes[count]->id][2] = b;
         }
 
-		printf("Rango de valores de id: %d to %d de %d\n", minId, maxId, rig->defRig.defNodesRef.size());
+		//printf("Rango de valores de id: %d to %d de %d\n", minId, maxId, rig->defRig.defNodesRef.size());
     }
 }
 
@@ -4294,9 +4294,10 @@ void GLWidget::draw2DGraphics()
 	AirRig* rig = (AirRig*)escena->rig;
 
 	if(rig) 
-	{
+	{FreadMO
 		for(int j = 0; j < rig->defRig.roots.size(); j++) 
 		{
+			//rig->defRig.roots[j]->computeWorldPosNonRoll(rig->defRig.roots[j]);
 			rig->defRig.roots[j]->computeWorldPos(rig->defRig.roots[j]);
 		}
 
@@ -4585,7 +4586,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 
 			sktCr->parentRig->dirtyFlag = true;
 			sktCr->parentRig->update();
-
 			
 			AirRig* currentRig = ((AirRig*) sktCr->parentRig);
 			if(currentRig && (sktCr->mode == SKT_CREATE || sktCr->mode == SKT_RIGG))
@@ -4996,7 +4996,11 @@ void GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3
 
 }
 
- void GLWidget::traceRayToObject(Geometry* geom, Vector2i& pt , Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx)
+ void GLWidget::traceRayToObject(Geometry* geom, 
+								 Vector2i& pt , 
+								 Vector3d& rayDir, 
+								 vector<Vector3d>& intersecPoints, 
+								 vector<int>& triangleIdx)
  {
   
   qglviewer::Vec orig, dir, selectedPoint;
@@ -5687,8 +5691,9 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 			skt->dirtyFlag = true;
 			skt->propagateDirtyness();
 
-			skt->root->computeRestPos();
 			skt->root->computeWorldPos();
+			skt->root->computeRestPos();
+
 			//ComputeWithWorldOrientedRotations(skt->root);
 
 		 }
