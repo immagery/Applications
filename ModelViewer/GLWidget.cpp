@@ -48,8 +48,8 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	escena->rig = new AirRig(scene::getNewId());
 
-	worker.rig = (AirRig*)escena->rig;
-
+	// TODEBUG_WORKERS
+	//worker.rig = (AirRig*)escena->rig;
 
 	// Verbose flags
 	bDrawStatistics = false;
@@ -547,8 +547,28 @@ void GLWidget::setContextMode(contextMode ctx)
  }
  
 
+void GLWidget::LaunchTests()
+{
+	vector<string> meshes;   
+	string result; 
+
+	string prefix = "C:/Users/chus/Documents/dev/Data/models/22_harry_pieces/closed_pieces/";
+
+	for(int i = 0; i< 35; i++)
+		meshes.push_back(QString("%1h%2.off").arg(prefix.c_str()).arg(i,2,10,QChar('0')).toStdString());
+
+	result = prefix + "toda_la_maya.off";
+
+	MergeMeshes(meshes, result);
+
+	return;
+}
+
 void GLWidget::doTests(string fileName, string name, string path) 
 {
+	LaunchTests();
+	return;
+
 	// Load 2 cylinders, with colored faces.
 
 
@@ -1429,10 +1449,21 @@ void GLWidget::paintModelWithData()
             float r,g,b;
             GetColourGlobal(value,0.0,1.0, r, g, b);
             //QColor c(r,g,b);
-            m->shading->colors[bd->mainSurface->nodes[count]->id].resize(3);
-            m->shading->colors[bd->mainSurface->nodes[count]->id][0] = r;
-            m->shading->colors[bd->mainSurface->nodes[count]->id][1] = g;
-            m->shading->colors[bd->mainSurface->nodes[count]->id][2] = b;
+
+			//int surfIdx = bd->pointData[count].component;
+			//int vertIdxOnPiece = bd->pointData[count].component;
+
+			//int idx = 0;
+			//if(surfIdx > 0 && surfIdx < bd->surfaces.size())
+			//	idx = surfIdx;
+
+			//if(count < bd->surfaces[idx].nodes.size())
+			//{
+				m->shading->colors[bd->pointData[count].node->id].resize(3);
+				m->shading->colors[bd->pointData[count].node->id][0] = r;
+				m->shading->colors[bd->pointData[count].node->id][1] = g;
+				m->shading->colors[bd->pointData[count].node->id][2] = b;
+			//}
         }
 
 		//printf("Rango de valores de id: %d to %d de %d\n", minId, maxId, rig->defRig.defNodesRef.size());
@@ -1602,12 +1633,20 @@ void GLWidget::computeWeights()
 	// 1. Revisar el rigg y marcar el trabajo a hacer.
 	//rig->getWorkToDo(worker.preprocessNodes, worker.segmentationNodes);
 
-	// TOREMOVE: binds the model for computations-> this needs to be done just
-	// one time at the beginning to load all the data in GPU.
-	worker.setModelForComputations((Modelo*)escena->models[0]);
+	// Create enough workers to work with this model.
+	compMgr.resize(((Modelo*)escena->models[0])->bind->surfaces.size());
 
-	// Updates all the necessary nodes depending on the dirty flags
-	worker.updateAllComputations();
+	for(int surfIdx = 0; surfIdx < compMgr.size(); surfIdx++)
+	{
+		// Assign the rig
+		compMgr[surfIdx].rig = rig;
+
+		// Assign the model and bind for computations
+		compMgr[surfIdx].setModelForComputations((Modelo*)escena->models[0], surfIdx);
+
+		// Updates all the necessary nodes depending on the dirty flags
+		compMgr[surfIdx].updateAllComputations();
+	}
 
 	// 3.1. Set-up default deformations -> TODELETE 
 	//for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
@@ -4294,7 +4333,7 @@ void GLWidget::draw2DGraphics()
 	AirRig* rig = (AirRig*)escena->rig;
 
 	if(rig) 
-	{FreadMO
+	{
 		for(int j = 0; j < rig->defRig.roots.size(); j++) 
 		{
 			//rig->defRig.roots[j]->computeWorldPosNonRoll(rig->defRig.roots[j]);
@@ -5579,130 +5618,137 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 
  }
 
+
+ void GLWidget::readSnakes(string fileName, string name, string path)
+ {
+	QString newPath( path.c_str());
+	newPath = newPath +"/";
+
+	QFile modelDefFile((fileName).c_str());
+	if(modelDefFile.exists())
+	{
+	modelDefFile.open(QFile::ReadOnly);
+	QTextStream in(&modelDefFile);
+
+	QString sModelFile = in.readLine();
+	QString sSceneName = in.readLine();
+
+	// Leer modelo
+	readModel( (newPath+sModelFile).toStdString(), sSceneName.toStdString(), newPath.toStdString());
+
+	int count = in.readLine().toInt();
+
+	QStringList flags = in.readLine().split(" ");
+			
+	vector<QString> names(count*3+1);
+	vector<Vector3d> points(count*3+1);
+
+	names[0] = flags[0];
+	points[0] = Vector3d(flags[1].toDouble(), flags[2].toDouble(), flags[3].toDouble());
+
+	for(int idx = 0 ; idx < count*3 ; idx++)
+	{
+		QStringList flags2 = in.readLine().split(" ");
+		names[idx+1] = flags2[0];
+		points[idx+1] = Vector3d(flags2[1].toDouble(), flags2[2].toDouble(), flags2[3].toDouble());
+	}
+
+	escena->skeletons.resize(1);
+	escena->skeletons[0] = new skeleton(scene::getNewId());
+	skeleton* skt = escena->skeletons[0];
+
+	skt->root = new joint(scene::getNewId(T_BONE));
+	skt->root->sName = names[0].toStdString();
+	skt->root->worldPosition = points[0];
+	skt->joints.push_back(skt->root);
+	skt->jointRef[skt->root->nodeId] = skt->root;
+
+	skt->root->pos = skt->root->worldPosition;
+
+	for(int i = 0; i< count; i++)
+	{
+		QString baseName = names[i*3+1];
+		QString morroName = names[i*3+2];
+		QString mandibulaName = names[i*3+3];
+
+		Vector3d basePoint = points[i*3+1];
+		Vector3d morroPoint = points[i*3+2];
+		Vector3d mandibulaPoint = points[i*3+3];
+
+		joint* jt = new joint(skt->root, scene::getNewId(T_BONE));
+		jt->sName = baseName.toStdString();
+		jt->worldPosition = basePoint;
+		jt->dirtyFlag = true;
+		skt->root->childs.push_back(jt);
+		skt->joints.push_back(jt);
+		skt->jointRef[jt->nodeId] = jt;
+
+		jt->pos = jt->worldPosition - skt->root->worldPosition;
+
+		joint* lastJt = jt;
+
+		int numOfDivisions = 22;
+
+		Vector3d dir = morroPoint - basePoint;
+		Vector3d incr = dir/(numOfDivisions+2);
+
+		for(int j = 0; j< numOfDivisions; j++)
+		{
+			joint* jt2 = new joint(lastJt, scene::getNewId(T_BONE));
+			jt2->sName = (baseName + QString("_00%1").arg(j)).toStdString();
+			jt2->worldPosition = basePoint + incr*(j+1);			
+			jt2->dirtyFlag = true;
+			lastJt->childs.push_back(jt2);
+			jt2->pos = jt2->worldPosition - lastJt->worldPosition;
+			lastJt = jt2;
+
+			skt->joints.push_back(jt2);
+			skt->jointRef[jt2->nodeId] = jt2;
+		}
+
+		joint* jt2 = new joint(lastJt, scene::getNewId(T_BONE));
+		jt2->sName = morroName.toStdString();
+		jt2->worldPosition = morroPoint;
+		jt2->pos = jt2->worldPosition - lastJt->worldPosition;
+		jt2->dirtyFlag = true;
+		lastJt->childs.push_back(jt2);
+		skt->joints.push_back(jt2);
+		skt->jointRef[jt2->nodeId] = jt2;
+
+		joint* jt3 = new joint(lastJt, scene::getNewId(T_BONE));
+		jt3->sName = mandibulaName.toStdString();
+		jt3->worldPosition = mandibulaPoint;
+		jt3->pos = jt3->worldPosition - lastJt->worldPosition;
+		jt3->dirtyFlag = true;
+		lastJt->childs.push_back(jt3);
+		skt->joints.push_back(jt3);
+		skt->jointRef[jt3->nodeId] = jt3;
+	}
+
+	skt->dirtyFlag = true;
+	skt->propagateDirtyness();
+
+	skt->root->computeWorldPos();
+	skt->root->computeRestPos();
+
+	//ComputeWithWorldOrientedRotations(skt->root);
+
+	}
+		
+	updateSceneView(); 
+}
+
+
  void GLWidget::readScene(string fileName, string name, string path)
  {
 	 // temporal para construir la serpiente
 	 if(QString(fileName.c_str()).right(3) == "snk")
 	 {
-		QString newPath( path.c_str());
-		newPath = newPath +"/";
-
-		 QFile modelDefFile((fileName).c_str());
-		 if(modelDefFile.exists())
-		 {
-			modelDefFile.open(QFile::ReadOnly);
-			QTextStream in(&modelDefFile);
-
-			QString sModelFile = in.readLine();
-			QString sSceneName = in.readLine();
-
-			// Leer modelo
-			readModel( (newPath+sModelFile).toStdString(), sSceneName.toStdString(), newPath.toStdString());
-
-			int count = in.readLine().toInt();
-
-			QStringList flags = in.readLine().split(" ");
-			
-			vector<QString> names(count*3+1);
-			vector<Vector3d> points(count*3+1);
-
-			names[0] = flags[0];
-			points[0] = Vector3d(flags[1].toDouble(), flags[2].toDouble(), flags[3].toDouble());
-
-			for(int idx = 0 ; idx < count*3 ; idx++)
-			{
-				QStringList flags2 = in.readLine().split(" ");
-				names[idx+1] = flags2[0];
-				points[idx+1] = Vector3d(flags2[1].toDouble(), flags2[2].toDouble(), flags2[3].toDouble());
-			}
-
-			escena->skeletons.resize(1);
-			escena->skeletons[0] = new skeleton(scene::getNewId());
-			skeleton* skt = escena->skeletons[0];
-
-			skt->root = new joint(scene::getNewId(T_BONE));
-			skt->root->sName = names[0].toStdString();
-			skt->root->worldPosition = points[0];
-			skt->joints.push_back(skt->root);
-			skt->jointRef[skt->root->nodeId] = skt->root;
-
-			skt->root->pos = skt->root->worldPosition;
-
-			for(int i = 0; i< count; i++)
-			{
-				QString baseName = names[i*3+1];
-				QString morroName = names[i*3+2];
-				QString mandibulaName = names[i*3+3];
-
-				Vector3d basePoint = points[i*3+1];
-				Vector3d morroPoint = points[i*3+2];
-				Vector3d mandibulaPoint = points[i*3+3];
-
-				joint* jt = new joint(skt->root, scene::getNewId(T_BONE));
-				jt->sName = baseName.toStdString();
-				jt->worldPosition = basePoint;
-				jt->dirtyFlag = true;
-				skt->root->childs.push_back(jt);
-				skt->joints.push_back(jt);
-				skt->jointRef[jt->nodeId] = jt;
-
-				jt->pos = jt->worldPosition - skt->root->worldPosition;
-
-				joint* lastJt = jt;
-
-				int numOfDivisions = 22;
-
-				Vector3d dir = morroPoint - basePoint;
-				Vector3d incr = dir/(numOfDivisions+2);
-
-				for(int j = 0; j< numOfDivisions; j++)
-				{
-					joint* jt2 = new joint(lastJt, scene::getNewId(T_BONE));
-					jt2->sName = (baseName + QString("_00%1").arg(j)).toStdString();
-					jt2->worldPosition = basePoint + incr*(j+1);			
-					jt2->dirtyFlag = true;
-					lastJt->childs.push_back(jt2);
-					jt2->pos = jt2->worldPosition - lastJt->worldPosition;
-					lastJt = jt2;
-
-					skt->joints.push_back(jt2);
-					skt->jointRef[jt2->nodeId] = jt2;
-				}
-
-				joint* jt2 = new joint(lastJt, scene::getNewId(T_BONE));
-				jt2->sName = morroName.toStdString();
-				jt2->worldPosition = morroPoint;
-				jt2->pos = jt2->worldPosition - lastJt->worldPosition;
-				jt2->dirtyFlag = true;
-				lastJt->childs.push_back(jt2);
-				skt->joints.push_back(jt2);
-				skt->jointRef[jt2->nodeId] = jt2;
-
-				joint* jt3 = new joint(lastJt, scene::getNewId(T_BONE));
-				jt3->sName = mandibulaName.toStdString();
-				jt3->worldPosition = mandibulaPoint;
-				jt3->pos = jt3->worldPosition - lastJt->worldPosition;
-				jt3->dirtyFlag = true;
-				lastJt->childs.push_back(jt3);
-				skt->joints.push_back(jt3);
-				skt->jointRef[jt3->nodeId] = jt3;
-			}
-
-			skt->dirtyFlag = true;
-			skt->propagateDirtyness();
-
-			skt->root->computeWorldPos();
-			skt->root->computeRestPos();
-
-			//ComputeWithWorldOrientedRotations(skt->root);
-
-		 }
-		
-		updateSceneView(); 
-		
+		readSnakes(fileName, name, path);
 		return;
 	 }
 	 
+	 // Proceso normal
 	 QFile modelDefFile(fileName.c_str());
      if(modelDefFile.exists())
      {
@@ -5760,8 +5806,31 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 
 		// Constuir datos sobre el modelo
         Modelo* m = ((Modelo*)escena->models.back());
-        m->sPath = newPath.toStdString(); // importante para futuras referencias
+        m->sPath = newPath.toStdString(); // importatente para futuras referencias
 		BuildSurfaceGraphs(m);
+
+		// Save all the pieces.
+		/*
+		if(m->bind->surfaces.size() > 1)
+		{
+			for(int sf = 0; sf < m->bind->surfaces.size(); sf++)
+			{
+				QString sFileName = QString("%1model_piece_%2_%3.off").arg(m->sPath.c_str()).arg(sf).arg(m->sName.c_str());
+				SaveOFFFromSurface(m->bind->surfaces[sf], sFileName.toStdString());
+
+				for(int sfNode = 0; sfNode < m->bind->surfaces[sf].nodes.size(); sfNode++)
+				{
+					if(	m->bind->pointData[m->bind->surfaces[sf].nodes[sfNode]->id].isBorder)
+					{
+						printf(">>> %s\n", sFileName.toStdString().c_str());
+						break;
+
+					}
+				}
+			}
+		}
+		*/
+
 		getBDEmbedding(m);
 
 		// De momento lo dejamos.

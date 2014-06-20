@@ -86,6 +86,10 @@ public:
 	void paintPlaneWithData(bool compute = false);
 
 	virtual void readScene(string fileName, string name, string path);
+	
+	// Read snakes for bean
+	void readSnakes(string fileName, string name, string path);
+
 	virtual void saveScene(string fileName, string name, string path, bool compactMode = false);
 
 	// Skeleton creator tool
@@ -131,7 +135,7 @@ public:
 								  vector<int>& triangleIdx, Vector3d& point);
 
 	//Computation Management
-	ComputationMgr worker;
+	vector<ComputationMgr> compMgr;
 	AppMgr *appMgr;
 
 protected:
@@ -170,6 +174,7 @@ public slots:
     void ChangeSliceXY(int slice);
 
 	//Metodos especificos
+	virtual void LaunchTests();
     virtual void doTests(string fileName, string name, string path);
 	void eigenMultiplication(int elements);
 
