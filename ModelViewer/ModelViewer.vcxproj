@@ -462,6 +462,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\adri\DataStructures\AirVoxelization.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Animation.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\AnimationManager.cpp" />
     <ClCompile Include="..\..\adri\DataStructures\Cage.cpp" />
@@ -542,6 +543,7 @@
     <ClCompile Include="mainwindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\adri\DataStructures\AirVoxelization.h" />
     <ClInclude Include="..\..\adri\DataStructures\Animation.h" />
     <ClInclude Include="..\..\adri\DataStructures\AnimationManager.h" />
     <ClInclude Include="..\..\adri\DataStructures\Box3.h" />

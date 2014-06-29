@@ -19,6 +19,8 @@
 #include <DataStructures\InteriorDistancesData.h>
 #include <DataStructures\DataStructures.h>
 
+#include <DataStructures\AirVoxelization.h>
+
 #include <omp.h>
 #include <Eigen/Core>
 #include <tetgen/tetgen.h>
@@ -27,6 +29,8 @@
 using namespace std::chrono;
 
 #define ratioExpansion_DEF 0.7
+
+#define debugingSelection false
 
 GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
                    Qt::WindowFlags flags ) : AdriViewer(parent, shareWidget, flags) {
@@ -190,6 +194,8 @@ void GLWidget::setShaderConfiguration( shaderIdx type)
 		m_currentShader->setUniformValue("material.shininess", 200.0f);
 		m_currentShader->setUniformValue("material.opacity", 1.0f);
 	}
+
+	m_currentype = type;
 }
 
 void GLWidget::prepareShaderProgram()
@@ -1259,10 +1265,10 @@ void GLWidget::paintModelWithData()
                 newvalue = (pd.segmentId-FIRST_DEFNODE_ID);
                 value = ((float)(newvalue))/((float)rig->defRig.defNodesRef.size()-1);
 
-				if(minId < 0) minId = newvalue;
+				if(minId < 0) minId = newvalue; // first time
 				else minId = min(minId, newvalue);
 
-				if(maxId < 0) maxId = newvalue;
+				if(maxId < 0) maxId = newvalue; // first time
 				else maxId = max(maxId, newvalue);
             }
             else if(escena->iVisMode == VIS_BONES_SEGMENTATION)
@@ -1634,16 +1640,22 @@ void GLWidget::computeWeights()
 	//rig->getWorkToDo(worker.preprocessNodes, worker.segmentationNodes);
 
 	// Create enough workers to work with this model.
-	compMgr.resize(((Modelo*)escena->models[0])->bind->surfaces.size());
-
-	for(int surfIdx = 0; surfIdx < compMgr.size(); surfIdx++)
+	if(compMgr.size() != ((Modelo*)escena->models[0])->bind->surfaces.size())
 	{
-		// Assign the rig
-		compMgr[surfIdx].rig = rig;
+		compMgr.resize(((Modelo*)escena->models[0])->bind->surfaces.size());
 
-		// Assign the model and bind for computations
-		compMgr[surfIdx].setModelForComputations((Modelo*)escena->models[0], surfIdx);
+		for(int surfIdx = 0; surfIdx < compMgr.size(); surfIdx++)
+		{
+			// Assign the rig
+			compMgr[surfIdx].rig = rig;
 
+			// Assign the model and bind for computations
+			compMgr[surfIdx].setModelForComputations((Modelo*)escena->models[0], surfIdx);
+		}
+	}
+
+	for(int surfIdx = 0; surfIdx < 1; /*compMgr.size();*/ surfIdx++)
+	{
 		// Updates all the necessary nodes depending on the dirty flags
 		compMgr[surfIdx].updateAllComputations();
 	}
@@ -2028,54 +2040,40 @@ void GLWidget::computeProcess()
 	}
 
 	// D. Launch the process
-		//if(localVerbose) ini = clock();
 
-		worker.bd = rig->model->bind;
-		worker.model = rig->model;
-		worker.rig = rig;
+	// Disable deformations and updating
+	for(int dgIdx = 0; dgIdx < rig->defRig.defGroups.size(); dgIdx++)
+		rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
 
-		// Disable deformations and updating
-		for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
-			worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+	rig->enableDeformation = false;
 
-		worker.rig->enableDeformation = false;
+	showInfo("Computing weights...");	
 
-		showInfo("Computing weights...");	
+	if(compMgr.size() != rig->model->bind->surfaces.size() )
+		compMgr.resize(rig->model->bind->surfaces.size());
+
+	for(int idxSurf = 0; idxSurf < 1 /*rig->model->bind->surfaces.size()*/; idxSurf++)
+	{
+		compMgr[idxSurf].bd = rig->model->bind;
+		compMgr[idxSurf].model = rig->model;
+		compMgr[idxSurf].rig = rig;
+
+		compMgr[idxSurf].surfaceIdx = idxSurf;
 
 		// Do computations
-		worker.updateAllComputations();
+		compMgr[idxSurf].updateAllComputations();
+	}
 
-		// Compute rest poses
-		worker.rig->saveRestPoses();
-		//worker.rig->restorePoses();
+	rig->cleanDefNodesDirtyBit();
 
-		// Enable deformations and updating
-		enableDeformationAfterComputing();
-		updateOutliner();
+	// Compute rest poses
+	rig->saveRestPoses();
 
-		showInfo("Weights computed...");	
+	// Enable deformations and updating
+	enableDeformationAfterComputing();
+	updateOutliner();
 
-		//appMgr = new AppMgr();
-		//appMgr->setComputeMgr(&worker);
-		//connect(appMgr, SIGNAL(finished()), this, SLOT(enableDeformationAfterComputing()));
-		//appMgr->start();
-
-		//if(localVerbose) fin = clock();
-		//if(localVerbose) printf("Process: %f ms\n", timelapse(ini,fin)*1000); fflush(0);
-
-	/*
-	int defNodesSize = rig->defRig.deformers.size();
-
-	// Matrix weights for comutations
-	MatrixXf MatrixWeights(rig->model->vn(), defNodesSize);
-	MatrixWeights.fill(0);
-
-	// Init subDistances
-	MatrixXf distancesTemp(rig->model->vn(), defNodesSize);
-
-	// Optimized Computation (just the first one)
-	computeNodesOptimized(rig->defRig, *rig->model, MatrixWeights, distancesTemp);
-	*/
+	showInfo("Weights computed...");	
 
 }
 
@@ -2214,6 +2212,56 @@ void GLWidget::paintPlaneWithData(bool compute)
 
 void GLWidget::VoxelizeModel(Modelo* m, bool onlyBorders)
 {
+	clock_t begin=clock();
+
+	MyBox3 bounding_;
+	m->getBoundingBox(bounding_.min, bounding_.max); 
+	Vector3i divisions(2^7, 2^7, 2^7);
+
+	// Processing grid
+	voxGrid3d* processGrid = new voxGrid3d();
+	processGrid->init(bounding_, divisions);
+
+	// process each grid
+	for(int surfIdx = 0; surfIdx< m->bind->surfaces.size(); surfIdx++)
+	{
+		// 1. clear grid
+		processGrid->clearData();
+
+		// 2. process surface
+		processGrid->typeCells(&m->bind->surfaces[surfIdx]);
+
+		// 3. copy result
+		m->grid->mergeResults(processGrid, surfIdx);
+	}
+
+
+
+
+
+	if(m->grid == NULL)
+		m->grid = new grid3d();
+
+	m->grid->res = 2^7;
+    m->grid->worldScale = 1.0;
+
+	gridInit(*m,*(m->grid));
+	m->grid->typeCells(*m);
+
+    // EMBEDING INTERPOLATION FOR EVERY CELL
+    int interiorCells = 0;
+    //interiorCells = gridCellsEmbeddingInterpolation(*m, *(grRend->grid), m->embedding, onlyBorders);
+
+    if(VERBOSE)
+    {
+        clock_t end=clock();
+        cout << "("<< interiorCells <<"cells): " << double(timelapse(end,begin)) << " s"<< endl;
+        double memorySize = (double)(interiorCells*DOUBLESIZE)/MBSIZEINBYTES;
+        cout << "Estimated memory consumming: " << memorySize << "MB" <<endl;
+        cout << ">> TOTAL (construccion del grid desde cero): "<<double(timelapse(end,begin)) << " s"<< endl;
+
+    }
+
     /*
     // Hemos vinculado el grid al modelo y esqueleto cargados.
     // Hay que gestionar esto con cuidado.
@@ -3123,15 +3171,20 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 			*/
 			//appMgr->start();
 
-			for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
-				worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+			AirRig* localRig = (AirRig*)escena->rig;
 
-			worker.rig->enableDeformation = false;
+			for(int dgIdx = 0; dgIdx < localRig->defRig.defGroups.size(); dgIdx++)
+				localRig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+
+			localRig->enableDeformation = false;
 
 			showInfo("Updating weights...");	
 
 			// Do computations
-			worker.updateAllComputations();
+			for(int surfIdx = 0; surfIdx< compMgr.size(); surfIdx++)
+			{
+				compMgr[surfIdx].updateAllComputations();
+			}
 
 			// Enable deformations and updating
 			enableDeformationAfterComputing();
@@ -3155,15 +3208,18 @@ void GLWidget::setGlobalSmoothPasses(int value)
 				rig->defRig.defGroups[defIdx]->smoothingPasses = value;
 		}
 
-		for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
-				worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+		for(int dgIdx = 0; dgIdx < rig->defRig.defGroups.size(); dgIdx++)
+				rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
 
-		worker.rig->enableDeformation = false;
+		rig->enableDeformation = false;
 
 		showInfo("Updating weights...");	
 
 		// Do computations
-		worker.updateAllComputations();
+		for(int surfIdx = 0; rig->model->bind->surfaces.size(); surfIdx++)
+		{
+			compMgr[surfIdx].updateAllComputations();
+		}
 
 		// Enable deformations and updating
 		enableDeformationAfterComputing();
@@ -3720,20 +3776,27 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 
 			propagateExpansion(*group);
 			
-			if(!worker.rig)
+			AirRig* rig = (AirRig*)escena->rig;
+
+			if(!rig)
 			{
 				printf("BUG: No esta bien inicializado el rig!");
 			}
 
-			// Disable deformations and updating
-			for(int dgIdx = 0; dgIdx < worker.rig->defRig.defGroups.size(); dgIdx++)
-				worker.rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
-
-			worker.rig->enableDeformation = false;
 			
+			// Disable deformations and updating
+			for(int dgIdx = 0; dgIdx < rig->defRig.defGroups.size(); dgIdx++)
+				rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
+
+			rig->enableDeformation = false;
+			
+			assert(compMgr.size() > 0);
 
 			// Do computations
-			worker.updateAllComputations();
+			for(int surfIdx = 0; surfIdx < rig->model->bind->surfaces.size(); surfIdx++)
+			{
+				compMgr[surfIdx].updateAllComputations();
+			}
 
 			// Enable deformations and updating
 			enableDeformationAfterComputing();
@@ -4420,8 +4483,9 @@ void GLWidget::finishRiggingTool()
 	//printf("Finalizando operacion\n");
 	sktCr->finishRig();
 
-	//TODEBUG -> lo idel seria que se hiciera al principio al aplicar la herramienta
-	worker.model = (Modelo*)escena->models.front();
+	//TODEBUG -> se deberia haber cargado el modelo al inicio.
+	assert(compMgr.size() > 0);
+	//worker.model = (Modelo*)escena->models.front();
 
 	// Deseleccionar todo.
 	for(int i = 0; i< selMgr.selection.size(); i++)
@@ -4540,16 +4604,25 @@ int GLWidget::getSelection()
   // Get the number of objects that were seen through the pick matrix frustum. Reset GL_RENDER mode.
   GLint nbHits = glRenderMode(GL_RENDER);
 
+  // Each hit has 4 values...
   if (nbHits > 0)
-    {
-	  return (selectBuffer())[4*0+3];
-      // Interpret results : each object created 4 values in the selectBuffer().
-      // (selectBuffer())[4*i+3] is the id pushed on the stack.
-      //for (int i=0; i<nbHits; ++i)
-	  //{
-	//	selectBuffer()[4*i+3]
-	  //}
+  {
+	if(debugingSelection)
+	{
+		printf("Number of hits: %d\n", nbHits);
+		for(int i = 0; i< nbHits; i++)
+		{
+			printf("Elements: %d %d %d %d \n", (selectBuffer())[4*i+0], (selectBuffer())[4*i+1], 
+											   (selectBuffer())[4*i+2], (selectBuffer())[4*i+3]);
+		}
+	}
+
+	// We get the first node...
+	int firstId = (selectBuffer())[4*0+3];
+	return firstId;
   }
+  else if(debugingSelection)
+	printf("No selection\n");
 
   return  -1;
 }
@@ -5830,6 +5903,8 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 			}
 		}
 		*/
+
+		VoxelizeModel(m, false);
 
 		getBDEmbedding(m);
 
