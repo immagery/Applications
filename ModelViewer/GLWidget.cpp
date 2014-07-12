@@ -27,6 +27,7 @@
 #include <chrono>
 
 using namespace std::chrono;
+using namespace Eigen;
 
 #define ratioExpansion_DEF 0.7
 
@@ -2216,7 +2217,14 @@ void GLWidget::VoxelizeModel(Modelo* m, bool onlyBorders)
 
 	MyBox3 bounding_;
 	m->getBoundingBox(bounding_.min, bounding_.max); 
+	float dimValue = 2^7;
 	Vector3i divisions(2^7, 2^7, 2^7);
+
+	Vector3d diagonal(bounding_.max.x()-bounding_.min.x(),
+					  bounding_.max.y()-bounding_.min.y(),
+					  bounding_.max.z()-bounding_.min.z());
+
+	float cellSize = bounding_.max.x()-bounding_.min.x()/2^7;
 
 	// Processing grid
 	voxGrid3d* processGrid = new voxGrid3d();
@@ -2236,28 +2244,30 @@ void GLWidget::VoxelizeModel(Modelo* m, bool onlyBorders)
 	}
 
 
-
+	/*
 
 
 	if(m->grid == NULL)
-		m->grid = new grid3d();
+		m->grid = new voxGrid3d();
 
 	m->grid->res = 2^7;
     m->grid->worldScale = 1.0;
 
-	gridInit(*m,*(m->grid));
+	m->grid->init(m->getBoundingBox(), m->grid->res);
 	m->grid->typeCells(*m);
 
     // EMBEDING INTERPOLATION FOR EVERY CELL
     int interiorCells = 0;
     //interiorCells = gridCellsEmbeddingInterpolation(*m, *(grRend->grid), m->embedding, onlyBorders);
+	*/
 
     if(VERBOSE)
     {
         clock_t end=clock();
-        cout << "("<< interiorCells <<"cells): " << double(timelapse(end,begin)) << " s"<< endl;
-        double memorySize = (double)(interiorCells*DOUBLESIZE)/MBSIZEINBYTES;
-        cout << "Estimated memory consumming: " << memorySize << "MB" <<endl;
+        //cout << "("<< interiorCells <<"cells) ";
+		cout << "( timelampse: " << double(timelapse(end,begin)) << " s"<< endl;
+        //double memorySize = (double)(interiorCells*DOUBLESIZE)/MBSIZEINBYTES;
+        //cout << "Estimated memory consumming: " << memorySize << "MB" <<endl;
         cout << ">> TOTAL (construccion del grid desde cero): "<<double(timelapse(end,begin)) << " s"<< endl;
 
     }
