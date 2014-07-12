@@ -52,3 +52,10 @@ air/AirLib/cuda/cudaMVC.cu.deps
 air/AirLib/cuda/matrixMul/matrixMul.cu.deps
 air/AirLib/cuda/mvc.cu.deps
 *.deps
+AirViewer/AirViewer/
+.gitattributes
+AirViewer/AirViewer.opensdf
+AirViewer/AirViewer.sdf
+AirViewer/AirViewer.v12.suo
+AirViewer/x64/Release/AirViewer.exe
+ModelViewer/ModelViewer.v12.suo
