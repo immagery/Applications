@@ -113,6 +113,8 @@ int parseOptionsAndRun(int argnum, char **args)
 
 int main(int argc, char *argv[])
 {
+	printf("Esto son pruebas de arranque... que puede estar pasando?\n"); fflush(0);
+
     // si hay par‡metros arrancamos en background sin interficie.
     if(argc > 1)
     {

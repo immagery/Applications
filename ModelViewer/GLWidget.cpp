@@ -23,7 +23,7 @@
 
 #include <omp.h>
 #include <Eigen/Core>
-#include <tetgen/tetgen.h>
+//#include <tetgen/tetgen.h>
 #include <chrono>
 
 using namespace std::chrono;
@@ -207,27 +207,27 @@ void GLWidget::prepareShaderProgram()
 	m_shaders[SHD_BASIC] = new QOpenGLShaderProgram();
 	printf("Basic shader loading\n");
 	loadShaderAndLink(m_shaders[SHD_BASIC],
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.vert",
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.frag");
+					  "C:/dev/air/AirLib/shaders/phong.vert",
+					  "C:/dev/air/AirLib/shaders/phong.frag");
 
 	m_shaders[SHD_XRAY] = new QOpenGLShaderProgram();
 	printf("XRay loading\n");
 	loadShaderAndLink(m_shaders[SHD_XRAY],
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/xray.vert",
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/xray.frag");
+					  "C:/dev/air/AirLib/shaders/xray.vert",
+					  "C:/dev/air/AirLib/shaders/xray.frag");
 
 	m_shaders[SHD_VERTEX_COLORS] = new QOpenGLShaderProgram();
 	printf("VertexColor loading\n");
 	loadShaderAndLink(m_shaders[SHD_VERTEX_COLORS],
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.vert",
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong_vertexColors.frag");
+					  "C:/dev/air/AirLib/shaders/phong.vert",
+					  "C:/dev/air/AirLib/shaders/phong_vertexColors.frag");
 
 
 	m_shaders[SHD_NO_SHADE] = new QOpenGLShaderProgram();
 	printf("No shade loading\n");
 	loadShaderAndLink(m_shaders[SHD_NO_SHADE],
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/phong.vert",
-					  "C:/Users/chus/Documents/dev/air/AirLib/shaders/noLight_vertexColors.frag");
+					  "C:/dev/air/AirLib/shaders/phong.vert",
+					  "C:/dev/air/AirLib/shaders/noLight_vertexColors.frag");
 
 
 	m_currentShader = m_shaders[SHD_BASIC];
@@ -2053,8 +2053,10 @@ void GLWidget::computeProcess()
 	if(compMgr.size() != rig->model->bind->surfaces.size() )
 		compMgr.resize(rig->model->bind->surfaces.size());
 
-	for(int idxSurf = 0; idxSurf < 1 /*rig->model->bind->surfaces.size()*/; idxSurf++)
+	for(int idxSurf = 0; idxSurf < rig->model->bind->surfaces.size(); idxSurf++)
 	{
+		printf("Surface %d\n", idxSurf);
+
 		compMgr[idxSurf].bd = rig->model->bind;
 		compMgr[idxSurf].model = rig->model;
 		compMgr[idxSurf].rig = rig;
@@ -2209,197 +2211,6 @@ void GLWidget::paintPlaneWithData(bool compute)
         }
     }
 	*/
-}
-
-void GLWidget::VoxelizeModel(Modelo* m, bool onlyBorders)
-{
-	clock_t begin=clock();
-
-	MyBox3 bounding_;
-	m->getBoundingBox(bounding_.min, bounding_.max); 
-	float dimValue = 2^7;
-	Vector3i divisions(2^7, 2^7, 2^7);
-
-	Vector3d diagonal(bounding_.max.x()-bounding_.min.x(),
-					  bounding_.max.y()-bounding_.min.y(),
-					  bounding_.max.z()-bounding_.min.z());
-
-	float cellSize = bounding_.max.x()-bounding_.min.x()/2^7;
-
-	// Processing grid
-	voxGrid3d* processGrid = new voxGrid3d();
-	processGrid->init(bounding_, divisions);
-
-	// process each grid
-	for(int surfIdx = 0; surfIdx< m->bind->surfaces.size(); surfIdx++)
-	{
-		// 1. clear grid
-		processGrid->clearData();
-
-		// 2. process surface
-		processGrid->typeCells(&m->bind->surfaces[surfIdx]);
-
-		// 3. copy result
-		m->grid->mergeResults(processGrid, surfIdx);
-	}
-
-
-	/*
-
-
-	if(m->grid == NULL)
-		m->grid = new voxGrid3d();
-
-	m->grid->res = 2^7;
-    m->grid->worldScale = 1.0;
-
-	m->grid->init(m->getBoundingBox(), m->grid->res);
-	m->grid->typeCells(*m);
-
-    // EMBEDING INTERPOLATION FOR EVERY CELL
-    int interiorCells = 0;
-    //interiorCells = gridCellsEmbeddingInterpolation(*m, *(grRend->grid), m->embedding, onlyBorders);
-	*/
-
-    if(VERBOSE)
-    {
-        clock_t end=clock();
-        //cout << "("<< interiorCells <<"cells) ";
-		cout << "( timelampse: " << double(timelapse(end,begin)) << " s"<< endl;
-        //double memorySize = (double)(interiorCells*DOUBLESIZE)/MBSIZEINBYTES;
-        //cout << "Estimated memory consumming: " << memorySize << "MB" <<endl;
-        cout << ">> TOTAL (construccion del grid desde cero): "<<double(timelapse(end,begin)) << " s"<< endl;
-
-    }
-
-    /*
-    // Hemos vinculado el grid al modelo y esqueleto cargados.
-    // Hay que gestionar esto con cuidado.
-    printf("Ojo!, usamos los modelos y skeletos tal cual...\n");
-    escena->visualizers.push_back((shadingNode*)new gridRenderer());
-    gridRenderer* grRend = (gridRenderer*)escena->visualizers.back();
-    grRend->iam = GRIDRENDERER_NODE;
-    grRend->model = m;
-
-    // grid creation for computation
-    m->grid = new grid3d();
-    grRend->grid = m->grid;
-
-    grRend->grid->res = parent->ui->gridResolutionIn->text().toInt();
-    grRend->grid->worldScale = parent->ui->sceneScale->text().toInt();
-
-    for(int i = 0; i< escena->skeletons.size(); i++)
-    {
-        float cellSize = grRend->grid->cellSize;
-        GetMinSegmentLenght(getMinSkeletonSize((skeleton*)escena->skeletons[i]), cellSize);
-        ((skeleton*)escena->skeletons[i])->minSegmentLength = GetMinSegmentLenght(getMinSkeletonSize((skeleton*)escena->skeletons[i]), cellSize);
-
-        grRend->grid->bindedSkeletons.push_back((skeleton*)escena->skeletons[i]);
-    }
-
-    clock_t begin, end;
-
-    vector< vector<double> >* embedding = NULL;
-    if(m->embedding.size() != 0)
-    {
-        embedding = &(m->embedding);
-    }
-    else // No se ha cargado ningun embedding.
-    {
-        printf("No hay cargado ning�n embedding. Lo siento, no puedo hacer calculos\n"); fflush(0);
-        return;
-    }
-
-    // Cargamos el grid si ya ha sido calculado
-    QString sSavingFile = QString("%1%2%3").arg(m->sPath.c_str()).arg(m->sName.c_str()).arg("_embedded_grid.dat");
-    if(!sSavingFile.isEmpty() && QFile(sSavingFile).exists())
-    {
-        if(VERBOSE)
-        {
-           cout << "Loading from disc: ";
-           begin=clock();
-        }
-
-        grRend->grid->LoadGridFromFile(sSavingFile.toStdString());
-
-        if(VERBOSE)
-        {
-            end = clock();
-            cout << double(timelapse(end,begin)) << " s"<< endl;
-        }
-    }
-    else
-    {
-        if(VERBOSE)
-        {
-            if(!onlyBorders) cout << "Computing volume: " << endl;
-            else cout << "Computing volume (onlyAtBorders): " << endl;
-
-            cout << "------------------------------------------------------" << endl;
-            cout << "                  - PREPROCESO -                      " << endl;
-            cout << "------------------------------------------------------" << endl;
-            cout << "Creaci�n del grid con res " << grRend->grid->res << endl;
-            begin=clock();
-
-        }
-
-        // CONSTRUCCION DEL GRID
-        gridInit(*m,*(grRend->grid));
-
-        if(VERBOSE)
-        {
-            end=clock();
-            cout << double(timelapse(end,begin)) << " s"<< endl;
-            begin = end;
-            cout << "Etiquetado del grid: ";
-        }
-
-        //Tipificamos las celdas seg�n si es interior, exterior, o borde de la maya
-        grRend->grid->typeCells(*m);
-
-        if(VERBOSE)
-        {
-            end=clock();
-            cout << double(timelapse(end,begin)) << " s"<< endl;
-            cout << "Grid cells embedding";
-            begin=clock();
-        }
-
-        // EMBEDING INTERPOLATION FOR EVERY CELL
-        int interiorCells = 0;
-        interiorCells = gridCellsEmbeddingInterpolation(*m, *(grRend->grid), m->embedding, onlyBorders);
-
-        if(VERBOSE)
-        {
-            end=clock();
-            cout << "("<< interiorCells <<"cells): " << double(timelapse(end,begin)) << " s"<< endl;
-            double memorySize = (double)(interiorCells*DOUBLESIZE*embedding[0].size())/MBSIZEINBYTES;
-            cout << "Estimated memory consumming: " << memorySize << "MB" <<endl;
-            cout << ">> TOTAL (construccion del grid desde cero): "<<double(timelapse(end,begin)) << " s"<< endl;
-
-        }
-
-        if(!sSavingFile.isEmpty())
-        {
-            if(VERBOSE)
-            {
-               cout << "Guardando en disco: ";
-               begin=clock();
-            }
-
-            grRend->grid->SaveGridToFile(sSavingFile.toStdString());
-
-            if(VERBOSE)
-            {
-                clock_t end=clock();
-                cout << double(timelapse(end,begin)) << " s"<< endl;
-            }
-        }
-    }
-
-    grRend->propagateDirtyness();
-    updateGridRender();
-    */
 }
 
 // Do test skinning

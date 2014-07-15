@@ -193,7 +193,6 @@ public slots:
 	virtual void selectElements(vector<unsigned int > lst);
 
 	void BuildTetrahedralization();
-    void VoxelizeModel(Modelo *m, bool onlyBorders = true);
     
 	void exportWeightsToMaya();
     void UpdateVertexSource(int id);

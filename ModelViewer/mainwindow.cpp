@@ -32,14 +32,14 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalSmoothingPasses(int)));
 	connect(ui->localSmoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeLocalSmoothingPasses(int)));
 
-    connect(ui->prop_function_updt, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
+    //connect(ui->prop_function_updt, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
 
     connect(ui->paintModel_btn, SIGNAL(released()), widget, SLOT(paintModelWithGrid()));
-    connect(ui->metricUsedCheck, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
+   // connect(ui->metricUsedCheck, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
 
-    connect(ui->drawInfluences_check, SIGNAL(released()), widget, SLOT(showHCoordinatesSlot()));
+    //connect(ui->drawInfluences_check, SIGNAL(released()), widget, SLOT(showHCoordinatesSlot()));
 
-    connect(ui->coordTab, SIGNAL(currentChanged(int)), widget, SLOT(active_GC_vs_HC(int)));
+    //connect(ui->coordTab, SIGNAL(currentChanged(int)), widget, SLOT(active_GC_vs_HC(int)));
 
     connect(ui->glCustomWidget, SIGNAL(updateSceneView()), this, SLOT(updateSceneView()));
     connect(ui->outlinerView, SIGNAL(clicked(QModelIndex)), this, SLOT(selectObject(QModelIndex)));
