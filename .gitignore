@@ -59,3 +59,6 @@ AirViewer/AirViewer.sdf
 AirViewer/AirViewer.v12.suo
 AirViewer/x64/Release/AirViewer.exe
 ModelViewer/ModelViewer.v12.suo
+AirViewer/x64/Debug/AirViewer.exe
+AirViewer/x64/Debug/AirViewer.ilk
+AirViewer/x64/Debug/AirViewer.pdb
