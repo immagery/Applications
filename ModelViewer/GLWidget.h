@@ -122,6 +122,8 @@ public:
 	QOpenGLShaderProgram* m_currentShader;
 	vector<QOpenGLShaderProgram*> m_shaders;
 
+	vector<shaderIdx> m_pShadersPile;
+
 	QOpenGLBuffer m_vertexPositionBuffer;
 	QOpenGLBuffer m_vertexColorBuffer;
 	QOpenGLVertexArrayObject m_vao;
@@ -215,7 +217,10 @@ public slots:
 		scene::drawingNodeStdSize = scale;
 	}
 
+	void pushShader(shaderIdx newShader);
+	void popShader();
 
+	void setAuxValue(int value);
 };
 
 #endif // GLWIDGET_H

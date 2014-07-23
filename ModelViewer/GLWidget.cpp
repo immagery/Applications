@@ -29,8 +29,6 @@
 using namespace std::chrono;
 using namespace Eigen;
 
-#define ratioExpansion_DEF 0.7
-
 #define debugingSelection false
 
 GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
@@ -1655,7 +1653,7 @@ void GLWidget::computeWeights()
 		}
 	}
 
-	for(int surfIdx = 0; surfIdx < 1; /*compMgr.size();*/ surfIdx++)
+	for(int surfIdx = 0; surfIdx < compMgr.size(); surfIdx++)
 	{
 		// Updates all the necessary nodes depending on the dirty flags
 		compMgr[surfIdx].updateAllComputations();
@@ -1663,10 +1661,10 @@ void GLWidget::computeWeights()
 
 	// 3.1. Set-up default deformations -> TODELETE 
 	//for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
-	rig->defRig.defGroups[0]-> bulgeEffect = true;
+	//rig->defRig.defGroups[1]-> bulgeEffect = true;
 	
 	// Bulge initialization over skinning computation
-	initBulges(rig);
+	//initBulges(rig);
 
 	// 4. Actualizar la escena
 	// enable deformations and render data
@@ -1983,10 +1981,10 @@ void GLWidget::enableDeformationAfterComputing()
 
 	// TO REMOVE: This patch enables bulging just between the first and the second joint
 	//for(int i = 0; i< rig->defRig.defGroups.size(); i++)
-		rig->defRig.defGroups[0]->bulgeEffect = true;
+	//	rig->defRig.defGroups[1]->bulgeEffect = true;
 
 	// Bulge initialization over skinning computation
-	initBulges(rig);
+	//initBulges(rig);
 
 	// enable deformations and render data
 	rig->enableDeformation = true;
@@ -2055,7 +2053,7 @@ void GLWidget::computeProcess()
 
 	for(int idxSurf = 0; idxSurf < rig->model->bind->surfaces.size(); idxSurf++)
 	{
-		printf("Surface %d\n", idxSurf);
+		printf("Surface %d\n", idxSurf); fflush(0);
 
 		compMgr[idxSurf].bd = rig->model->bind;
 		compMgr[idxSurf].model = rig->model;
@@ -2076,7 +2074,7 @@ void GLWidget::computeProcess()
 	enableDeformationAfterComputing();
 	updateOutliner();
 
-	showInfo("Weights computed...");	
+	showInfo("Weights computed...");
 
 }
 
@@ -2986,6 +2984,8 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 			group->smoothingPasses = localSmooth;
 			group->localSmooth = true;
 
+			group->dirtySmooth = true;
+
 			/*
 			AirRig* rig = (AirRig*)escena->rig;
 			updateAirSkinning(rig->defRig, *rig->model);
@@ -3027,6 +3027,8 @@ void GLWidget::setGlobalSmoothPasses(int value)
 		{
 			if(!rig->defRig.defGroups[defIdx]->localSmooth)
 				rig->defRig.defGroups[defIdx]->smoothingPasses = value;
+
+			rig->defRig.defGroups[defIdx]->dirtySmooth = true;
 		}
 
 		for(int dgIdx = 0; dgIdx < rig->defRig.defGroups.size(); dgIdx++)
@@ -3037,7 +3039,7 @@ void GLWidget::setGlobalSmoothPasses(int value)
 		showInfo("Updating weights...");	
 
 		// Do computations
-		for(int surfIdx = 0; rig->model->bind->surfaces.size(); surfIdx++)
+		for (int surfIdx = 0; surfIdx < rig->model->bind->surfaces.size(); surfIdx++)
 		{
 			compMgr[surfIdx].updateAllComputations();
 		}
@@ -4214,6 +4216,18 @@ void GLWidget::draw2DGraphics()
 		escena->skeletons[j]->root->computeWorldPos();
 	}
 
+	// Draw analisis structures
+	if (m_bShowAnalisis)
+	{
+		pushShader(SHD_NO_SHADE);
+		for (unsigned int i = 0; i < escena->models.size(); i++)
+		{
+			((Modelo*)escena->models[i])->drawAnalitics();	
+		}
+		popShader();
+	}
+
+
 	AirRig* rig = (AirRig*)escena->rig;
 
 	if(rig) 
@@ -4226,17 +4240,17 @@ void GLWidget::draw2DGraphics()
 
 		if(rig->enableDeformation)
 		{
-			if(!rig->enableTwist)
+			//if(!rig->enableTwist)
 				rig->airSkin->computeDeformations(rig);
-			else
-				rig->airSkin->computeDeformationsWithSW(rig);
+			//else
+			//	rig->airSkin->computeDeformationsWithSW(rig);
 		}
 	}
 
 	setShaderConfiguration(preferredType);
 	AdriViewer::draw();
 
-	setShaderConfiguration(SHD_NO_SHADE);
+	pushShader(SHD_NO_SHADE);
 
 	glDisable(GL_DEPTH_TEST);
 
@@ -4260,16 +4274,11 @@ void GLWidget::draw2DGraphics()
 	// Manipuladores
 	if(selMgr.selection.size() >0 )
 	{
-		// quizás hay que quitar opciones de zbuffer para pintar siempre
-		// encima de todo
-		// Hay seleccion
 		ToolManip.drawFunc();
 	}
 
+	popShader();
 	glEnable(GL_DEPTH_TEST);
-
-	// draw the buffers
-	//glDrawArrays( GL_TRIANGLES, 0, 3);
 
 	if(showBulgeInfo)
 		draw2DGraphics();
@@ -4481,6 +4490,9 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 				if(node == 2) ToolManip.axis = AXIS_Y;
 				if(node == 3) ToolManip.axis = AXIS_Z;
 
+				qglviewer::Vec camPos = camera()->position();
+				ToolManip.cameraPos = Vector3d(camPos.x, camPos.y, camPos.z);
+
 				Vector3d rayOrigin(orig.x, orig.y, orig.z);
 				Vector3d rayDir(dir.x, dir.y, dir.z);
 				ToolManip.startManipulator(rayOrigin, rayDir);
@@ -4528,10 +4540,21 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 				computeWeights();
 
 				//2.Process anim->rig mode
+				//currentRig->restorePoses();
+				//currentRig->airSkin->resetDeformations();
+
+				paintModelWithData();
+			}
+			else if (currentRig && (sktCr->mode == SKT_TEST))
+			{
+				//1.Process rig->anim mode
+				currentRig->saveRestPoses();
+				computeWeights();
+
+				//2.Process anim->rig mode
 				currentRig->restorePoses();
 				currentRig->airSkin->resetDeformations();
 
-				paintModelWithData();
 			}
 
 			return;
@@ -4852,7 +4875,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 						ToolManip.bModifierMode = false;
 						ToolManip.bEnable = false;
 
-						sktCr->state == SKT_CR_IDDLE;
+						sktCr->state = SKT_CR_IDDLE;
 
 						vector<unsigned int > lst;
 						//printf("DefGroup deselected\n");
@@ -4870,7 +4893,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 							ToolManip.bEnable = true;
 							ToolManip.setFrame(dg->getTranslation(false), dg->getRotation(false), Vector3d(1,1,1));
 							
-							sktCr->state == SKT_CR_SELECTED;
+							sktCr->state = SKT_CR_SELECTED;
 
 							//printf("Nueva Seleccion: %d\n", dg->nodeId);
 						}
@@ -5793,3 +5816,39 @@ void GLWidget::saveScene(string fileName, string name, string path, bool compact
 
     }
  }
+
+ // apilar nuevo shader
+ void GLWidget::pushShader(shaderIdx newShader)
+ {
+	 setShaderConfiguration(newShader);
+	 m_pShadersPile.push_back(newShader);
+ }
+
+ // restaurar el ultimo shader, si hay
+ void GLWidget::popShader()
+ {
+	 if (m_pShadersPile.size() > 0)
+	 {
+		 shaderIdx oldShader = m_pShadersPile.back();
+		 m_pShadersPile.pop_back();
+		 setShaderConfiguration(oldShader);
+	 }
+	 else
+	 {
+		// Apilar uno por defecto
+		 setShaderConfiguration(SHD_BASIC);
+		 
+		 printf("[ERROR] Estas desapilando un shader que no existe... te has descontado\n");
+	 }
+ }
+
+void GLWidget::setAuxValue(int value)
+{ 
+	valueAux = value;
+	for (int i = 0; i < escena->models.size(); i++)
+	{
+		Modelo* m = (Modelo*)escena->models[i];
+	
+		m->shading->setAuxValue(value);
+	}
+}

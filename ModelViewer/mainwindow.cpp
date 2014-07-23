@@ -31,37 +31,18 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 
 	connect(ui->smoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalSmoothingPasses(int)));
 	connect(ui->localSmoothingPasses, SIGNAL(valueChanged(int)), this, SLOT(changeLocalSmoothingPasses(int)));
-
-    //connect(ui->prop_function_updt, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
-
     connect(ui->paintModel_btn, SIGNAL(released()), widget, SLOT(paintModelWithGrid()));
-   // connect(ui->metricUsedCheck, SIGNAL(released()), widget, SLOT(PropFunctionConf()));
-
-    //connect(ui->drawInfluences_check, SIGNAL(released()), widget, SLOT(showHCoordinatesSlot()));
-
-    //connect(ui->coordTab, SIGNAL(currentChanged(int)), widget, SLOT(active_GC_vs_HC(int)));
 
     connect(ui->glCustomWidget, SIGNAL(updateSceneView()), this, SLOT(updateSceneView()));
     connect(ui->outlinerView, SIGNAL(clicked(QModelIndex)), this, SLOT(selectObject(QModelIndex)));
-
     connect(ui->segmentation_btn, SIGNAL(toggled(bool)), this, SLOT(toogleToShowSegmentation(bool)));
 
     connect(ui->exportWeights_btn, SIGNAL(released()), widget, SLOT(exportWeightsToMaya()));
-
-    //connect(ui->expansionSlider, SIGNAL(sliderReleased()), this, SLOT(changeExpansionSlider()));
-	//connect(ui->expansionSlider, SIGNAL(valueChanged(int)), this, SLOT(updateExpansionSlidervalue(int)));
 	connect(ui->expansionSlider, SIGNAL(valueChanged(int)), this, SLOT(changeExpansionSlider(int)));
 
 	connect(ui->thresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(updateThresholdSlidervalue(int)));
 	connect(ui->threshold_enable, SIGNAL(toggled(bool)), this, SLOT(enableThreshold(bool)));
 	connect(ui->threshold_enable_adaptative, SIGNAL(toggled(bool)), this, SLOT(enableAdaptativeThreshold(bool)));
-	
-    //connect(ui->smoothPropagationSlider, SIGNAL(sliderReleased()), this, SLOT(changeSmoothSlider()));
-    //connect(ui->smoothPropagationSlider, SIGNAL(valueChanged(int)), this, SLOT(updateSmoothSlidervalue(int)));
-
-	connect(ui->auxValueInt, SIGNAL(valueChanged(int)), this, SLOT(changeAuxValueInt(int)));
-
-    //connect(ui->glCustomWidget, SIGNAL(jointDataShow(float, int)), this , SLOT(jointDataUpdate(float,int)));
 
 	connect(ui->ip_axisX, SIGNAL(valueChanged(int)), this, SLOT(changeInteriorPointPosition()));
 	connect(ui->ip_axisY, SIGNAL(valueChanged(int)), this, SLOT(changeInteriorPointPosition()));
@@ -77,10 +58,8 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->PlaneDataCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeVisModeForPlane(int)));
 	
 	connect(ui->positionPlaneSlider, SIGNAL(sliderMoved(int)), this, SLOT(changeSelPointForPlane(int)));
-
 	connect(ui->bonesSubdivisionRatio, SIGNAL(editingFinished()), this, SLOT(UpdateSceneScale()));
 	
-
 	// Control for button radios, for transformations and rotations mode.
 	connect(ui->single_transform, SIGNAL(clicked()), this, SLOT(changeTransformationMode()));
 	connect(ui->hierarchy_transform, SIGNAL(clicked()), this, SLOT(changeTransformationMode()));
@@ -173,8 +152,11 @@ void MainWindow::changeLocalSmoothingPasses(int value)
 void MainWindow::changeAuxValueInt(int value)
 {
     widget->valueAux = value;
-	widget->paintModelWithData();
-	widget->updateGridRender();
+
+	widget->setAuxValue(value);
+
+	//widget->paintModelWithData();
+	//widget->updateGridRender();
 }
 
 void MainWindow::updateThresholdSlidervalue(int value)
