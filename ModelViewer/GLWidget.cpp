@@ -68,6 +68,10 @@ GLWidget::GLWidget(QWidget * parent, const QGLWidget * shareWidget,
 
 	setAutoFillBackground(false);
 
+	last_time = 0;
+
+	m_bRTInteraction = true;
+
 }
 
 
@@ -437,7 +441,11 @@ void GLWidget::setToolCrtMode(int ctx)
 
 		currentRig->enableDeformation = false;
 
-		sktCr->state = SKT_CR_IDDLE;
+		if (!sktCr->parentNode)
+			sktCr->state = SKT_CR_IDDLE;
+		else
+			sktCr->state = SKT_CR_SELECTED;
+
 		// TO_UNCOMMENT
 		//preferredType = SHD_XRAY;
 		AirRig::mode = MODE_CREATE;
@@ -492,16 +500,8 @@ void GLWidget::setToolCrtMode(int ctx)
 	}
 	else if(ctx == SKT_TEST)
 	{
-		if(sktCr->state != SKT_ANIM && sktCr->state != SKT_TEST)
-		{
-			//Guardamos las poses, como poses de reposo.
-			((AirRig*) escena->rig)->saveRestPoses();
-
-			computeWeights();
-
-			// disable deormation until the weights are computed
-			((AirRig*)escena->rig)->enableDeformation = true;
-		}
+		//((AirRig*)escena->rig)->saveRestPoses();
+		((AirRig*)escena->rig)->enableDeformation = true;
 
 		sktCr->state = SKT_CR_IDDLE;
 		preferredType = preferredNormalType;
@@ -1243,7 +1243,7 @@ void GLWidget::paintModelWithData()
 
 		int minId = -1, maxId = -1;
 
-		//#pragma omp parallel for
+		#pragma omp parallel for
         for(int count = 0; count< m->bind->pointData.size(); count++)
         {
             if(m->bind->pointData[count].isBorder)
@@ -1332,7 +1332,7 @@ void GLWidget::paintModelWithData()
                 }
                 if(searchedindex >= 0)
 				{
-					if(pd.secondInfluences[searchedindex].size()> 0)
+					if (pd.secondInfluences.size() > 0 && pd.secondInfluences[searchedindex].size()> 0)
 					{
 						if(valueAux < pd.secondInfluences[searchedindex].size())
 							value = pd.secondInfluences[searchedindex][valueAux].wideBone;
@@ -1658,6 +1658,8 @@ void GLWidget::computeWeights()
 		// Updates all the necessary nodes depending on the dirty flags
 		compMgr[surfIdx].updateAllComputations();
 	}
+
+	rig->defRig.cleanDefNodes();
 
 	// 3.1. Set-up default deformations -> TODELETE 
 	//for(int i = 1; i < rig->defRig.defGroups.size()-1; i++)
@@ -2065,6 +2067,8 @@ void GLWidget::computeProcess()
 		compMgr[idxSurf].updateAllComputations();
 	}
 
+
+	rig->defRig.cleanDefNodes();
 	rig->cleanDefNodesDirtyBit();
 
 	// Compute rest poses
@@ -3007,6 +3011,8 @@ void GLWidget::setLocalSmoothPasses(int localSmooth)
 				compMgr[surfIdx].updateAllComputations();
 			}
 
+			localRig->defRig.cleanDefNodes();
+
 			// Enable deformations and updating
 			enableDeformationAfterComputing();
 
@@ -3044,6 +3050,8 @@ void GLWidget::setGlobalSmoothPasses(int value)
 			compMgr[surfIdx].updateAllComputations();
 		}
 
+		rig->defRig.cleanDefNodes();
+
 		// Enable deformations and updating
 		enableDeformationAfterComputing();
 
@@ -3054,6 +3062,11 @@ void GLWidget::setGlobalSmoothPasses(int value)
 	}
 
 	paintModelWithData();
+}
+
+void GLWidget::enableRTInteraction(bool enable)
+{
+	m_bRTInteraction = enable;
 }
 
 void GLWidget::setBulgeParams(bool enable)
@@ -3590,10 +3603,14 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 	if (selMgr.selection.size() > 0)
 		selectedObject = selMgr.selection.back();
 
+	map<int, joint*> savedPoses;
+
 	if (selectedObject != NULL) 
 	{
 		if(selectedObject->iam == DEFGROUP_NODE)
 		{
+			AirRig* currentRig = ((AirRig*)sktCr->parentRig);
+
 			DefGroup* group = (DefGroup*) selectedObject;
 			group->expansion = expValue;
 
@@ -3603,16 +3620,14 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 
 			if(!rig)
 			{
-				printf("BUG: No esta bien inicializado el rig!");
+				printf("The Rig is not initilized... do something, please!\n");
 			}
 
-			
 			// Disable deformations and updating
 			for(int dgIdx = 0; dgIdx < rig->defRig.defGroups.size(); dgIdx++)
 				rig->defRig.defGroups[dgIdx]->bulgeEffect = false;
 
 			rig->enableDeformation = false;
-			
 			assert(compMgr.size() > 0);
 
 			// Do computations
@@ -3621,66 +3636,12 @@ void GLWidget::changeExpansionFromSelectedJoint(float expValue)
 				compMgr[surfIdx].updateAllComputations();
 			}
 
+			rig->defRig.cleanDefNodes();
+
 			// Enable deformations and updating
 			enableDeformationAfterComputing();
-
-			/*
-			AirRig* rig = (AirRig*)escena->rig;
-			updateAirSkinning(rig->defRig, *rig->model);
-			*/
 		}
 	}
-
-	//paintModelWithData();
-
-	/*
-     for(unsigned int i = 0; i< selMgr.selection.size(); i++)
-     {
-         if(((object*)selMgr.selection[i])->iam == JOINT_NODE)
-         {
-             joint* jt = (joint*)selMgr.selection[i];
-             jt->expansion = expValue;
-
-             for(unsigned int i = 0; i< escena->visualizers.size(); i++)
-             {
-                 if(!escena->visualizers[i] || escena->visualizers[i]->iam != GRIDRENDERER_NODE)
-                     continue;
-
-                  vector<DefNode>& nodes = ((gridRenderer*)escena->visualizers[i])->grid->v.intPoints;
-
-                  for(unsigned int n = 0; n< nodes.size(); n++)
-                  {
-                      if(((DefNode)nodes[n]).boneId == (int)jt->nodeId)
-                      {
-                          if(((DefNode)nodes[n]).ratio < ratioExpansion_DEF)
-                          {
-                              float ratio2 = (((DefNode)nodes[n]).ratio/ratioExpansion_DEF);
-                              float dif = 1-expValue;
-                              float newValue =  expValue + dif*ratio2;
-                              nodes[n].expansion = newValue;
-                          }
-                      }
-                  }
-             }
-
-         }
-     }
-
-     //TODEBUG
-     printf("Ojo!, ahora estamos teniendo en cuenta: 1 solo modelo, esqueleto y grid.\n"); fflush(0);
-     gridRenderer* grRend = (gridRenderer*)escena->visualizers.back();
-
-     if(grRend == NULL) return;
-
-     //TODO: he cambiado el grid por la maya directamente, hay que rehacer la siguiente llamada.
-     assert(false);
-     //updateSkinningWithHierarchy(*(grRend->grid));
-
-     grRend->propagateDirtyness();
-     updateGridRender();
-	 */
-
-
  }
 
 //void GLWidget::postSelection(const QPoint&)
@@ -4200,8 +4161,33 @@ void GLWidget::draw2DGraphics()
 
 }
 
+void GLWidget::drawFPS(float fps, int x, int y)
+{
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, width(), 0, height(), 0, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+}
+
  void GLWidget::draw()
  {
+	 clock_t time = clock();
+	 clock_t interval = time - last_time;
+	 last_time = time;
+	 float fps = 1.0/ ((float)interval / (float)CLOCKS_PER_SEC);
+
+	 //setFPSIsDisplayed(true);
+	 //printf("FPS: %f\n", fps);
+
+	 //drawFPS(fps, 15, height() - 15);
+
 	// Clear the color buffer
 	glClear( GL_COLOR_BUFFER_BIT );
 
@@ -4314,7 +4300,7 @@ void GLWidget::finishRiggingTool()
 	sktCr->finishRig();
 
 	//TODEBUG -> se deberia haber cargado el modelo al inicio.
-	assert(compMgr.size() > 0);
+	//assert(compMgr.size() > 0);
 	//worker.model = (Modelo*)escena->models.front();
 
 	// Deseleccionar todo.
@@ -4329,9 +4315,20 @@ void GLWidget::finishRiggingTool()
 	emit setRiggingToolUI();
 	sktCr->mode = SKT_RIGG;
 
+	for (int rootIdx = 0; rootIdx < sktCr->parentRig->defRig.roots.size(); rootIdx++)
+	{
+		sktCr->parentRig->defRig.roots[rootIdx]->computeWorldPos(sktCr->parentRig->defRig.roots[rootIdx]);
+	}
+
+	for (int dgIdx = 0; dgIdx < sktCr->parentRig->defRig.defGroups.size(); dgIdx++)
+		sktCr->parentRig->defRig.defGroups[dgIdx]->update();
+
+	sktCr->parentRig->update();
+
 	// Construimos los nuevos grupos.
+	/*
 	DefGraph& defRig = ((AirRig*) escena->rig)->defRig;
-	for(int i = 0; i < defRig.defGroups.size(); i++)
+ 	for(int i = 0; i < defRig.defGroups.size(); i++)
 	{
 		if(defRig.defGroups[i]->dirtyCreation)
 		{
@@ -4352,6 +4349,7 @@ void GLWidget::finishRiggingTool()
 			defRig.defNodesRef[defRig.defGroups[i]->deformers[j].nodeId] = &(defRig.defGroups[i]->deformers[j]);
 		}
 	}
+	*/
 
 	preferredNormalType = SHD_VERTEX_COLORS;
 	emit updateSceneView();
@@ -4506,12 +4504,29 @@ void GLWidget::mousePressEvent(QMouseEvent* e)
 	AdriViewer::mousePressEvent(e);
 }
 
+
+void GLWidget::resetAnimation()
+{
+	AirRig* currentRig = (AirRig*)escena->rig;
+	((AirRig*)escena->rig)->restorePoses();
+
+	// No esta inicializado todavia.
+	if (!currentRig->airSkin) return;
+
+	currentRig->airSkin->resetDeformations();
+}
+
 void GLWidget::mouseMoveEvent(QMouseEvent* e)
 {
 	if(!X_ALT_modifier)
 	{
 		if(pressed && ToolManip.bModifierMode)
 		{
+			AirRig* currentRig = ((AirRig*)sktCr->parentRig);
+
+			object* obj = selMgr.selection[0];
+			DefGroup* dg = (DefGroup*)obj;
+
 			Vector2i currentMouse(e->pos().x(), e->pos().y());
 
 			qglviewer::Vec orig, dir, selectedPoint;
@@ -4525,36 +4540,143 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 			Vector3d rayOrigin(orig.x, orig.y, orig.z);
 			Vector3d rayDir(dir.x, dir.y, dir.z);
 			ToolManip.moveManipulator(rayOrigin, rayDir);
-
-			// Transform the object
-			ToolManip.applyTransformation(selMgr.selection[0], ToolManip.type, ToolManip.mode);
-
-			sktCr->parentRig->dirtyFlag = true;
-			sktCr->parentRig->update();
 			
-			AirRig* currentRig = ((AirRig*) sktCr->parentRig);
 			if(currentRig && (sktCr->mode == SKT_CREATE || sktCr->mode == SKT_RIGG))
 			{
+				// Transform the object
+				ToolManip.applyTransformation(selMgr.selection[0], ToolManip.type, ToolManip.mode);
+
+				sktCr->parentRig->dirtyFlag = true;
+				sktCr->parentRig->update();
+
 				//1.Process rig->anim mode
 				currentRig->saveRestPoses();
-				computeWeights();
 
-				//2.Process anim->rig mode
-				//currentRig->restorePoses();
-				//currentRig->airSkin->resetDeformations();
+				if (m_bRTInteraction)
+					computeWeights();
 
 				paintModelWithData();
 			}
 			else if (currentRig && (sktCr->mode == SKT_TEST))
 			{
-				//1.Process rig->anim mode
-				currentRig->saveRestPoses();
-				computeWeights();
 
-				//2.Process anim->rig mode
+				// 1. Compute the displacement in local
+				Vector3d newPosition(0, 0, 0);
+				Vector3d displ = ToolManip.currentframe.position;
+
+				Quaterniond currentRot = Quaterniond::Identity();
+				Quaterniond currentrRot = Quaterniond::Identity();
+
+				Vector3d currentPos(0, 0, 0);
+				Vector3d currentRestPos(0, 0, 0);
+
+				if (dg->dependentGroups.size() > 0)
+				{
+					currentRot = dg->dependentGroups[0]->transformation->rotation;
+					currentrRot = dg->dependentGroups[0]->transformation->rRotation;
+
+					currentPos = dg->dependentGroups[0]->transformation->translation;
+					currentRestPos = dg->dependentGroups[0]->transformation->rTranslation;
+				}
+
+				displ = currentRot.inverse()._transformVector(displ - currentPos); // Transformacion a local
+				displ = currentrRot._transformVector(displ) + currentRestPos; // Transformacion a local		
+
+				map<int, joint*> pose;
+				for (int jointIdx = 0; jointIdx < currentRig->defRig.defGroups.size(); jointIdx++)
+				{
+					pose[currentRig->defRig.defGroups[jointIdx]->nodeId] = new joint();
+					pose[currentRig->defRig.defGroups[jointIdx]->nodeId]->copyBasicData(currentRig->defRig.defGroups[jointIdx]->transformation);
+				}
+
+				// 3. Restore the pose
 				currentRig->restorePoses();
+
+				// FOR TESTING REASONS
+				if (m_bShowAnalisis)
+				{
+					ToolManip.jointsPoints.clear();
+					ToolManip.jointsColors.clear();
+					for (int defGroupAIdx = 0; defGroupAIdx < currentRig->defRig.defGroups.size(); defGroupAIdx++)
+					{
+						//ToolManip.jointsPoints.push_back(currentRig->defRig.defGroups[defGroupAIdx]->transformation->translation);
+						DefGroup* dgAux = currentRig->defRig.defGroups[defGroupAIdx];
+						for (int defNodeAIdx = 0; defNodeAIdx < dgAux->deformers.size(); defNodeAIdx++)
+						{
+							if (!dgAux->deformers[defNodeAIdx].freeNode)
+							{
+								ToolManip.jointsPoints.push_back(dgAux->deformers[defNodeAIdx].pos);
+
+								Vector3i nodeCell = currentRig->model->grid->cellId(dgAux->deformers[defNodeAIdx].pos);
+
+								bool in = (nodeCell.x() >= 0 && nodeCell.y() >= 0 && nodeCell.z() >= 0 &&
+									nodeCell.x() < currentRig->model->grid->dimensions.x() &&
+									nodeCell.y() < currentRig->model->grid->dimensions.y() &&
+									nodeCell.z() < currentRig->model->grid->dimensions.z());
+
+								if (in && currentRig->model->grid->isContained(nodeCell, 0))
+								{
+									ToolManip.jointsColors.push_back(Vector3d(0, 1, 0));
+								}
+								else
+								{
+									ToolManip.jointsColors.push_back(Vector3d(1, 0, 0));
+								}
+							}
+						}
+
+						ToolManip.jointsPoints.push_back(dgAux->transformation->rTranslation);
+						ToolManip.jointsColors.push_back(Vector3d(0, 0, 1));
+						ToolManip.jointsPoints.push_back(dgAux->transformation->translation);
+						ToolManip.jointsColors.push_back(Vector3d(0.5, 0.5, 0.9));
+					}
+				}
+
+
+				dg->setTranslation(displ.x(), displ.y(), displ.z(), ToolManip.mode == TM_SINGLE);
+
+				dg->dirtyFlag = true; 
+				sktCr->parentRig->dirtyFlag = true;
+				sktCr->parentRig->update();
+
+				for (int rootIdx = 0; rootIdx < sktCr->parentRig->defRig.roots.size(); rootIdx++)
+				{
+					sktCr->parentRig->defRig.roots[rootIdx]->computeWorldPos(sktCr->parentRig->defRig.roots[rootIdx]);
+				}
+
+				dg->update();
+
+				// Pose the model in the original situation, that could be voided if all the computations
+				// were done over the original model: study the posibility of having a contant data for
+				// optimize loading from memmory... it could make faster the process.
 				currentRig->airSkin->resetDeformations();
 
+				computeWeights();
+
+				//1.Process rig->anim mode
+				currentRig->saveRestPoses();
+
+				for (int jointIdx = 0; jointIdx < currentRig->defRig.defGroups.size(); jointIdx++)
+				{
+					currentRig->defRig.defGroups[jointIdx]->transformation->copyBasicData(pose[currentRig->defRig.defGroups[jointIdx]->nodeId], true);
+				}
+
+				for (int rootIdx = 0; rootIdx < sktCr->parentRig->defRig.roots.size(); rootIdx++)
+				{
+					sktCr->parentRig->defRig.roots[rootIdx]->computeWorldPos(sktCr->parentRig->defRig.roots[rootIdx]);
+				}
+
+				sktCr->parentRig->dirtyFlag = true;
+				sktCr->parentRig->update();
+
+			}
+			else
+			{
+				// Transform the object
+				ToolManip.applyTransformation(selMgr.selection[0], ToolManip.type, ToolManip.mode);
+
+				sktCr->parentRig->dirtyFlag = true;
+				sktCr->parentRig->update();
 			}
 
 			return;
@@ -4572,7 +4694,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 			rig->highlight(node, true);
 
 		}
-	
+
 
 		//Vector2f desplMouse(e->pos().x(), e->pos().y());
 
@@ -4599,6 +4721,23 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 			{
 				// Estabamos modificando y hemos acabado...
 				ToolManip.bModifierMode = false;
+
+				if (!m_bRTInteraction && (sktCr->mode == SKT_CREATE || sktCr->mode == SKT_RIGG))
+				{
+					// Aqui podemos hacer un calcula si se ha movido algo
+					//1.Process rig->anim mode
+					AirRig* currentRig = ((AirRig*)sktCr->parentRig);
+					currentRig->saveRestPoses();
+
+					computeWeights();
+
+					//2.Process anim->rig mode
+					//currentRig->restorePoses();
+					//currentRig->airSkin->resetDeformations();
+
+					paintModelWithData();
+				}
+
 				return;
 			}
 
@@ -4728,10 +4867,16 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 							sktCr->parentNode = dg;
 							sktCr->parentRig = (AirRig*)escena->rig;
 							sktCr->parentNode->select(true, sktCr->parentNode->nodeId);
-							sktCr->state = SKT_CR_SELECTED;
+							
 
 							// Add the the existing joint to the temporal dynamic skeleton
-							sktCr->addNewNode(dg->getTranslation(false));
+							DefGroup* newDg = sktCr->addNewNode(dg->getTranslation(false));
+
+							if (sktCr->state != SKT_CR_SELECTED)
+							{
+								
+							}
+							sktCr->state = SKT_CR_SELECTED;
 
 							/*
 							for(int i = 0; i< selMgr.selection.size(); i++)
@@ -4943,7 +5088,10 @@ void GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3
   {
 	printf("El punto seleccionado es...");
 	point = Vector3d((intersecPoints[firstIn] + intersecPoints[firstOut])/2);
-	printf("%f %f %f a profundidad %f", point.x(), point.y(), point.z());//, dephts[firstIn]+dephts[firstOut]/2);
+	Vector3d dir = (intersecPoints[firstOut] - intersecPoints[firstIn]);
+
+	printf("Rayo: %f %f %f\n", dir.x(), dir.y(), dir.z());
+	printf("%f %f %f\n", point.x(), point.y(), point.z());
   }
   else
   {

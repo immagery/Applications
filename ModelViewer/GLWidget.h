@@ -109,6 +109,8 @@ public:
 	virtual void keyPressEvent(QKeyEvent *e);
 	virtual void keyReleaseEvent(QKeyEvent* e);
 
+	virtual void resetAnimation();
+
 	bool X_ALT_modifier;
 
 	int getSelection();
@@ -140,11 +142,16 @@ public:
 	vector<ComputationMgr> compMgr;
 	AppMgr *appMgr;
 
+	clock_t last_time;
+
+	bool m_bRTInteraction;
+
 protected:
     //virtual void postSelection(const QPoint& point);
 	virtual void draw();
 	virtual void drawWithNames();
 
+	void drawFPS(float fps, int x, int y);
 	virtual void draw2DGraphics();
 	virtual void drawBulgeCurve(int idDeformer, int idGroup, 
 								Vector2i Origin, Vector2i rectSize);
@@ -209,6 +216,8 @@ public slots:
 
     virtual void changeSmoothPropagationDistanceRatio(float smoothRatioValue);
 	virtual void changeExpansionFromSelectedJoint(float expValue);
+
+	virtual void enableRTInteraction(bool);
 
 	virtual void setSceneScale(float scale)
 	{
