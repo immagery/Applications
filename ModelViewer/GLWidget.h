@@ -134,7 +134,7 @@ public:
 								  Vector3d& rayDir, vector<Vector3d>& intersecPoints, 
 								  vector<int>& triangleIdx);
 
-	virtual void getFirstMidPoint(Geometry* geom, Vector3d& rayDir, 
+	virtual bool getFirstMidPoint(Geometry* geom, Vector3d& rayDir, 
 								  vector<Vector3d>& intersecPoints, 
 								  vector<int>& triangleIdx, Vector3d& point);
 
@@ -196,6 +196,8 @@ public slots:
 	void computeWeights();
 	void updateComputations();
 
+	void updateSubdivisionParameter(float subdivision);
+
 	// TOREMOVE
 	void computeNodeMasiveOptimized(DefGraph& graph, Modelo& model, int defId2);
 
@@ -218,6 +220,8 @@ public slots:
 	virtual void changeExpansionFromSelectedJoint(float expValue);
 
 	virtual void enableRTInteraction(bool);
+
+	virtual void moveThroughHierarchy(int keyCode);
 
 	virtual void setSceneScale(float scale)
 	{

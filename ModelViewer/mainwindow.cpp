@@ -60,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent) : AdriMainWindow(parent)
 	connect(ui->PlaneDataCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeVisModeForPlane(int)));
 	
 	connect(ui->positionPlaneSlider, SIGNAL(sliderMoved(int)), this, SLOT(changeSelPointForPlane(int)));
-	connect(ui->bonesSubdivisionRatio, SIGNAL(editingFinished()), this, SLOT(UpdateSceneScale()));
+	connect(ui->sceneScaleFactor, SIGNAL(editingFinished()), this, SLOT(UpdateSceneScale()));
 	
 	// Control for button radios, for transformations and rotations mode.
 	connect(ui->single_transform, SIGNAL(clicked()), this, SLOT(changeTransformationMode()));
@@ -107,7 +107,7 @@ void MainWindow::updateSceneView()
 
 void MainWindow::UpdateSceneScale()
 {
-	float value = ui->bonesSubdivisionRatio->text().toFloat();
+	float value = ui->sceneScaleFactor->text().toFloat();
 	ui->glCustomWidget->setSceneScale(value);
 }
 
@@ -283,7 +283,7 @@ void MainWindow::toogleToShowSegmentation(bool toogle)
 void MainWindow::changeExpansionSlider(int i)
 {
     float valueAux = ui->expansionSlider->value();
-	float value = valueAux / 1000.0;
+	float value = (valueAux - 2500)/5000.0 + 1.0;
     
 	/*
 	if(valueAux <= 100)
@@ -301,7 +301,7 @@ void MainWindow::changeExpansionSlider(int i)
 void MainWindow::changeExpansionSlider()
 {
     float valueAux = ui->expansionSlider->value();
-	float value = valueAux / 1000.0;
+	float value = (valueAux - 2500) / 5000.0 + 1.0;
     
 	/*
 	if(valueAux <= 100)

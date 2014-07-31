@@ -403,6 +403,19 @@ void GLWidget::setTool(ToolType ctx)
 	}
 }
 
+void cleanRigDefinition(AirRig* rig)
+{
+	for (int i = 0; i < rig->defRig.defGroups.size(); i++)
+	{
+		delete rig->defRig.defGroups[i];
+	}
+
+	rig->defRig.defGroups.clear();
+	rig->defRig.defNodesRef.clear();
+	rig->defRig.defGroupsRef.clear();
+	rig->defRig.roots.clear();
+}
+
 void GLWidget::setToolCrtMode(int ctx)
 {
 	if(selMgr.currentTool == CTX_CREATE_SKT && sktCr->state != SKT_CR_IDDLE && sktCr->mode == SKT_CREATE)
@@ -411,24 +424,25 @@ void GLWidget::setToolCrtMode(int ctx)
 	AirRig* currentRig = (AirRig*)escena->rig;
 	if(!sktCr->parentRig) sktCr->parentRig = currentRig;
 
-	// En el caso de que haya algo seleccionado...
-	if(selMgr.selection.size() > 0)
-	{
-		unsigned int nodeId = selMgr.selection[0]->nodeId;
-		if(selMgr.selection[0]->iam == DEFGROUP_NODE)
-		{
-			sktCr->parentNode = currentRig->defRig.defGroupsRef[nodeId];
-
-			// Crear un primer nodo del nodo seleccionado... es importante.
-			sktCr->addNewNode(sktCr->parentNode->getTranslation(false));
-		}
-	}
-	else sktCr->parentNode = NULL;
 
 	if(ctx == SKT_CREATE)
 	{
 		// Restore poses over all the defGroups
 		currentRig->restorePoses();
+
+		// En el caso de que haya algo seleccionado...
+		if (selMgr.selection.size() > 0)
+		{
+			unsigned int nodeId = selMgr.selection[0]->nodeId;
+			if (selMgr.selection[0]->iam == DEFGROUP_NODE)
+			{
+				sktCr->parentNode = currentRig->defRig.defGroupsRef[nodeId];
+
+				if (sktCr->dynRig->defRig.defGroups.size() == 0)
+					sktCr->addNewNode(sktCr->parentNode->getTranslation(false));
+			}
+		}
+		else sktCr->parentNode = NULL;
 
 		/*
 		// Restore deformation to rest pose
@@ -453,6 +467,8 @@ void GLWidget::setToolCrtMode(int ctx)
 	}
 	if(ctx == SKT_RIGG)
 	{
+		cleanRigDefinition(sktCr->dynRig);
+
 		((AirRig*)escena->rig)->restorePoses();
 		
 		// No esta inicializado todavia.
@@ -472,6 +488,7 @@ void GLWidget::setToolCrtMode(int ctx)
 
 		((AirRig*)escena->rig)->enableDeformation = false;
 
+
 		sktCr->state = SKT_CR_IDDLE;
 		// TO_UNCOMMENT
 		//preferredType = SHD_XRAY;
@@ -480,6 +497,8 @@ void GLWidget::setToolCrtMode(int ctx)
 	}
 	if(ctx == SKT_ANIM)
 	{
+		cleanRigDefinition(sktCr->dynRig);
+
 		if(sktCr->mode != SKT_ANIM && sktCr->mode != SKT_TEST)
 		{
 			//Guardamos las poses, como poses de reposo.
@@ -500,6 +519,8 @@ void GLWidget::setToolCrtMode(int ctx)
 	}
 	else if(ctx == SKT_TEST)
 	{
+		cleanRigDefinition(sktCr->dynRig);
+
 		//((AirRig*)escena->rig)->saveRestPoses();
 		((AirRig*)escena->rig)->enableDeformation = true;
 
@@ -1626,10 +1647,22 @@ void GLWidget::initBulges(AirRig* rig)
 	printf("Loaded %d bulges\n", count);
 }
 
+void GLWidget::updateSubdivisionParameter(float subdivision)
+{
+	AirRig* rig = (AirRig*)escena->rig;
+
+	for (int defId = 0; defId < rig->defRig.defGroups.size(); defId++)
+	{
+		rig->defRig.defGroups[defId]->subdivisionRatio = subdivision;
+	}
+}
+
 void GLWidget::computeWeights()
 {
 	// Get values from UI
-	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
+	updateSubdivisionParameter(parent->ui->bonesSubdivisionRatio->text().toFloat());
+
+	printf("Calculando con %f de factor de subdivision\n", parent->ui->bonesSubdivisionRatio->text().toFloat());
 
 	// 0. Vincular el modelo al esqueleto si no se ha hecho todavia
 	AirRig* rig = (AirRig*) escena->rig;
@@ -2014,6 +2047,8 @@ void GLWidget::computeProcess()
 
 	// B. Get values from UI
 	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
+
+	printf("Calculando con %f de factor de subdivision\n", subdivisionRatio);
 
 	// C. Vincular a escena: modelo y esqueletos
 	if(localVerbose) ini = clock();
@@ -4299,10 +4334,6 @@ void GLWidget::finishRiggingTool()
 	//printf("Finalizando operacion\n");
 	sktCr->finishRig();
 
-	//TODEBUG -> se deberia haber cargado el modelo al inicio.
-	//assert(compMgr.size() > 0);
-	//worker.model = (Modelo*)escena->models.front();
-
 	// Deseleccionar todo.
 	for(int i = 0; i< selMgr.selection.size(); i++)
 	{
@@ -4320,36 +4351,28 @@ void GLWidget::finishRiggingTool()
 		sktCr->parentRig->defRig.roots[rootIdx]->computeWorldPos(sktCr->parentRig->defRig.roots[rootIdx]);
 	}
 
+	float subdivsionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 	for (int dgIdx = 0; dgIdx < sktCr->parentRig->defRig.defGroups.size(); dgIdx++)
+	{
+		sktCr->parentRig->defRig.defGroups[dgIdx]->subdivisionRatio = subdivsionRatio;
+	}
+
+	// Solo se actualizará el que este marcado.
+	for (int dgIdx = 0; dgIdx < sktCr->parentRig->defRig.defGroups.size(); dgIdx++)
+	{
 		sktCr->parentRig->defRig.defGroups[dgIdx]->update();
+	}
 
 	sktCr->parentRig->update();
 
-	// Construimos los nuevos grupos.
-	/*
-	DefGraph& defRig = ((AirRig*) escena->rig)->defRig;
- 	for(int i = 0; i < defRig.defGroups.size(); i++)
-	{
-		if(defRig.defGroups[i]->dirtyCreation)
-		{
-			defRig.defGroups[i]->subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
-			((AirRig*) escena->rig)->BuildGroup(defRig.defGroups[i]);
-			defRig.defGroups[i]->dirtyCreation = false;
-			defRig.defGroups[i]->dirtyTransformation = true;
-			defRig.defGroups[i]->dirtyFlag = true;
-		}
-	}
+	//1.Process rig->anim mode
+	sktCr->parentRig->saveRestPoses();
 
-	// Reload NodeReferences.
-	defRig.defNodesRef.clear();
-	for(int i = 0; i < defRig.defGroups.size(); i++)
-	{
-		for(int j = 0; j < defRig.defGroups[i]->deformers.size(); j++)
-		{
-			defRig.defNodesRef[defRig.defGroups[i]->deformers[j].nodeId] = &(defRig.defGroups[i]->deformers[j]);
-		}
-	}
-	*/
+	// Compute the new rigg
+	computeWeights();
+
+	// Paint the model acordingly
+	paintModelWithData();
 
 	preferredNormalType = SHD_VERTEX_COLORS;
 	emit updateSceneView();
@@ -4418,6 +4441,43 @@ void GLWidget::keyPressEvent(QKeyEvent* e)
 		X_ALT_modifier = true;
 		handled = true;
 	}	
+
+	else if (e->key() == Qt::Key_Left ||
+		e->key() == Qt::Key_Right||
+		e->key() == Qt::Key_Up ||
+		e->key() == Qt::Key_Down)
+	{
+		moveThroughHierarchy(e->key());
+		handled = true;
+	}
+	else if (e->key() == Qt::Key_F)
+	{
+		if (selMgr.selection.size() > 0)
+		{
+			if (selMgr.selection[0]->iam == DEFGROUP_NODE)
+			{
+				DefGroup* dg = (DefGroup*)selMgr.selection[0];
+				setSceneCenter(qglviewer::Vec(dg->transformation->worldPosition.x(), 
+					dg->transformation->worldPosition.y(),
+					dg->transformation->worldPosition.z()));
+
+				Vector3d minPt, maxPt;
+				dg->getBoundingBox(minPt, maxPt);
+
+				float diagonal = (maxPt - minPt).norm();
+
+				if (diagonal < 0.01) diagonal = 0.01;
+
+				setSceneRadius(diagonal);
+
+				// Hay que mover la camara
+				showEntireScene();
+			}
+		}
+
+		handled = true;
+	}
+
 
 	if (!handled)
 		QGLViewer::keyPressEvent(e);
@@ -4516,6 +4576,120 @@ void GLWidget::resetAnimation()
 	currentRig->airSkin->resetDeformations();
 }
 
+void GLWidget::moveThroughHierarchy(int keyCode)
+{
+	if (selMgr.selection.size() == 0) return;
+
+	if (selMgr.selection[0]->iam != DEFGROUP_NODE) return;
+
+	AirRig* currentRig = ((AirRig*)sktCr->parentRig);
+	object* obj = selMgr.selection[0];
+	DefGroup* dg = (DefGroup*)obj;
+
+	DefGroup* newSel = (DefGroup*)obj;
+
+	if (keyCode == Qt::Key_Up)
+	{
+		if (dg->dependentGroups.size() > 0)
+			newSel = dg->dependentGroups[0];
+		else
+			newSel = dg;
+	}
+	else if (keyCode == Qt::Key_Down)
+	{
+		if (dg->relatedGroups.size() > 0)
+			newSel = dg->relatedGroups[0];
+		else
+			newSel = dg;
+	}
+	else if (keyCode == Qt::Key_Left)
+	{
+		if (dg->dependentGroups.size() > 0)
+		{
+			DefGroup* dgFather = dg->dependentGroups[0];
+
+			int groupId = -1;
+			for (int i = 0; i < dgFather->relatedGroups.size(); i++)
+			{
+				if (dgFather->relatedGroups[i]->nodeId == dg->nodeId)
+				{
+					groupId = i;
+					break;
+				}
+			}
+
+			if (groupId == -1)
+			{
+				newSel = dg;
+			}
+			else
+			{
+				newSel = dgFather->relatedGroups[(groupId + 1) % dgFather->relatedGroups.size()];
+			}
+
+		}
+		else
+			newSel = dg;
+	}
+	else if (keyCode == Qt::Key_Right)
+	{
+		if (dg->dependentGroups.size() > 0)
+		{
+			DefGroup* dgFather = dg->dependentGroups[0];
+
+			int groupId = -1;
+			for (int i = 0; i < dgFather->relatedGroups.size(); i++)
+			{
+				if (dgFather->relatedGroups[i]->nodeId == dg->nodeId)
+				{
+					groupId = i;
+					break;
+				}
+			}
+
+			if (groupId == -1)
+			{
+				newSel = dg;
+			}
+			else
+			{
+				if (groupId == 0)
+					newSel = dgFather->relatedGroups.back();
+				else
+					newSel = dgFather->relatedGroups[groupId - 1];
+			}
+
+		}
+		else
+			newSel = dg;
+	}
+
+
+	if (newSel->nodeId != dg->nodeId)
+	{
+		// deseleccion
+		int oldId = dg->nodeId;
+		dg->select(false, oldId);
+		selMgr.selection.clear();
+
+		vector<unsigned int > lst;
+		lst.push_back(newSel->nodeId);
+		selectElements(lst);
+
+		// Selection
+		selMgr.selection.push_back(newSel);
+		newSel->select(true, newSel->nodeId);
+		
+		// Actualizar el manipulador
+		ToolManip.bModifierMode = false;
+		ToolManip.bEnable = true;
+		ToolManip.setFrame(newSel->transformation->translation, newSel->transformation->rotation, Vector3d(1, 1, 1));
+
+	}
+
+
+}
+
 void GLWidget::mouseMoveEvent(QMouseEvent* e)
 {
 	if(!X_ALT_modifier)
@@ -4523,6 +4697,8 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 		if(pressed && ToolManip.bModifierMode)
 		{
 			AirRig* currentRig = ((AirRig*)sktCr->parentRig);
+
+			if (selMgr.selection.size() == 0) return;
 
 			object* obj = selMgr.selection[0];
 			DefGroup* dg = (DefGroup*)obj;
@@ -4675,8 +4851,8 @@ void GLWidget::mouseMoveEvent(QMouseEvent* e)
 				// Transform the object
 				ToolManip.applyTransformation(selMgr.selection[0], ToolManip.type, ToolManip.mode);
 
-				sktCr->parentRig->dirtyFlag = true;
-				sktCr->parentRig->update();
+				selMgr.selection[0]->dirtyFlag = true;
+				selMgr.selection[0]->update();
 			}
 
 			return;
@@ -4932,7 +5108,8 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 							if(intersecPoints.size() > 0)
 							{
 								// Select the right point
-								getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+								if (!getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint))
+									return;
 
 								// Add the new joint to the temporal dynamic skeleton
 								sktCr->addNewNode(jointPoint);
@@ -4976,10 +5153,13 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 						if(intersecPoints.size() > 0)
 						{
 							// Select the right point
-							getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint);
+							if (!getFirstMidPoint(geom, rayDir, intersecPoints, triangleIdx, jointPoint))
+								return;
 
 							// Add the new joint to the temporal dynamic skeleton
 							sktCr->addNewNode(jointPoint);
+
+							printf("TODO: Ahora deberiamos acabar la insercion\n");
 
 							// Pasamos a modo en que ya hemos seleccionado un elem.
 							sktCr->state = SKT_CR_SELECTED;
@@ -5061,7 +5241,7 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* e)
 
 }
 
-void GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point)
+bool GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3d>& intersecPoints, vector<int>& triangleIdx, Vector3d& point)
 {
   int firstIn = -1;
   int firstOut = -1;
@@ -5086,16 +5266,19 @@ void GLWidget::getFirstMidPoint(Geometry* geom, Vector3d& rayDir, vector<Vector3
 
   if(firstIn>=0 && firstOut>0)
   {
-	printf("El punto seleccionado es...");
+	//printf("El punto seleccionado es...");
 	point = Vector3d((intersecPoints[firstIn] + intersecPoints[firstOut])/2);
 	Vector3d dir = (intersecPoints[firstOut] - intersecPoints[firstIn]);
 
-	printf("Rayo: %f %f %f\n", dir.x(), dir.y(), dir.z());
-	printf("%f %f %f\n", point.x(), point.y(), point.z());
+	//printf("Rayo: %f %f %f\n", dir.x(), dir.y(), dir.z());
+	//printf("%f %f %f\n", point.x(), point.y(), point.z());
+
+	return true;
   }
   else
   {
-	  printf("No hay punto...\n");
+	  printf("Ojo!: No hay punto... revisa que no haya pasado nada extrano.\n");
+	  return false;
   }
 
 }
