@@ -1662,7 +1662,7 @@ void GLWidget::computeWeights()
 	// Get values from UI
 	updateSubdivisionParameter(parent->ui->bonesSubdivisionRatio->text().toFloat());
 
-	printf("Calculando con %f de factor de subdivision\n", parent->ui->bonesSubdivisionRatio->text().toFloat());
+	//printf("Calculando con %f de factor de subdivision\n", parent->ui->bonesSubdivisionRatio->text().toFloat());
 
 	// 0. Vincular el modelo al esqueleto si no se ha hecho todavia
 	AirRig* rig = (AirRig*) escena->rig;
@@ -2048,7 +2048,7 @@ void GLWidget::computeProcess()
 	// B. Get values from UI
 	float subdivisionRatio = parent->ui->bonesSubdivisionRatio->text().toFloat();
 
-	printf("Calculando con %f de factor de subdivision\n", subdivisionRatio);
+	//printf("Calculando con %f de factor de subdivision\n", subdivisionRatio);
 
 	// C. Vincular a escena: modelo y esqueletos
 	if(localVerbose) ini = clock();
